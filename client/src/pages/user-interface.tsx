@@ -200,15 +200,15 @@ export default function UserInterface() {
           </div>
 
           {/* Key Input */}
-          <Card className="dashboard-card">
+          <Card className="glass-card slide-up" style={{animationDelay: '0.2s'}}>
             <CardContent className="p-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Access Key
               </label>
               <div className="relative">
                 <Input
                   placeholder="Key'inizi buraya girin..."
-                  className="bg-slate-900 border-slate-600 text-slate-50 pr-12"
+                  className="bg-background border-border text-foreground pr-12 focus:border-primary transition-all duration-300"
                   value={form.watch("keyValue")}
                   onChange={(e) => {
                     form.setValue("keyValue", e.target.value);
@@ -219,34 +219,34 @@ export default function UserInterface() {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-all duration-300"
                   onClick={handleKeyValidation}
                   disabled={validateKeyMutation.isPending || !form.watch("keyValue")}
                 >
                   {keyValidated ? (
-                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <CheckCircle className="w-5 h-5 text-green-500 glow-effect" />
                   ) : (
                     <CheckCircle className="w-5 h-5" />
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Key'iniz tek kullanımlıktır ve sadece bir kez kullanılabilir
               </p>
             </CardContent>
           </Card>
 
           {/* Service Selection */}
-          <Card className="dashboard-card">
+          <Card className="glass-card slide-up" style={{animationDelay: '0.3s'}}>
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-slate-50">
+              <CardTitle className="text-lg font-semibold text-foreground">
                 Servis Seçin
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {servicesLoading ? (
-                  <div className="col-span-full text-center text-slate-400">
+                  <div className="col-span-full text-center text-muted-foreground">
                     Servisler yükleniyor...
                   </div>
                 ) : (

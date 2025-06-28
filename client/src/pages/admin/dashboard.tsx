@@ -96,58 +96,66 @@ export default function Dashboard() {
           <div className="p-6 space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatsCard
-                title="Toplam Key"
-                value={stats?.totalKeys || 0}
-                change="+8.2% son 30 gün"
-                changeType="positive"
-                icon={Key}
-                iconColor="bg-blue-600"
-              />
-              <StatsCard
-                title="Kullanılan Key"
-                value={stats?.usedKeys || 0}
-                change="+12.1% son 30 gün"
-                changeType="positive"
-                icon={CheckCircle}
-                iconColor="bg-green-600"
-              />
-              <StatsCard
-                title="Aktif Servis"
-                value={stats?.activeServices || 0}
-                change="Değişiklik yok"
-                changeType="neutral"
-                icon={Settings}
-                iconColor="bg-purple-600"
-              />
-              <StatsCard
-                title="Günlük İşlem"
-                value={stats?.dailyTransactions || 0}
-                change="-3.1% son 30 gün"
-                changeType="negative"
-                icon={TrendingUp}
-                iconColor="bg-amber-600"
-              />
+              <div className="slide-up" style={{animationDelay: '0s'}}>
+                <StatsCard
+                  title="Toplam Key"
+                  value={stats?.totalKeys || 0}
+                  change="+8.2% son 30 gün"
+                  changeType="positive"
+                  icon={Key}
+                  iconColor="bg-blue-600"
+                />
+              </div>
+              <div className="slide-up" style={{animationDelay: '0.1s'}}>
+                <StatsCard
+                  title="Kullanılan Key"
+                  value={stats?.usedKeys || 0}
+                  change="+12.1% son 30 gün"
+                  changeType="positive"
+                  icon={CheckCircle}
+                  iconColor="bg-green-600"
+                />
+              </div>
+              <div className="slide-up" style={{animationDelay: '0.2s'}}>
+                <StatsCard
+                  title="Aktif Servis"
+                  value={stats?.activeServices || 0}
+                  change="Değişiklik yok"
+                  changeType="neutral"
+                  icon={Settings}
+                  iconColor="bg-purple-600"
+                />
+              </div>
+              <div className="slide-up" style={{animationDelay: '0.3s'}}>
+                <StatsCard
+                  title="Günlük İşlem"
+                  value={stats?.dailyTransactions || 0}
+                  change="-3.1% son 30 gün"
+                  changeType="negative"
+                  icon={TrendingUp}
+                  iconColor="bg-amber-600"
+                />
+              </div>
             </div>
 
             {/* Recent Activity & Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Recent Activity */}
               <div className="lg:col-span-2">
-                <Card className="dashboard-card">
-                  <CardHeader className="border-b border-slate-700">
-                    <CardTitle className="text-lg font-semibold text-slate-50">
+                <Card className="glass-card slide-up" style={{animationDelay: '0.4s'}}>
+                  <CardHeader className="border-b border-border">
+                    <CardTitle className="text-lg font-semibold text-foreground">
                       Son Aktiviteler
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-4">
                     {mockActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-center space-x-4">
-                        <div className={`w-10 h-10 ${activity.iconColor} rounded-full flex items-center justify-center`}>
+                      <div key={activity.id} className="flex items-center space-x-4 hover:bg-accent/50 p-3 rounded-lg transition-all duration-300">
+                        <div className={`w-10 h-10 ${activity.iconColor} rounded-full flex items-center justify-center glow-effect`}>
                           <activity.icon className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-slate-50 font-medium">
+                          <p className="text-foreground font-medium">
                             {activity.description}
                           </p>
                           <p className="text-slate-400 text-sm">
@@ -165,15 +173,15 @@ export default function Dashboard() {
 
               {/* Quick Actions */}
               <div className="lg:col-span-1">
-                <Card className="dashboard-card">
-                  <CardHeader className="border-b border-slate-700">
-                    <CardTitle className="text-lg font-semibold text-slate-50">
+                <Card className="glass-card slide-up" style={{animationDelay: '0.5s'}}>
+                  <CardHeader className="border-b border-border">
+                    <CardTitle className="text-lg font-semibold text-foreground">
                       Hızlı İşlemler
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-3">
                     <Button 
-                      className="w-full justify-start space-x-3 bg-blue-600 hover:bg-blue-700"
+                      className="w-full justify-start space-x-3 gradient-bg hover:scale-105 transition-all duration-300 pulse-glow"
                       onClick={() => setShowKeyModal(true)}
                     >
                       <Plus className="w-4 h-4" />
@@ -182,7 +190,7 @@ export default function Dashboard() {
                     
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start space-x-3 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
                     >
                       <Cog className="w-4 h-4" />
                       <span>Servis Ekle</span>
@@ -190,7 +198,7 @@ export default function Dashboard() {
                     
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start space-x-3 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
                     >
                       <List className="w-4 h-4" />
                       <span>Logları Görüntüle</span>
@@ -198,7 +206,7 @@ export default function Dashboard() {
                     
                     <Button 
                       variant="outline" 
-                      className="w-full justify-start space-x-3 border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
                     >
                       <Download className="w-4 h-4" />
                       <span>Veri Dışa Aktar</span>

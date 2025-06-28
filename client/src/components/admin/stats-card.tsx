@@ -31,14 +31,14 @@ export default function StatsCard({
   };
 
   return (
-    <Card className="dashboard-card">
+    <Card className="glass-card hover:scale-105 transition-all duration-300 group">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-slate-400 text-sm font-medium">{title}</p>
-            <p className="text-2xl font-bold text-slate-50">{value}</p>
+            <p className="text-muted-foreground text-sm font-medium">{title}</p>
+            <p className="text-2xl font-bold text-foreground">{value}</p>
           </div>
-          <div className={`w-12 h-12 ${iconColor} rounded-lg flex items-center justify-center`}>
+          <div className={`w-12 h-12 ${iconColor} rounded-lg flex items-center justify-center glow-effect group-hover:scale-110 transition-all duration-300`}>
             <Icon className="w-6 h-6 text-white" />
           </div>
         </div>
