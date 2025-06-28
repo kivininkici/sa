@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,9 +27,10 @@ export default function ApiManagement() {
   const queryClient = useQueryClient();
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [fetchedServices, setFetchedServices] = useState([]);
+  const [fetchedServices, setFetchedServices] = useState<any[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [importedApis, setImportedApis] = useState<string[]>([]);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -98,6 +98,7 @@ export default function ApiManagement() {
       setIsDialogOpen(false);
       setFetchedServices([]);
       setSelectedServices([]);
+      setImportedApis(prev => [...prev, apiUrl]);
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -111,6 +112,36 @@ export default function ApiManagement() {
         }, 500);
         return;
       }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+    const deleteApiMutation = useMutation({
+    mutationFn: async (apiUrl: string) => {
+      const response = await fetch(`/api/admin/apis/${encodeURIComponent(apiUrl)}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete API");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data, apiUrl) => {
+      toast({
+        title: "Başarılı",
+        description: `API silindi: ${data.deleted} servis kaldırıldı`,
+      });
+      setImportedApis(prev => prev.filter(api => api !== apiUrl));
+      queryClient.invalidateQueries({ queryKey: ["/api/services/all"] });
+    },
+    onError: (error) => {
       toast({
         title: "Hata",
         description: error.message,
@@ -135,7 +166,7 @@ export default function ApiManagement() {
     const servicesToImport = fetchedServices.filter((_, index) => 
       selectedServices.includes(index)
     );
-    
+
     if (servicesToImport.length === 0) {
       toast({
         title: "Hata",
@@ -168,7 +199,7 @@ export default function ApiManagement() {
           title="API Yönetimi" 
           description="Harici API'lerden servis içe aktarın" 
         />
-        
+
         <div className="content-area">
           <div className="p-6 space-y-6">
             {/* Header Actions */}
@@ -177,7 +208,7 @@ export default function ApiManagement() {
                 <h2 className="text-2xl font-bold text-slate-50">API Yönetimi</h2>
                 <p className="text-slate-400">Harici API'lerden servis içe aktarın ve yönetin</p>
               </div>
-              
+
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
@@ -189,7 +220,7 @@ export default function ApiManagement() {
                   <DialogHeader>
                     <DialogTitle>API'den Servis İçe Aktar</DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -212,7 +243,7 @@ export default function ApiManagement() {
                         />
                       </div>
                     </div>
-                    
+
                     <Button 
                       onClick={handleFetchServices}
                       disabled={fetchServicesMutation.isPending}
@@ -243,7 +274,7 @@ export default function ApiManagement() {
                             </Button>
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                           {fetchedServices.map((service: any, index) => (
                             <Card 
@@ -271,7 +302,7 @@ export default function ApiManagement() {
                             </Card>
                           ))}
                         </div>
-                        
+
                         <Button 
                           onClick={handleImportServices}
                           disabled={importServicesMutation.isPending || selectedServices.length === 0}
@@ -337,9 +368,45 @@ export default function ApiManagement() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </main>
+
+        {/* Imported APIs */}
+        {importedApis.length > 0 && (
+          <Card className="dashboard-card">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-slate-50">
+                İçe Aktarılan API'ler
+              </CardTitle>
+              <p className="text-slate-400">
+                Sisteme eklenen API'ler ve servislerini yönetin
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {importedApis.map((api) => (
+                  <div
+                    key={api}
+                    className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700"
+                  >
+                    <div className="flex-1">
+                      <p className="text-slate-200 font-medium">{api}</p>
+                      <p className="text-slate-400 text-sm">API Endpoint</p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteApiMutation.mutate(api)}
+                      disabled={deleteApiMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Sil
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
