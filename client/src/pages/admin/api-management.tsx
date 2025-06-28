@@ -369,44 +369,46 @@ export default function ApiManagement() {
               </CardContent>
             </Card>
 
-        {/* Imported APIs */}
-        {importedApis.length > 0 && (
-          <Card className="dashboard-card">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold text-slate-50">
-                İçe Aktarılan API'ler
-              </CardTitle>
-              <p className="text-slate-400">
-                Sisteme eklenen API'ler ve servislerini yönetin
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {importedApis.map((api) => (
-                  <div
-                    key={api}
-                    className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700"
-                  >
-                    <div className="flex-1">
-                      <p className="text-slate-200 font-medium">{api}</p>
-                      <p className="text-slate-400 text-sm">API Endpoint</p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteApiMutation.mutate(api)}
-                      disabled={deleteApiMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Sil
-                    </Button>
+            {/* Imported APIs */}
+            {importedApis.length > 0 && (
+              <Card className="dashboard-card">
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold text-slate-50">
+                    İçe Aktarılan API'ler
+                  </CardTitle>
+                  <p className="text-slate-400">
+                    Sisteme eklenen API'ler ve servislerini yönetin
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {importedApis.map((api) => (
+                      <div
+                        key={api}
+                        className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-700"
+                      >
+                        <div className="flex-1">
+                          <p className="text-slate-200 font-medium">{api}</p>
+                          <p className="text-slate-400 text-sm">API Endpoint</p>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteApiMutation.mutate(api)}
+                          disabled={deleteApiMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          Sil
+                        </Button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
