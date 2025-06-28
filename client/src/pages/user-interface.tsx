@@ -32,7 +32,8 @@ import {
   Youtube, 
   Music,
   Info,
-  Rocket
+  Rocket,
+  Search
 } from "lucide-react";
 import { Service } from "@shared/schema";
 
@@ -47,6 +48,7 @@ export default function UserInterface() {
   const { toast } = useToast();
   const [selectedService, setSelectedService] = useState<number | null>(null);
   const [keyValidated, setKeyValidated] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/services"],
@@ -161,6 +163,16 @@ export default function UserInterface() {
 
   const servicesToShow = services?.length > 0 ? services : defaultServices;
 
+    const filteredServices = servicesToShow?.filter((service: Service | any) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      service.name.toLowerCase().includes(searchLower) ||
+      service.description.toLowerCase().includes(searchLower) ||
+      service.platform.toLowerCase().includes(searchLower) ||
+      service.type.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
       {/* Header */}
@@ -244,13 +256,30 @@ export default function UserInterface() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+                {/* Search Services */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                  <Input
+                    placeholder="Servis ara... (örn: Instagram, takipçi, beğeni)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 bg-background border-border text-foreground"
+                  />
+                </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {servicesLoading ? (
                   <div className="col-span-full text-center text-muted-foreground">
                     Servisler yükleniyor...
                   </div>
                 ) : (
-                  servicesToShow?.map((service: Service | any) => (
+                    filteredServices?.length === 0 ? (
+                    <div className="col-span-full text-center text-muted-foreground">
+                      <Search className="w-12 h-12 mx-auto mb-2 text-slate-600" />
+                      <p>Arama kriterinize uygun servis bulunamadı</p>
+                    </div>
+                  ) : (
+                  filteredServices?.map((service: Service | any) => (
                     <ServiceCard
                       key={service.id}
                       name={service.name}
@@ -264,7 +293,7 @@ export default function UserInterface() {
                       }}
                     />
                   ))
-                )}
+                ))}
               </div>
             </CardContent>
           </Card>
