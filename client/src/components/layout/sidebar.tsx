@@ -1,12 +1,16 @@
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  Key, 
-  Settings, 
-  Users, 
-  FileText, 
-  Cog,
-  LogOut
+import {
+  LayoutDashboard,
+  Key,
+  Settings,
+  Users,
+  Activity,
+  Server,
+  LogOut,
+  Menu,
+  X,
+  ChevronRight,
+  ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

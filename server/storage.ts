@@ -22,7 +22,7 @@ export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // Key operations
   getAllKeys(): Promise<Key[]>;
   getKeyByValue(value: string): Promise<Key | undefined>;
@@ -35,7 +35,7 @@ export interface IStorage {
     used: number;
     unused: number;
   }>;
-  
+
   // Service operations
   getAllServices(): Promise<Service[]>;
   getActiveServices(): Promise<Service[]>;
@@ -43,20 +43,20 @@ export interface IStorage {
   createService(service: InsertService): Promise<Service>;
   updateService(id: number, updates: Partial<Service>): Promise<Service>;
   deleteService(id: number): Promise<void>;
-  
+
   // Order operations
   getAllOrders(): Promise<Order[]>;
   getOrderById(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: number, updates: Partial<Order>): Promise<Order>;
   getOrdersByStatus(status: string): Promise<Order[]>;
-  
+
   // Log operations
   getAllLogs(): Promise<Log[]>;
   createLog(log: InsertLog): Promise<Log>;
   getLogsByType(type: string): Promise<Log[]>;
   getLogsByUserId(userId: string): Promise<Log[]>;
-  
+
   // Dashboard stats
   getDashboardStats(): Promise<{
     totalKeys: number;

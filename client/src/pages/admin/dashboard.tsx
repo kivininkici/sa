@@ -1,28 +1,36 @@
-import { useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import StatsCard from "@/components/admin/stats-card";
+import KeyCreationModal from "@/components/admin/key-creation-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Key, 
-  CheckCircle, 
-  Settings, 
-  TrendingUp, 
-  Plus, 
-  Cog, 
-  List, 
-  Download,
-  ArrowUp,
-  ArrowDown,
-  Minus
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Key,
+  Users,
+  ShoppingCart,
+  Activity,
+  Plus,
+  Eye,
+  Trash2,
+  CheckCircle,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
-import KeyCreationModal from "@/components/admin/key-creation-modal";
-import { useState } from "react";
+import { Key as KeyType } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -44,44 +52,35 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: dashboardStats } = useQuery({
     queryKey: ["/api/dashboard/stats"],
     retry: false,
   });
 
+  const { data: recentKeys } = useQuery({
+    queryKey: ["/api/keys"],
+    retry: false,
+  });
+
+  const { data: recentOrders } = useQuery({
+    queryKey: ["/api/orders"],
+    retry: false,
+  });
+
   if (isLoading || !isAuthenticated) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  const mockActivities = [
-    {
-      id: 1,
-      type: "key_created",
-      description: "Yeni key oluşturuldu",
-      timestamp: "2 dakika önce",
-      status: "Başarılı",
-      icon: Key,
-      iconColor: "bg-blue-600",
-    },
-    {
-      id: 2,
-      type: "order_completed",
-      description: "Instagram takipçi siparişi tamamlandı",
-      timestamp: "5 dakika önce",
-      status: "Tamamlandı",
-      icon: CheckCircle,
-      iconColor: "bg-green-600",
-    },
-    {
-      id: 3,
-      type: "admin_added",
-      description: "Yeni admin eklendi",
-      timestamp: "1 saat önce",
-      status: "Aktif",
-      icon: Settings,
-      iconColor: "bg-amber-600",
-    },
-  ];
+  // Get recent 5 keys and orders
+  const recentKeysData = recentKeys?.slice(0, 5) || [];
+  const recentOrdersData = recentOrders?.slice(0, 5) || [];
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -89,132 +88,248 @@ export default function Dashboard() {
       <main className="flex-1 overflow-hidden">
         <Header 
           title="Dashboard" 
-          description="Sistem genel durumu ve istatistikler" 
+          description="Sistem genel bakış ve istatistikler" 
         />
         
         <div className="content-area">
           <div className="p-6 space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="slide-up" style={{animationDelay: '0s'}}>
-                <StatsCard
-                  title="Toplam Key"
-                  value={stats?.totalKeys || 0}
-                  change="+8.2% son 30 gün"
-                  changeType="positive"
-                  icon={Key}
-                  iconColor="bg-blue-600"
-                />
+            {/* Welcome Section */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-50">Hoş Geldiniz</h2>
+                <p className="text-slate-400">Sistemin genel durumunu buradan takip edebilirsiniz</p>
               </div>
-              <div className="slide-up" style={{animationDelay: '0.1s'}}>
-                <StatsCard
-                  title="Kullanılan Key"
-                  value={stats?.usedKeys || 0}
-                  change="+12.1% son 30 gün"
-                  changeType="positive"
-                  icon={CheckCircle}
-                  iconColor="bg-green-600"
-                />
-              </div>
-              <div className="slide-up" style={{animationDelay: '0.2s'}}>
-                <StatsCard
-                  title="Aktif Servis"
-                  value={stats?.activeServices || 0}
-                  change="Değişiklik yok"
-                  changeType="neutral"
-                  icon={Settings}
-                  iconColor="bg-purple-600"
-                />
-              </div>
-              <div className="slide-up" style={{animationDelay: '0.3s'}}>
-                <StatsCard
-                  title="Günlük İşlem"
-                  value={stats?.dailyTransactions || 0}
-                  change="-3.1% son 30 gün"
-                  changeType="negative"
-                  icon={TrendingUp}
-                  iconColor="bg-amber-600"
-                />
-              </div>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => setShowKeyModal(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Hızlı Key Oluştur
+              </Button>
             </div>
 
-            {/* Recent Activity & Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Recent Activity */}
-              <div className="lg:col-span-2">
-                <Card className="glass-card slide-up" style={{animationDelay: '0.4s'}}>
-                  <CardHeader className="border-b border-border">
-                    <CardTitle className="text-lg font-semibold text-foreground">
-                      Son Aktiviteler
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
-                    {mockActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-center space-x-4 hover:bg-accent/50 p-3 rounded-lg transition-all duration-300">
-                        <div className={`w-10 h-10 ${activity.iconColor} rounded-full flex items-center justify-center glow-effect`}>
-                          <activity.icon className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-foreground font-medium">
-                            {activity.description}
-                          </p>
-                          <p className="text-slate-400 text-sm">
-                            {activity.timestamp}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 bg-green-900 text-green-300 text-xs rounded-full">
-                          {activity.status}
-                        </span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="lg:col-span-1">
-                <Card className="glass-card slide-up" style={{animationDelay: '0.5s'}}>
-                  <CardHeader className="border-b border-border">
-                    <CardTitle className="text-lg font-semibold text-foreground">
-                      Hızlı İşlemler
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-3">
-                    <Button 
-                      className="w-full justify-start space-x-3 gradient-bg hover:scale-105 transition-all duration-300 pulse-glow"
-                      onClick={() => setShowKeyModal(true)}
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Yeni Key Oluştur</span>
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
-                    >
-                      <Cog className="w-4 h-4" />
-                      <span>Servis Ekle</span>
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
-                    >
-                      <List className="w-4 h-4" />
-                      <span>Logları Görüntüle</span>
-                    </Button>
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start space-x-3 glass-card hover:bg-accent transition-all duration-300"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Veri Dışa Aktar</span>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatsCard
+                title="Toplam Key"
+                value={dashboardStats?.totalKeys || 0}
+                icon={Key}
+                iconColor="bg-blue-600"
+                subtitle="Oluşturulmuş"
+              />
+              <StatsCard
+                title="Aktif Kullanıcı"
+                value={dashboardStats?.totalUsers || 0}
+                icon={Users}
+                iconColor="bg-green-600"
+                subtitle="Kayıtlı"
+              />
+              <StatsCard
+                title="Toplam Sipariş"
+                value={dashboardStats?.totalOrders || 0}
+                icon={ShoppingCart}
+                iconColor="bg-purple-600"
+                subtitle="İşlem"
+              />
+              <StatsCard
+                title="Sistem Durumu"
+                value="Aktif"
+                icon={Activity}
+                iconColor="bg-emerald-600"
+                subtitle="Çalışıyor"
+              />
             </div>
+
+            {/* Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Keys */}
+              <Card className="dashboard-card">
+                <CardHeader className="border-b border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-slate-50 flex items-center">
+                      <Key className="w-5 h-5 mr-2 text-blue-400" />
+                      Son Oluşturulan Key'ler
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      onClick={() => window.location.href = '/admin/keys'}
+                    >
+                      Tümünü Gör
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-900">
+                        <TableRow className="border-slate-700">
+                          <TableHead className="text-slate-400">Key</TableHead>
+                          <TableHead className="text-slate-400">Durum</TableHead>
+                          <TableHead className="text-slate-400">Tarih</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentKeysData.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-slate-400 py-8">
+                              <Key className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+                              Henüz key oluşturulmamış
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          recentKeysData.map((key: KeyType) => (
+                            <TableRow key={key.id} className="border-slate-700">
+                              <TableCell>
+                                <code className="px-2 py-1 bg-slate-900 text-blue-400 text-xs rounded font-mono">
+                                  {key.value.substring(0, 8)}...
+                                </code>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={key.isUsed ? "default" : "secondary"}
+                                  className={key.isUsed 
+                                    ? "bg-green-900 text-green-300" 
+                                    : "bg-amber-900 text-amber-300"
+                                  }
+                                >
+                                  {key.isUsed ? (
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                  ) : (
+                                    <Clock className="w-3 h-3 mr-1" />
+                                  )}
+                                  {key.isUsed ? "Kullanılmış" : "Bekliyor"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-300 text-sm">
+                                {key.createdAt ? new Date(key.createdAt).toLocaleDateString("tr-TR") : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Orders */}
+              <Card className="dashboard-card">
+                <CardHeader className="border-b border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold text-slate-50 flex items-center">
+                      <ShoppingCart className="w-5 h-5 mr-2 text-purple-400" />
+                      Son Siparişler
+                    </CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      onClick={() => window.location.href = '/admin/orders'}
+                    >
+                      Tümünü Gör
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-900">
+                        <TableRow className="border-slate-700">
+                          <TableHead className="text-slate-400">Sipariş</TableHead>
+                          <TableHead className="text-slate-400">Durum</TableHead>
+                          <TableHead className="text-slate-400">Tarih</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentOrdersData.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-slate-400 py-8">
+                              <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+                              Henüz sipariş bulunmuyor
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          recentOrdersData.map((order: any) => (
+                            <TableRow key={order.id} className="border-slate-700">
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="text-slate-300 text-sm font-medium">
+                                    #{order.id}
+                                  </span>
+                                  <span className="text-slate-500 text-xs">
+                                    {order.quantity} adet
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant="outline"
+                                  className={
+                                    order.status === "completed" 
+                                      ? "bg-green-900 text-green-300 border-green-600" 
+                                      : order.status === "failed"
+                                      ? "bg-red-900 text-red-300 border-red-600"
+                                      : "bg-amber-900 text-amber-300 border-amber-600"
+                                  }
+                                >
+                                  {order.status === "completed" && <CheckCircle className="w-3 h-3 mr-1" />}
+                                  {order.status === "failed" && <AlertCircle className="w-3 h-3 mr-1" />}
+                                  {order.status === "pending" && <Clock className="w-3 h-3 mr-1" />}
+                                  {order.status === "completed" ? "Tamamlandı" : 
+                                   order.status === "failed" ? "Başarısız" : "Bekliyor"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-300 text-sm">
+                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString("tr-TR") : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card className="dashboard-card">
+              <CardHeader className="border-b border-slate-700">
+                <CardTitle className="text-lg font-semibold text-slate-50">
+                  Hızlı İşlemler
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-16 border-slate-600 text-slate-300 hover:bg-slate-700 flex flex-col items-center justify-center"
+                    onClick={() => window.location.href = '/admin/keys'}
+                  >
+                    <Key className="w-6 h-6 mb-1" />
+                    Key Yönetimi
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 border-slate-600 text-slate-300 hover:bg-slate-700 flex flex-col items-center justify-center"
+                    onClick={() => window.location.href = '/admin/services'}
+                  >
+                    <Activity className="w-6 h-6 mb-1" />
+                    Servis Yönetimi
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-16 border-slate-600 text-slate-300 hover:bg-slate-700 flex flex-col items-center justify-center"
+                    onClick={() => window.location.href = '/admin/logs'}
+                  >
+                    <Eye className="w-6 h-6 mb-1" />
+                    Sistem Logları
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>

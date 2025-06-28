@@ -13,6 +13,7 @@ import Users from "@/pages/admin/users";
 import Logs from "@/pages/admin/logs";
 import Settings from "@/pages/admin/settings";
 import UserInterface from "@/pages/user-interface";
+import AdminOrders from "@/pages/admin/orders";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -28,11 +29,11 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/keys" component={Keys} />
-          <Route path="/services" component={Services} />
           <Route path="/users" component={Users} />
           <Route path="/logs" component={Logs} />
           <Route path="/settings" component={Settings} />
           <Route path="/user" component={UserInterface} />
+          <Route path="/orders" component={AdminOrders} />
         </>
       )}
       <Route component={NotFound} />
