@@ -30,13 +30,13 @@ function Router() {
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/keys" component={Keys} />
+          <Route path="/services" component={Services} />
+          <Route path="/api-management" component={ApiManagement} />
           <Route path="/users" component={Users} />
           <Route path="/logs" component={Logs} />
           <Route path="/settings" component={Settings} />
           <Route path="/user" component={UserInterface} />
           <Route path="/orders" component={AdminOrders} />
-          <Route path="/admin/services" component={Services} />
-          <Route path="/admin/api-management" component={ApiManagement} />
         </>
       )}
       <Route component={NotFound} />

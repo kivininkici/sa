@@ -24,6 +24,7 @@ const navigation = [
   { name: "Key Yönetimi", href: "/keys", icon: Key },
   { name: "Servisler", href: "/services", icon: Settings },
   { name: "API Yönetimi", href: "/api-management", icon: Download },
+  { name: "Siparişler", href: "/orders", icon: ShoppingCart },
   { name: "Kullanıcılar", href: "/users", icon: Users },
   { name: "Loglar", href: "/logs", icon: FileText },
   { name: "Ayarlar", href: "/settings", icon: Cog },
@@ -56,14 +57,14 @@ export default function Sidebar() {
           const isActive = location === item.href;
           return (
             <Link key={item.name} href={item.href}>
-              <a className={`nav-link glass-card transition-all duration-300 ${
+              <div className={`nav-link glass-card transition-all duration-300 cursor-pointer ${
                 isActive 
                   ? 'bg-primary/20 text-primary border-primary/30 shadow-lg glow-effect' 
                   : 'bg-background/30 text-muted-foreground border-border/30 hover:bg-accent/50 hover:text-foreground hover:border-accent'
               }`}>
                 <item.icon className="w-5 h-5" />
                 <span>{item.name}</span>
-              </a>
+              </div>
             </Link>
           );
         })}
