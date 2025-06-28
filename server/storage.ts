@@ -4,6 +4,7 @@ import {
   services,
   orders,
   logs,
+  apiSettings,
   type User,
   type UpsertUser,
   type Key,
@@ -14,6 +15,8 @@ import {
   type InsertOrder,
   type Log,
   type InsertLog,
+  type InsertApiSettings,
+  type ApiSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, isNotNull, count } from "drizzle-orm";
@@ -56,6 +59,13 @@ export interface IStorage {
   createLog(log: InsertLog): Promise<Log>;
   getLogsByType(type: string): Promise<Log[]>;
   getLogsByUserId(userId: string): Promise<Log[]>;
+
+  // API Settings operations
+  createApiSettings(data: InsertApiSettings): Promise<ApiSettings>;
+  getAllApiSettings(): Promise<ApiSettings[]>;
+  getActiveApiSettings(): Promise<ApiSettings[]>;
+  updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings>;
+  deleteApiSettings(id: number): Promise<void>;
 
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -239,6 +249,33 @@ export class DatabaseStorage implements IStorage {
       .from(logs)
       .where(eq(logs.userId, userId))
       .orderBy(desc(logs.createdAt));
+  }
+
+  // API Settings methods
+  async createApiSettings(data: InsertApiSettings): Promise<ApiSettings> {
+    const [apiSetting] = await db.insert(apiSettings).values(data).returning();
+    return apiSetting;
+  }
+
+  async getAllApiSettings(): Promise<ApiSettings[]> {
+    return await db.select().from(apiSettings).orderBy(desc(apiSettings.createdAt));
+  }
+
+  async getActiveApiSettings(): Promise<ApiSettings[]> {
+    return await db.select().from(apiSettings).where(eq(apiSettings.isActive, true));
+  }
+
+  async updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings> {
+    const [updated] = await db
+      .update(apiSettings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(apiSettings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteApiSettings(id: number): Promise<void> {
+    await db.delete(apiSettings).where(eq(apiSettings.id, id));
   }
 
   // Dashboard stats

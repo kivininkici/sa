@@ -12,7 +12,8 @@ import {
   ChevronRight,
   ShoppingCart,
   FileText,
-  Cog
+  Cog,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Key Yönetimi", href: "/keys", icon: Key },
   { name: "Servisler", href: "/services", icon: Settings },
+  { name: "API Yönetimi", href: "/api-management", icon: Download },
   { name: "Kullanıcılar", href: "/users", icon: Users },
   { name: "Loglar", href: "/logs", icon: FileText },
   { name: "Ayarlar", href: "/settings", icon: Cog },

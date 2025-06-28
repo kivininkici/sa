@@ -14,6 +14,7 @@ import Logs from "@/pages/admin/logs";
 import Settings from "@/pages/admin/settings";
 import UserInterface from "@/pages/user-interface";
 import AdminOrders from "@/pages/admin/orders";
+import ApiManagement from "@/pages/admin/api-management";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -34,6 +35,8 @@ function Router() {
           <Route path="/settings" component={Settings} />
           <Route path="/user" component={UserInterface} />
           <Route path="/orders" component={AdminOrders} />
+          <Route path="/admin/services" component={Services} />
+          <Route path="/admin/api-management" component={ApiManagement} />
         </>
       )}
       <Route component={NotFound} />

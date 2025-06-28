@@ -85,6 +85,16 @@ export const logs = pgTable("logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const apiSettings = pgTable("api_settings", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  apiUrl: varchar("api_url", { length: 500 }).notNull(),
+  apiKey: varchar("api_key", { length: 500 }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Schema exports
 export const insertKeySchema = createInsertSchema(keys).omit({
   id: true,
@@ -107,6 +117,12 @@ export const insertLogSchema = createInsertSchema(logs).omit({
   createdAt: true,
 });
 
+export const insertApiSettingsSchema = createInsertSchema(apiSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -118,3 +134,5 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertLog = z.infer<typeof insertLogSchema>;
 export type Log = typeof logs.$inferSelect;
+export type InsertApiSettings = z.infer<typeof insertApiSettingsSchema>;
+export type ApiSettings = typeof apiSettings.$inferSelect;
