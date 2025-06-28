@@ -35,7 +35,7 @@ export default function Landing() {
                   Kullanıcı Paneli
                 </Button>
                 <Button 
-                  onClick={() => window.location.href = '/admin/login'}
+                  onClick={() => window.location.href = '/api/login'}
                   className="gradient-bg hover:scale-105 transition-all duration-300 pulse-glow"
                 >
                   Admin Girişi
@@ -61,7 +61,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16 slide-up">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = '/admin/login'}
+                onClick={() => window.location.href = '/api/login'}
                 className="gradient-bg hover:scale-105 transition-all duration-300 pulse-glow px-8 py-4 text-lg"
               >
                 <Shield className="w-5 h-5 mr-2" />

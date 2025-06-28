@@ -74,8 +74,6 @@ export interface IStorage {
     activeServices: number;
     dailyTransactions: number;
   }>;
-
-  getServicesByApiEndpoint(apiEndpoint: string): Promise<Service[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -311,10 +309,6 @@ export class DatabaseStorage implements IStorage {
       activeServices: activeServicesResult.count,
       dailyTransactions: dailyTransactionsResult.count,
     };
-  }
-
-  async getServicesByApiEndpoint(apiEndpoint: string): Promise<Service[]> {
-    return await db.select().from(services).where(eq(services.apiEndpoint, apiEndpoint));
   }
 }
 

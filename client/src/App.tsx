@@ -15,17 +15,18 @@ import Settings from "@/pages/admin/settings";
 import UserInterface from "@/pages/user-interface";
 import AdminOrders from "@/pages/admin/orders";
 import ApiManagement from "@/pages/admin/api-management";
-import AdminLogin from "@/pages/admin/login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/user" component={UserInterface} />
-
-      {isAuthenticated ? (
+      {isLoading || !isAuthenticated ? (
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/user" component={UserInterface} />
+        </>
+      ) : (
         <>
           <Route path="/" component={Dashboard} />
           <Route path="/keys" component={Keys} />
@@ -34,10 +35,9 @@ function Router() {
           <Route path="/users" component={Users} />
           <Route path="/logs" component={Logs} />
           <Route path="/settings" component={Settings} />
+          <Route path="/user" component={UserInterface} />
           <Route path="/orders" component={AdminOrders} />
         </>
-      ) : (
-        <Route path="/" component={Landing} />
       )}
       <Route component={NotFound} />
     </Switch>

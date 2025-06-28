@@ -1,8 +1,28 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupCustomAuth, isAdminAuthenticated } from "./auth";
-import cookieParser from "cookie-parser";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+
+// Admin-only middleware
+const isAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Check if user is admin (you can customize this logic)
+    const adminUsers = ["43169400"]; // Add your user ID and other admin IDs here
+    
+    if (!adminUsers.includes(userId)) {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+};
 import { insertKeySchema, insertServiceSchema, insertOrderSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -40,14 +60,23 @@ async function makeServiceRequest(
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup middleware
-  app.use(cookieParser());
-  
-  // Setup custom admin authentication
-  setupCustomAuth(app);
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
 
   // Dashboard stats
-  app.get("/api/dashboard/stats", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/dashboard/stats", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -58,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Keys routes
-  app.get("/api/keys", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/keys", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const keys = await storage.getAllKeys();
       res.json(keys);
@@ -68,12 +97,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/keys", isAdminAuthenticated, async (req: any, res) => {
+  app.post("/api/keys", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const validatedData = insertKeySchema.parse({
         ...req.body,
         value: generateKey(),
-        createdBy: req.admin.id,
+        createdBy: req.user.claims.sub,
       });
 
       const key = await storage.createKey(validatedData);
@@ -82,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createLog({
         type: "key_created",
         message: `Key ${key.value} created`,
-        userId: req.admin.id,
+        userId: req.user.claims.sub,
         keyId: key.id,
         data: { keyName: key.name, keyType: key.type },
       });
@@ -94,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/keys/:id", isAdminAuthenticated, async (req: any, res) => {
+  app.delete("/api/keys/:id", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteKey(id);
@@ -103,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createLog({
         type: "key_deleted",
         message: `Key with ID ${id} deleted`,
-        userId: req.admin.id,
+        userId: req.user.claims.sub,
         keyId: id,
       });
 
@@ -114,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/keys/stats", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/keys/stats", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const stats = await storage.getKeyStats();
       res.json(stats);
@@ -135,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/services/all", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/services/all", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const services = await storage.getAllServices();
       res.json(services);
@@ -145,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/services", isAdminAuthenticated, async (req, res) => {
+  app.post("/api/services", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const validatedData = insertServiceSchema.parse(req.body);
       const service = await storage.createService(validatedData);
@@ -156,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/services/:id", isAdminAuthenticated, async (req, res) => {
+  app.put("/api/services/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -168,7 +197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/services/:id", isAdminAuthenticated, async (req, res) => {
+  app.delete("/api/services/:id", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteService(id);
@@ -305,7 +334,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Orders routes
-  app.get("/api/orders", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/orders", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const orders = await storage.getAllOrders();
       res.json(orders);
@@ -316,7 +345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logs routes
-  app.get("/api/logs", isAdminAuthenticated, async (req, res) => {
+  app.get("/api/logs", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const logs = await storage.getAllLogs();
       res.json(logs);
@@ -327,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // API Management routes
-  app.post("/api/admin/fetch-services", isAdminAuthenticated, async (req, res) => {
+  app.post("/api/admin/fetch-services", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { apiUrl, apiKey } = req.body;
       
@@ -360,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/import-services", isAdminAuthenticated, async (req, res) => {
+  app.post("/api/admin/import-services", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { services } = req.body;
       
@@ -399,30 +428,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error importing services:", error);
       res.status(500).json({ message: "Failed to import services" });
-    }
-  });
-
-  // Delete API and all its services
-  app.delete("/api/admin/apis/:apiUrl", isAdminAuthenticated, async (req, res) => {
-    try {
-      const apiUrl = decodeURIComponent(req.params.apiUrl);
-      
-      // Get all services from this API
-      const services = await storage.getServicesByApiEndpoint(apiUrl);
-      
-      // Delete all services from this API
-      for (const service of services) {
-        await storage.deleteService(service.id);
-      }
-
-      res.json({ 
-        success: true, 
-        deleted: services.length,
-        message: `Deleted ${services.length} services from API: ${apiUrl}`
-      });
-    } catch (error) {
-      console.error("Error deleting API services:", error);
-      res.status(500).json({ message: "Failed to delete API services" });
     }
   });
 

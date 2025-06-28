@@ -37,17 +37,17 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const [showKeyModal, setShowKeyModal] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to home if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Yetkisiz Erişim",
-        description: "Admin paneline erişmek için giriş yapın",
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/admin/login";
-      }, 1000);
+        window.location.href = "/api/login";
+      }, 500);
       return;
     }
   }, [isAuthenticated, isLoading, toast]);
