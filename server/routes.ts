@@ -324,6 +324,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database info endpoint
+  app.get("/api/database/info", async (req, res) => {
+    try {
+      // Get basic database connection info
+      const dbInfo = {
+        connected: true,
+        url: process.env.DATABASE_URL ? "Set" : "Not set",
+        timestamp: new Date().toISOString()
+      };
+      
+      // Try to get admin users count
+      const adminCount = await storage.getAdminCount();
+      
+      res.json({
+        database: dbInfo,
+        adminUsersCount: adminCount
+      });
+    } catch (error) {
+      console.error("Database info error:", error);
+      res.status(500).json({ 
+        message: "Database connection error",
+        error: error.message 
+      });
+    }
+  });
+
+  // List all admin users (without passwords)
+  app.get("/api/admin/list", async (req, res) => {
+    try {
+      const admins = await storage.getAllAdmins();
+      // Remove passwords from response for security
+      const safeAdmins = admins.map(admin => ({
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        isActive: admin.isActive,
+        createdAt: admin.createdAt,
+        lastLoginAt: admin.lastLoginAt
+      }));
+      res.json(safeAdmins);
+    } catch (error) {
+      console.error("Error fetching admins:", error);
+      res.status(500).json({ message: "Failed to fetch admins" });
+    }
+  });
+
   // Admin API Management routes
   app.post("/api/admin/fetch-services", requireAdminAuth, async (req, res) => {
     try {

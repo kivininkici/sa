@@ -22,7 +22,7 @@ import {
   type InsertAdminUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, isNull, isNotNull, count } from "drizzle-orm";
+import { eq, desc, sql, and, isNull, isNotNull, count } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
