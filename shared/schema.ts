@@ -8,6 +8,7 @@ import {
   serial,
   boolean,
   integer,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -62,14 +63,19 @@ export const keys = pgTable("keys", {
 export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  description: varchar("description", { length: 500 }),
   platform: varchar("platform", { length: 100 }).notNull(),
   type: varchar("type", { length: 100 }).notNull(),
   icon: varchar("icon", { length: 100 }),
+  price: numeric("price", { precision: 10, scale: 2 }).default("0"),
   isActive: boolean("is_active").notNull().default(true),
   apiEndpoint: varchar("api_endpoint", { length: 500 }),
   apiMethod: varchar("api_method", { length: 10 }).default("POST"),
   apiHeaders: jsonb("api_headers"),
   requestTemplate: jsonb("request_template"),
+  responseFormat: jsonb("response_format"),
+  serviceId: varchar("service_id", { length: 100 }), // For external API service ID
+  category: varchar("category", { length: 100 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

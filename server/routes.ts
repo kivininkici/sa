@@ -624,23 +624,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "API URL gereklidir" });
       }
 
-      // Make request to external API
-      const headers: any = {
+      let requestData: any = {};
+      let method = 'GET';
+      let headers: any = {
         'Content-Type': 'application/json',
       };
-      
-      if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
+
+      // Special handling for medyabayim.com API
+      if (apiUrl.includes('medyabayim.com')) {
+        method = 'POST';
+        requestData = {
+          key: apiKey,
+          action: 'services'
+        };
+      } else {
+        // Generic API handling
+        if (apiKey) {
+          headers['Authorization'] = `Bearer ${apiKey}`;
+        }
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
       
-      const response = await fetch(apiUrl, {
-        method: 'GET',
+      const fetchOptions: any = {
+        method,
         headers,
         signal: controller.signal,
-      });
+      };
+
+      if (method === 'POST') {
+        fetchOptions.body = JSON.stringify(requestData);
+      }
+
+      const response = await fetch(apiUrl, fetchOptions);
       
       clearTimeout(timeoutId);
 
@@ -650,9 +667,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await response.json();
       
-      // Assume the API returns an array of services
-      // Format them to match our schema
-      const formattedServices = Array.isArray(data) ? data : data.services || [];
+      // Handle medyabayim.com API response format
+      let formattedServices = [];
+      
+      if (apiUrl.includes('medyabayim.com')) {
+        // Parse medyabayim.com API response
+        if (Array.isArray(data)) {
+          formattedServices = data.map((service: any) => ({
+            name: service.name || service.service || `Service ${service.service}`,
+            description: service.name || service.description || '',
+            platform: 'MedyaBayim',
+            type: service.type || 'social_media',
+            price: parseFloat(service.rate) || 0,
+            isActive: true,
+            apiEndpoint: apiUrl,
+            apiMethod: 'POST',
+            apiHeaders: { 'Content-Type': 'application/json' },
+            requestTemplate: {
+              key: apiKey,
+              action: 'add',
+              service: service.service,
+              link: '{{link}}',
+              quantity: '{{quantity}}'
+            },
+            responseFormat: {},
+            serviceId: service.service,
+            category: service.category || 'general'
+          }));
+        }
+      } else {
+        // Generic API response handling
+        formattedServices = Array.isArray(data) ? data : data.services || [];
+      }
       
       res.json(formattedServices);
     } catch (error) {
