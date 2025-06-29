@@ -156,6 +156,11 @@ Changelog:
 - Memoized filtering ile performans artırıldı
 - Sayfalama sistemi ile büyük servis listelerinde kasma sorunu çözüldü
 - Servis import işleminde serviceId alanı düzgün kaydediliyor
+- Key geçerlilik süresi sistemi eklendi: Key'ler belirlenen gün sayısı sonra otomatik silinir
+- Gelişmiş maksimum miktar kontrolü: Kullanıcı limiti aşmaya çalışırsa anlaşılır uyarı gösterir
+- Otomatik expired key temizliği: Saatte bir çalışan arka plan temizleme sistemi
+- API servis çekme sistemi iyileştirildi: Servis ID'leri korunuyor
+- Servis arama sistemi geliştirildi: ID ile direkt arama imkanı (örn: 23424)
 
 ## User Preferences
 

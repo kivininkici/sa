@@ -70,6 +70,8 @@ export const keys = pgTable("keys", {
   isUsed: boolean("is_used").notNull().default(false),
   usedAt: timestamp("used_at"),
   usedBy: varchar("used_by", { length: 255 }),
+  validityDays: integer("validity_days").notNull().default(7), // Key geçerlilik süresi (gün)
+  expiresAt: timestamp("expires_at"), // Otomatik hesaplanan son kullanma tarihi
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: varchar("created_by", { length: 255 }).notNull(),
 });

@@ -238,6 +238,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/keys/cleanup-expired", requireAdminAuth, async (req, res) => {
+    try {
+      const deletedCount = await storage.cleanupExpiredKeys();
+      res.json({
+        success: true,
+        deletedCount,
+        message: `${deletedCount} expired key temizlendi`
+      });
+    } catch (error) {
+      console.error("Error cleaning up expired keys:", error);
+      res.status(500).json({ message: "Expired key'ler temizlenemedi" });
+    }
+  });
+
   // Services routes
   app.get("/api/services", async (req, res) => {
     try {
@@ -327,16 +341,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const usedQuantity = foundKey.usedQuantity || 0;
       const remainingQuantity = maxQuantity - usedQuantity;
       if (remainingQuantity <= 0) {
-        return res.status(400).json({ message: "Key limit has been reached" });
+        return res.status(400).json({ message: "Key limiti dolmuş" });
+      }
+
+      // Get service information if serviceId exists
+      let service = null;
+      if (foundKey.serviceId) {
+        service = await storage.getServiceById(foundKey.serviceId);
       }
 
       res.json({ 
-        valid: true, 
-        keyId: foundKey.id,
-        serviceId: foundKey.serviceId,
+        id: foundKey.id,
+        value: foundKey.value,
         maxQuantity: maxQuantity,
         usedQuantity: usedQuantity,
-        remainingQuantity: remainingQuantity
+        remainingQuantity: remainingQuantity,
+        service: service ? {
+          id: service.id,
+          name: service.name,
+          platform: service.platform,
+          type: service.type
+        } : null
       });
     } catch (error) {
       console.error("Error validating key:", error);
@@ -405,8 +430,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "pending",
       });
 
-      // Mark key as used
-      await storage.markKeyAsUsed(key.id, `order_${order.id}`);
+      // Update key usage (increment used quantity)
+      await storage.updateKeyUsedQuantity(key.id, quantity);
 
       // Log order creation
       await storage.createLog({
@@ -431,9 +456,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           service.apiHeaders,
           requestData
         );
-
-        // Update key usage
-        await storage.updateKeyUsedQuantity(key.id, quantity);
 
         // Update order with response
         const updatedOrder = await storage.updateOrder(order.id, {
@@ -1787,6 +1809,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   }
+
+  // Setup automatic expired key cleanup (run every hour)
+  setInterval(async () => {
+    try {
+      const deletedCount = await storage.cleanupExpiredKeys();
+      if (deletedCount > 0) {
+        console.log(`Automatic cleanup: ${deletedCount} expired keys deleted`);
+      }
+    } catch (error) {
+      console.error('Error in automatic key cleanup:', error);
+    }
+  }, 60 * 60 * 1000); // 1 hour
 
   const httpServer = createServer(app);
   return httpServer;

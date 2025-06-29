@@ -36,6 +36,7 @@ const keySchema = z.object({
   type: z.string().default("single-use"),
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
   maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
+  validityDays: z.number().min(1, "Geçerlilik süresi en az 1 gün olmalı").max(365, "Geçerlilik süresi en fazla 365 gün olabilir").default(7),
 });
 
 interface KeyCreationModalProps {
@@ -64,6 +65,7 @@ export default function KeyCreationModal({
       name: "",
       type: "single-use",
       maxQuantity: 1000,
+      validityDays: 7,
     },
   });
 
@@ -262,6 +264,38 @@ export default function KeyCreationModal({
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="validityDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-200">Geçerlilik Süresi (Gün)</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      value={field.value?.toString()}
+                    >
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
+                        <SelectValue placeholder="Geçerlilik süresini seçin" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        <SelectItem value="1" className="text-slate-50 focus:bg-slate-600">1 Gün</SelectItem>
+                        <SelectItem value="3" className="text-slate-50 focus:bg-slate-600">3 Gün</SelectItem>
+                        <SelectItem value="7" className="text-slate-50 focus:bg-slate-600">1 Hafta</SelectItem>
+                        <SelectItem value="14" className="text-slate-50 focus:bg-slate-600">2 Hafta</SelectItem>
+                        <SelectItem value="30" className="text-slate-50 focus:bg-slate-600">1 Ay</SelectItem>
+                        <SelectItem value="60" className="text-slate-50 focus:bg-slate-600">2 Ay</SelectItem>
+                        <SelectItem value="90" className="text-slate-50 focus:bg-slate-600">3 Ay</SelectItem>
+                        <SelectItem value="180" className="text-slate-50 focus:bg-slate-600">6 Ay</SelectItem>
+                        <SelectItem value="365" className="text-slate-50 focus:bg-slate-600">1 Yıl</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

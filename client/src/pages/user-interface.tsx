@@ -73,7 +73,7 @@ export default function UserInterface() {
   // Key validation mutation
   const validateKeyMutation = useMutation({
     mutationFn: async (data: KeyValidationData) => {
-      const response = await apiRequest("POST", "/api/keys/validate", data);
+      const response = await apiRequest("POST", "/api/validate-key", { key: data.keyValue });
       return response.json();
     },
     onSuccess: (data: ValidatedKey) => {
@@ -157,14 +157,28 @@ export default function UserInterface() {
   };
 
   const onOrderSubmit = (data: OrderData) => {
-    if (validatedKey && data.quantity > validatedKey.maxQuantity) {
+    if (!validatedKey) return;
+    
+    // Check remaining quantity
+    if (data.quantity > validatedKey.remainingQuantity) {
       toast({
         title: "Miktar Hatası",
-        description: `Maksimum miktar: ${validatedKey.maxQuantity}`,
+        description: `Bu key ${validatedKey.remainingQuantity} ile sınırlandırıldı. Kalan miktar: ${validatedKey.remainingQuantity}`,
         variant: "destructive",
       });
       return;
     }
+    
+    // Check max quantity
+    if (data.quantity > validatedKey.maxQuantity) {
+      toast({
+        title: "Miktar Hatası",
+        description: `Bu key ${validatedKey.maxQuantity} ile sınırlandırıldı`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createOrderMutation.mutate(data);
   };
 

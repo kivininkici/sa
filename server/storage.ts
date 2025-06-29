@@ -40,6 +40,7 @@ export interface IStorage {
   deleteKey(id: number): Promise<void>;
   markKeyAsUsed(id: number, usedBy: string): Promise<Key>;
   updateKeyUsedQuantity(id: number, additionalQuantity: number): Promise<Key>;
+  cleanupExpiredKeys(): Promise<number>; // Expired key'leri temizle
   getKeyStats(): Promise<{
     total: number;
     used: number;
@@ -125,11 +126,29 @@ export class DatabaseStorage implements IStorage {
 
   async getKeyByValue(value: string): Promise<Key | undefined> {
     const [key] = await db.select().from(keys).where(eq(keys.value, value));
+    
+    // Eğer key bulundu ve expired ise null döndür
+    if (key && key.expiresAt && key.expiresAt < new Date()) {
+      // Expired key'i otomatik sil
+      await this.deleteKey(key.id);
+      return undefined;
+    }
+    
     return key;
   }
 
   async createKey(key: InsertKey): Promise<Key> {
-    const [newKey] = await db.insert(keys).values(key).returning();
+    // Geçerlilik süresini hesapla (validityDays gün sonra)
+    const validityDays = key.validityDays || 7; // Default 7 gün
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + validityDays);
+    
+    const keyWithExpiration = {
+      ...key,
+      expiresAt,
+    };
+    
+    const [newKey] = await db.insert(keys).values(keyWithExpiration).returning();
     return newKey;
   }
 
@@ -185,11 +204,25 @@ export class DatabaseStorage implements IStorage {
     return updatedKey;
   }
 
+  async cleanupExpiredKeys(): Promise<number> {
+    // Expired key'leri sil (expiresAt < now)
+    const now = new Date();
+    const expiredKeys = await db
+      .delete(keys)
+      .where(sql`${keys.expiresAt} < ${now}`)
+      .returning({ id: keys.id });
+    
+    return expiredKeys.length;
+  }
+
   async getKeyStats(): Promise<{
     total: number;
     used: number;
     unused: number;
   }> {
+    // Önce expired key'leri temizle
+    await this.cleanupExpiredKeys();
+    
     const [totalResult] = await db.select({ count: count() }).from(keys);
     const [usedResult] = await db
       .select({ count: count() })
