@@ -83,12 +83,14 @@ export const services = pgTable("services", {
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
+  orderId: varchar("order_id", { length: 50 }).notNull().unique(), // Random order ID like #32390242
   keyId: integer("key_id").notNull(),
   serviceId: integer("service_id").notNull(),
-  targetUrl: varchar("target_url", { length: 500 }).notNull(),
+  targetUrl: varchar("target_url", { length: 500 }),
   quantity: integer("quantity").notNull(),
-  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  status: varchar("status", { length: 50 }).notNull().default("pending"), // pending, processing, completed, failed
   response: jsonb("response"),
+  message: text("message"), // Status message for user
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });

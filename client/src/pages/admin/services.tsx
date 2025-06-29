@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,27 +18,21 @@ import { Service } from "@shared/schema";
 
 export default function Services() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+    if (!isLoading && !admin) {
+      window.location.href = "/admin/login";
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [admin, isLoading]);
 
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/admin/services/all"],
     retry: false,
+    enabled: !!admin,
   });
 
   const deleteServiceMutation = useMutation({
@@ -53,18 +46,7 @@ export default function Services() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
     },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+    onError: (error: Error) => {
       toast({
         title: "Hata",
         description: error.message,
@@ -73,9 +55,18 @@ export default function Services() {
     },
   });
 
-  if (isLoading || !isAuthenticated) {
-    return <div>Loading...</div>;
+  if (isLoading || !admin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-400">Yükleniyor...</p>
+        </div>
+      </div>
+    );
   }
+
+  const servicesList = Array.isArray(services) ? services : [];
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -100,18 +91,12 @@ export default function Services() {
               </Button>
             </div>
 
-            {/* Services Grid */}
+            {/* Services List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {servicesLoading ? (
-                <div className="col-span-full text-center text-slate-400">
-                  Yükleniyor...
-                </div>
-              ) : !services || services.length === 0 ? (
-                <div className="col-span-full text-center text-slate-400">
-                  Henüz servis eklenmemiş
-                </div>
+                <div className="text-slate-400">Servisler yükleniyor...</div>
               ) : (
-                (services || []).map((service: Service) => (
+                servicesList.map((service: Service) => (
                   <Card key={service.id} className="dashboard-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
@@ -169,7 +154,7 @@ export default function Services() {
             </div>
 
             {/* Add Default Services Button */}
-            {(!services || services.length === 0) && (
+            {servicesList.length === 0 && !servicesLoading && (
               <Card className="dashboard-card">
                 <CardContent className="p-8 text-center">
                   <Settings className="w-12 h-12 text-slate-600 mx-auto mb-4" />
@@ -177,10 +162,10 @@ export default function Services() {
                     Henüz Servis Yok
                   </h3>
                   <p className="text-slate-400 mb-4">
-                    Başlamak için varsayılan servisleri ekleyin
+                    Başlamak için API yönetimi bölümünden servis ekleyin
                   </p>
                   <Button className="bg-blue-600 hover:bg-blue-700">
-                    Varsayılan Servisleri Ekle
+                    API Yönetimine Git
                   </Button>
                 </CardContent>
               </Card>

@@ -31,10 +31,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { Service } from "@shared/schema";
 
 const keySchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(1, "Key adı gerekli"),
   type: z.string().default("single-use"),
-  serviceId: z.number().optional(),
-  maxQuantity: z.number().min(1).optional(),
+  serviceId: z.number().min(1, "Servis seçimi gerekli"),
+  maxQuantity: z.number().min(1, "Miktar en az 1 olmalı").max(250, "Miktar en fazla 250 olabilir"),
 });
 
 interface KeyCreationModalProps {
@@ -50,7 +50,7 @@ export default function KeyCreationModal({
   const queryClient = useQueryClient();
 
   const { data: services } = useQuery({
-    queryKey: ["/api/services/all"],
+    queryKey: ["/api/admin/services/all"],
     retry: false,
   });
 
@@ -59,25 +59,26 @@ export default function KeyCreationModal({
     defaultValues: {
       name: "",
       type: "single-use",
+      maxQuantity: 250,
     },
   });
 
   const createKeyMutation = useMutation({
     mutationFn: async (data: z.infer<typeof keySchema>) => {
-      await apiRequest("POST", "/api/keys", data);
+      await apiRequest("POST", "/api/admin/keys", data);
     },
     onSuccess: () => {
       toast({
         title: "Başarılı",
         description: "Key başarıyla oluşturuldu",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/keys"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/keys/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard/stats"] });
       onOpenChange(false);
       form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Hata",
         description: error.message,
@@ -89,6 +90,8 @@ export default function KeyCreationModal({
   const onSubmit = (data: z.infer<typeof keySchema>) => {
     createKeyMutation.mutate(data);
   };
+
+  const servicesList = Array.isArray(services) ? services : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,13 +106,11 @@ export default function KeyCreationModal({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-300">
-                    Key Adı (Opsiyonel)
-                  </FormLabel>
+                  <FormLabel className="text-slate-200">Key Adı</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Örn: Ocak Kampanyası"
-                      className="bg-slate-900 border-slate-600 text-slate-50"
+                      placeholder="Örn: Instagram Beğeni Key"
+                      className="bg-slate-700 border-slate-600 text-slate-50"
                       {...field}
                     />
                   </FormControl>
@@ -117,44 +118,27 @@ export default function KeyCreationModal({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-slate-300">Key Türü</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-slate-900 border-slate-600 text-slate-50">
-                        <SelectValue placeholder="Key türü seçin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-slate-900 border-slate-600">
-                      <SelectItem value="single-use">Tek Kullanımlık</SelectItem>
-                      <SelectItem value="limited">Sınırlı Kullanım (5x)</SelectItem>
-                      <SelectItem value="daily">Günlük Key</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <FormField
               control={form.control}
               name="serviceId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-300">Servis Seçin (Opsiyonel)</FormLabel>
+                  <FormLabel className="text-slate-200">Servis Seç</FormLabel>
                   <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                     <FormControl>
-                      <SelectTrigger className="bg-slate-900 border-slate-600 text-slate-50">
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
                         <SelectValue placeholder="Servis seçin" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-slate-900 border-slate-600">
-                      {services?.map((service: Service) => (
-                        <SelectItem key={service.id} value={service.id.toString()}>
-                          {service.name}
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      {servicesList.map((service: Service) => (
+                        <SelectItem 
+                          key={service.id} 
+                          value={service.id.toString()}
+                          className="text-slate-50 focus:bg-slate-600"
+                        >
+                          {service.name} - {service.platform}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -163,44 +147,42 @@ export default function KeyCreationModal({
                 </FormItem>
               )}
             />
-            {form.watch("serviceId") && (
-              <FormField
-                control={form.control}
-                name="maxQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-slate-300">Maksimum Miktar</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Örn: 250"
-                        className="bg-slate-900 border-slate-600 text-slate-50"
-                        value={field.value || ""}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        min="1"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p className="text-xs text-slate-400">
-                      Key sahibi bu miktara kadar sipariş verebilir (0-{field.value || 0} arası)
-                    </p>
-                  </FormItem>
-                )}
-              />
-            )}
-            <div className="flex items-center space-x-3 pt-2">
+
+            <FormField
+              control={form.control}
+              name="maxQuantity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-200">Maksimum Miktar (1-250)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="250"
+                      placeholder="250"
+                      className="bg-slate-700 border-slate-600 text-slate-50"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
                 onClick={() => onOpenChange(false)}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
               >
                 İptal
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
                 disabled={createKeyMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
               >
                 {createKeyMutation.isPending ? "Oluşturuluyor..." : "Key Oluştur"}
               </Button>

@@ -89,10 +89,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log key creation
       await storage.createLog({
         type: "key_created",
-        message: `Key ${key.value} created`,
+        message: `Key ${key.value} created with service ID ${key.serviceId} and max quantity ${key.maxQuantity}`,
         userId: req.session.adminUsername || 'admin',
         keyId: key.id,
-        data: { keyName: key.name, keyType: key.type },
+        data: { keyName: key.name, keyType: key.type, serviceId: key.serviceId, maxQuantity: key.maxQuantity },
       });
 
       res.json(key);
@@ -1135,6 +1135,258 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch admin users" });
     }
   });
+
+  // PUBLIC API ROUTES - Key validation and order creation
+
+  // Generate random order ID
+  function generateOrderId(): string {
+    return Math.floor(10000000 + Math.random() * 90000000).toString();
+  }
+
+  // Key validation endpoint (public)
+  app.post("/api/keys/validate", async (req, res) => {
+    try {
+      const { keyValue } = req.body;
+
+      if (!keyValue) {
+        return res.status(400).json({ message: "Key değeri gerekli" });
+      }
+
+      // Find key and check if it's valid
+      const key = await storage.getKeyByValue(keyValue);
+      
+      if (!key) {
+        return res.status(404).json({ message: "Geçersiz key" });
+      }
+
+      if (key.isUsed) {
+        return res.status(400).json({ message: "Bu key daha önce kullanılmış" });
+      }
+
+      if (!key.serviceId) {
+        return res.status(400).json({ message: "Key'e bağlı servis bulunamadı" });
+      }
+
+      // Get service information
+      const service = await storage.getServiceById(key.serviceId);
+      
+      if (!service) {
+        return res.status(404).json({ message: "Key'e bağlı servis bulunamadı" });
+      }
+
+      if (!service.isActive) {
+        return res.status(400).json({ message: "Bu servis şu anda aktif değil" });
+      }
+
+      // Return validated key with service info
+      res.json({
+        id: key.id,
+        value: key.value,
+        maxQuantity: key.maxQuantity || 250,
+        service: {
+          id: service.id,
+          name: service.name,
+          platform: service.platform,
+          type: service.type
+        }
+      });
+
+    } catch (error) {
+      console.error("Error validating key:", error);
+      res.status(500).json({ message: "Key doğrulama sırasında hata oluştu" });
+    }
+  });
+
+  // Order creation endpoint (public)
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const { keyValue, quantity, targetUrl } = req.body;
+
+      if (!keyValue || !quantity) {
+        return res.status(400).json({ message: "Key ve miktar gerekli" });
+      }
+
+      // Validate key again
+      const key = await storage.getKeyByValue(keyValue);
+      
+      if (!key) {
+        return res.status(404).json({ message: "Geçersiz key" });
+      }
+
+      if (key.isUsed) {
+        return res.status(400).json({ message: "Bu key daha önce kullanılmış" });
+      }
+
+      if (quantity > (key.maxQuantity || 250)) {
+        return res.status(400).json({ 
+          message: `Miktar maksimum limiti aştı. Maksimum: ${key.maxQuantity || 250}` 
+        });
+      }
+
+      // Get service
+      const service = await storage.getServiceById(key.serviceId!);
+      
+      if (!service || !service.isActive) {
+        return res.status(400).json({ message: "Servis aktif değil" });
+      }
+
+      // Generate unique order ID
+      const orderId = generateOrderId();
+
+      // Create order
+      const order = await storage.createOrder({
+        orderId,
+        keyId: key.id,
+        serviceId: service.id,
+        quantity,
+        targetUrl: targetUrl || '',
+        status: 'pending',
+        message: 'Sipariş oluşturuldu, işleme alınıyor...'
+      });
+
+      // Mark key as used
+      await storage.markKeyAsUsed(key.id, `order_${orderId}`);
+
+      // Log order creation
+      await storage.createLog({
+        type: "order_created",
+        message: `Order ${orderId} created for service ${service.name}`,
+        userId: `order_${orderId}`,
+        keyId: key.id,
+        orderId: order.id,
+        data: { 
+          service: service.name, 
+          quantity, 
+          targetUrl,
+          orderId 
+        },
+      });
+
+      // Start processing order asynchronously
+      processOrderAsync(order.id, service, quantity, targetUrl);
+
+      res.json({ 
+        orderId,
+        message: "Sipariş başarıyla oluşturuldu",
+        status: "pending"
+      });
+
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ message: "Sipariş oluşturulurken hata oluştu" });
+    }
+  });
+
+  // Order status endpoint (public)
+  app.get("/api/orders/status/:orderId", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+
+      if (!orderId) {
+        return res.status(400).json({ message: "Sipariş ID gerekli" });
+      }
+
+      // Find order by orderId field
+      const orders = await storage.getAllOrders();
+      const order = orders.find(o => o.orderId === orderId);
+
+      if (!order) {
+        return res.status(404).json({ message: "Sipariş bulunamadı" });
+      }
+
+      res.json({
+        orderId: order.orderId,
+        status: order.status,
+        message: order.message || 'Sipariş işleniyor...',
+        createdAt: order.createdAt,
+        completedAt: order.completedAt
+      });
+
+    } catch (error) {
+      console.error("Error fetching order status:", error);
+      res.status(500).json({ message: "Sipariş durumu alınırken hata oluştu" });
+    }
+  });
+
+  // Async order processing function
+  async function processOrderAsync(orderId: number, service: any, quantity: number, targetUrl?: string) {
+    try {
+      // Update order status to processing
+      await storage.updateOrder(orderId, { 
+        status: 'processing',
+        message: 'Sipariş işleniyor...'
+      });
+
+      // Simulate API call to external service
+      if (service.apiEndpoint) {
+        try {
+          const apiResponse = await makeServiceRequest(
+            service.apiEndpoint,
+            service.apiMethod || 'POST',
+            service.apiHeaders || {},
+            {
+              service: service.serviceId || service.id,
+              link: targetUrl,
+              quantity: quantity,
+              ...(service.requestTemplate || {})
+            }
+          );
+
+          // Update order with success
+          await storage.updateOrder(orderId, {
+            status: 'completed',
+            message: 'Sipariş başarıyla tamamlandı',
+            response: apiResponse,
+            completedAt: new Date()
+          });
+
+          // Log success
+          await storage.createLog({
+            type: "order_completed",
+            message: `Order ${orderId} completed successfully`,
+            orderId: orderId,
+            data: { response: apiResponse },
+          });
+
+        } catch (apiError) {
+          console.error("API call failed for order:", orderId, apiError);
+          
+          // Update order with failure
+          await storage.updateOrder(orderId, {
+            status: 'failed',
+            message: 'Sipariş işlenirken hata oluştu. Lütfen destek ekibiyle iletişime geçin.',
+            response: { error: apiError instanceof Error ? apiError.message : 'Unknown error' }
+          });
+
+          // Log failure to admin panel
+          await storage.createLog({
+            type: "order_failed",
+            message: `Order ${orderId} failed: ${apiError instanceof Error ? apiError.message : 'Unknown error'}`,
+            orderId: orderId,
+            data: { error: apiError instanceof Error ? apiError.message : 'Unknown error' },
+          });
+        }
+      } else {
+        // No API endpoint, mark as failed
+        await storage.updateOrder(orderId, {
+          status: 'failed',
+          message: 'Servis yapılandırması eksik'
+        });
+      }
+
+    } catch (error) {
+      console.error("Error in async order processing:", error);
+      
+      try {
+        await storage.updateOrder(orderId, {
+          status: 'failed',
+          message: 'Sipariş işlenirken sistem hatası oluştu'
+        });
+      } catch (updateError) {
+        console.error("Failed to update order status:", updateError);
+      }
+    }
+  }
 
   const httpServer = createServer(app);
   return httpServer;
