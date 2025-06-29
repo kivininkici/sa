@@ -207,7 +207,7 @@ export default function Landing() {
                   <CardTitle className="text-2xl font-black text-white mb-3">Kolay Yönetim</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 pt-0">
-                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                  <p className="text-lg font-medium leading-relaxed text-[#3c445c]">
                     Gelişmiş admin paneli ile tam kontrol ve detaylı analitik.
                   </p>
                 </CardContent>
