@@ -36,11 +36,11 @@ export default function StatsCard({
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <p className="text-slate-400 text-sm font-medium tracking-wide">{title}</p>
-            <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <p className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               {value}
             </p>
           </div>
-          <div className={`w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-purple-500/30 transition-all duration-300`}>
+          <div className={`w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-blue-500/30 transition-all duration-300`}>
             <Icon className="w-7 h-7 text-white" />
           </div>
         </div>

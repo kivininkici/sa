@@ -57,14 +57,14 @@ export default function Landing() {
                   🚀 Profesyonel Sosyal Medya Yönetimi
                 </span>
               </div>
-              <h2 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-pink-500 via-pink-400 to-rose-400 bg-clip-text text-transparent leading-tight">
+              <h2 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-500 bg-clip-text text-transparent leading-tight">
                 KeyPanel
                 <span className="block text-4xl md:text-5xl mt-2">Yönetim Sistemi</span>
               </h2>
               <p className="text-xl text-muted-foreground mb-16 max-w-4xl mx-auto leading-relaxed">
                 Sosyal medya servislerinizi profesyonel düzeyde yönetin. Güvenli key sistemi ile 
-                <span className="text-pink-500 font-semibold"> otomatik sipariş yönetimi</span> ve 
-                <span className="text-rose-500 font-semibold"> gelişmiş analitik</span> özellikleri.
+                <span className="text-blue-500 font-semibold"> otomatik sipariş yönetimi</span> ve 
+                <span className="text-emerald-500 font-semibold"> gelişmiş analitik</span> özellikleri.
               </p>
             </div>
 
@@ -72,7 +72,7 @@ export default function Landing() {
               <Button 
                 size="lg"
                 onClick={() => window.location.href = '/admin-login'}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:scale-105 transition-all duration-500 px-10 py-5 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-purple-500/25"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white hover:scale-105 transition-all duration-500 px-10 py-5 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-blue-500/25"
               >
                 <Shield className="w-6 h-6 mr-3" />
                 Admin Paneli
@@ -80,7 +80,7 @@ export default function Landing() {
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-2 border-purple-500/30 bg-gradient-to-r from-purple-500/5 to-pink-500/5 hover:from-purple-500/10 hover:to-pink-500/10 text-purple-400 hover:text-purple-300 hover:border-purple-400/50 transition-all duration-500 px-10 py-5 text-lg font-semibold rounded-2xl backdrop-blur-xl"
+                className="border-2 border-blue-500/30 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 hover:from-blue-500/10 hover:to-cyan-500/10 text-blue-400 hover:text-blue-300 hover:border-blue-400/50 transition-all duration-500 px-10 py-5 text-lg font-semibold rounded-2xl backdrop-blur-xl"
                 onClick={() => window.location.href = '/user'}
               >
                 <KeyRound className="w-6 h-6 mr-3" />
@@ -107,7 +107,7 @@ export default function Landing() {
         <section className="py-24 bg-gradient-to-b from-transparent via-purple-500/5 to-transparent">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16 slide-up">
-              <h3 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              <h3 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-500 via-cyan-500 to-emerald-500 bg-clip-text text-transparent">
                 Güçlü Özellikler
               </h3>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -179,15 +179,15 @@ export default function Landing() {
         </section>
 
         {/* Footer */}
-        <footer className="relative overflow-hidden border-t border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-pink-500/5 py-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10"></div>
+        <footer className="relative overflow-hidden border-t border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-cyan-500/5 py-12">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-cyan-600/10"></div>
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <KeyRound className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   KeyPanel
                 </span>
               </div>
@@ -195,10 +195,10 @@ export default function Landing() {
                 © 2025 KeyPanel. Profesyonel sosyal medya yönetimi.
               </p>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+                <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
                   Gizlilik
                 </Button>
-                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
+                <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
                   Şartlar
                 </Button>
               </div>

@@ -101,15 +101,15 @@ export default function Dashboard() {
         <div className="content-area relative z-10">
           <div className="p-8 space-y-8">
             {/* Welcome Section */}
-            <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20">
+            <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-6 border border-blue-500/20">
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   Hoş Geldiniz 👋
                 </h2>
                 <p className="text-slate-400 mt-2">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
               </div>
               <Button 
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
                 onClick={() => setShowKeyModal(true)}
               >
                 <Plus className="w-5 h-5 mr-2" />
