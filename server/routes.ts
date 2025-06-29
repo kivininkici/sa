@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupAdminAuth, requireAdminAuth } from "./adminAuth";
 
 // Admin-only middleware
@@ -14,7 +13,7 @@ const isAdmin = async (req: any, res: any, next: any) => {
 
     // Check if user is admin (you can customize this logic)
     const adminUsers = ["43169400"]; // Add your user ID and other admin IDs here
-    
+
     if (!adminUsers.includes(userId)) {
       return res.status(403).json({ message: "Admin access required" });
     }
@@ -61,23 +60,8 @@ async function makeServiceRequest(
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-  
   // Admin auth setup
   setupAdminAuth(app);
-
-  // Auth routes
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
 
   // Admin Dashboard routes
   app.get("/api/admin/dashboard/stats", requireAdminAuth, async (req, res) => {
@@ -110,7 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const key = await storage.createKey(validatedData);
-      
+
       // Log key creation
       await storage.createLog({
         type: "key_created",
@@ -131,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteKey(id);
-      
+
       // Log key deletion
       await storage.createLog({
         type: "key_deleted",
@@ -363,7 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/fetch-services", requireAdminAuth, async (req, res) => {
     try {
       const { apiUrl, apiKey } = req.body;
-      
+
       if (!apiUrl) {
         return res.status(400).json({ message: "API URL is required" });
       }
@@ -396,13 +380,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/import-services", requireAdminAuth, async (req, res) => {
     try {
       const { services } = req.body;
-      
+
       if (!services || !Array.isArray(services)) {
         return res.status(400).json({ message: "Services array is required" });
       }
 
       const importedServices = [];
-      
+
       for (const service of services) {
         try {
           const validatedData = insertServiceSchema.parse({
