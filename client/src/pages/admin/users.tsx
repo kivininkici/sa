@@ -10,6 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Table,
   TableBody,
@@ -24,15 +31,27 @@ import {
   UserX, 
   Search,
   Shield,
-  Calendar
+  Calendar,
+  UserPlus,
+  Ban,
+  CheckCircle
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+
+// Admin oluşturma formu için schema
+const createAdminSchema = z.object({
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır"),
+  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+});
+
+type CreateAdminForm = z.infer<typeof createAdminSchema>;
 
 export default function UsersPage() {
   const { toast } = useToast();
   const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
+  const [createAdminOpen, setCreateAdminOpen] = useState(false);
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -42,231 +61,344 @@ export default function UsersPage() {
     }
   }, [admin, isLoading]);
 
+  // Fetch users
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ["/api/admin/users"],
-    retry: false,
+    enabled: !!admin,
   });
 
-  const { data: admins, isLoading: adminsLoading } = useQuery({
+  // Fetch admin users
+  const { data: adminUsers, isLoading: adminUsersLoading } = useQuery({
     queryKey: ["/api/admin/list"],
-    retry: false,
+    enabled: !!admin,
   });
+
+  // Create admin mutation
+  const createAdminMutation = useMutation({
+    mutationFn: async (data: CreateAdminForm) => {
+      const response = await apiRequest("POST", "/api/admin/create", data);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı!",
+        description: "Yeni admin kullanıcı oluşturuldu.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/list"] });
+      setCreateAdminOpen(false);
+      createAdminForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata!",
+        description: error.message || "Admin oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Suspend admin mutation
+  const suspendAdminMutation = useMutation({
+    mutationFn: async ({ id, suspend }: { id: number; suspend: boolean }) => {
+      const response = await apiRequest("PUT", `/api/admin/${id}/suspend`, { suspend });
+      return response;
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: "Başarılı!",
+        description: variables.suspend ? "Hesap askıya alındı." : "Hesap aktif edildi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/list"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata!",
+        description: error.message || "İşlem sırasında bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create admin form
+  const createAdminForm = useForm<CreateAdminForm>({
+    resolver: zodResolver(createAdminSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+    },
+  });
+
+  const onCreateAdmin = (data: CreateAdminForm) => {
+    createAdminMutation.mutate(data);
+  };
 
   if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
 
-  const filteredUsers = Array.isArray(users) ? users.filter((user: any) => 
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  // Calculate stats
+  const usersArray = Array.isArray(users) ? users : [];
+  const adminUsersArray = Array.isArray(adminUsers) ? adminUsers : [];
+  
+  const userStats = {
+    total: usersArray.length,
+    active: usersArray.filter((user: any) => user.isActive !== false).length,
+    admins: adminUsersArray.length,
+    suspended: adminUsersArray.filter((admin: any) => admin.isActive === false).length,
+  };
 
-  const filteredAdmins = Array.isArray(admins) ? admins.filter((admin: any) => 
+  const filteredUsers = usersArray.filter((user: any) =>
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAdmins = adminUsersArray.filter((admin: any) =>
     admin.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     admin.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
-
-  const totalUsers = (users as any)?.length || 0;
-  const activeUsers = Array.isArray(users) ? users.filter((user: any) => user.isActive).length : 0;
-  const totalAdmins = (admins as any)?.length || 0;
+  );
 
   return (
-    <div className="min-h-screen flex bg-slate-950">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           title="Kullanıcı Yönetimi" 
-          description="Sistem kullanıcılarını ve adminleri yönetin" 
+          description="Sistem kullanıcılarını ve adminleri yönetin"
         />
         
-        <div className="content-area">
-          <div className="p-6 space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-50">Kullanıcı Yönetimi</h2>
-                <p className="text-slate-400">Sistem kullanıcılarını ve adminleri görüntüleyin</p>
-              </div>
-            </div>
-
-            {/* User Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <StatsCard
-                title="Toplam Kullanıcı"
-                value={totalUsers}
-                icon={Users}
-                iconColor="bg-blue-600"
-              />
-              <StatsCard
-                title="Aktif Kullanıcı"
-                value={activeUsers}
-                icon={UserCheck}
-                iconColor="bg-green-600"
-              />
-              <StatsCard
-                title="Toplam Admin"
-                value={totalAdmins}
-                icon={Shield}
-                iconColor="bg-purple-600"
-              />
-            </div>
-
-            {/* Search */}
-            <div className="flex items-center space-x-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Kullanıcı ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-slate-900 border-slate-600 text-slate-50"
-                />
-              </div>
-            </div>
-
-            {/* Admin Users Table */}
-            <Card className="dashboard-card">
-              <CardHeader className="border-b border-slate-700">
-                <CardTitle className="text-lg font-semibold text-slate-50 flex items-center">
-                  <Shield className="w-5 h-5 mr-2 text-purple-400" />
-                  Admin Kullanıcıları
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-slate-900">
-                      <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-400">Kullanıcı Adı</TableHead>
-                        <TableHead className="text-slate-400">Email</TableHead>
-                        <TableHead className="text-slate-400">Durum</TableHead>
-                        <TableHead className="text-slate-400">Son Giriş</TableHead>
-                        <TableHead className="text-slate-400">Oluşturulma</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {adminsLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-slate-400 py-8">
-                            Yükleniyor...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredAdmins.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center text-slate-400 py-8">
-                            {searchTerm ? "Arama kriterine uygun admin bulunamadı" : "Henüz admin kullanıcısı yok"}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredAdmins.map((admin: any) => (
-                          <TableRow key={admin.id} className="border-slate-700 hover:bg-slate-900/50">
-                            <TableCell className="text-slate-50 font-medium">
-                              {admin.username}
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {admin.email || "Belirtilmemiş"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={admin.isActive ? "default" : "secondary"}
-                                className={admin.isActive 
-                                  ? "bg-green-900 text-green-300" 
-                                  : "bg-slate-700 text-slate-400"
-                                }
-                              >
-                                {admin.isActive ? "Aktif" : "Pasif"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {admin.lastLoginAt 
-                                ? new Date(admin.lastLoginAt).toLocaleDateString('tr-TR')
-                                : "Henüz giriş yapmamış"
-                              }
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {admin.createdAt 
-                                ? new Date(admin.createdAt).toLocaleDateString('tr-TR')
-                                : "-"
-                              }
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Regular Users Table */}
-            <Card className="dashboard-card">
-              <CardHeader className="border-b border-slate-700">
-                <CardTitle className="text-lg font-semibold text-slate-50 flex items-center">
-                  <Users className="w-5 h-5 mr-2 text-blue-400" />
-                  Normal Kullanıcılar
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-slate-900">
-                      <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-400">Kullanıcı Adı</TableHead>
-                        <TableHead className="text-slate-400">Email</TableHead>
-                        <TableHead className="text-slate-400">Durum</TableHead>
-                        <TableHead className="text-slate-400">Oluşturulma</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {usersLoading ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-slate-400 py-8">
-                            Yükleniyor...
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-slate-400 py-8">
-                            {searchTerm ? "Arama kriterine uygun kullanıcı bulunamadı" : "Henüz normal kullanıcı yok"}
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredUsers.map((user: any) => (
-                          <TableRow key={user.id} className="border-slate-700 hover:bg-slate-900/50">
-                            <TableCell className="text-slate-50 font-medium">
-                              {user.username}
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {user.email || "Belirtilmemiş"}
-                            </TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={user.isActive ? "default" : "secondary"}
-                                className={user.isActive 
-                                  ? "bg-green-900 text-green-300" 
-                                  : "bg-slate-700 text-slate-400"
-                                }
-                              >
-                                {user.isActive ? "Aktif" : "Pasif"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {user.createdAt 
-                                ? new Date(user.createdAt).toLocaleDateString('tr-TR')
-                                : "-"
-                              }
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <StatsCard
+              title="Toplam Kullanıcı"
+              value={userStats.total}
+              icon={Users}
+              iconColor="text-blue-500"
+            />
+            <StatsCard
+              title="Aktif Kullanıcı"
+              value={userStats.active}
+              icon={UserCheck}
+              iconColor="text-green-500"
+            />
+            <StatsCard
+              title="Admin Sayısı"
+              value={userStats.admins}
+              icon={Shield}
+              iconColor="text-purple-500"
+            />
+            <StatsCard
+              title="Askıya Alınan"
+              value={userStats.suspended}
+              icon={UserX}
+              iconColor="text-red-500"
+            />
           </div>
-        </div>
-      </main>
+
+          {/* Search and Actions */}
+          <Card className="mb-6">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Kullanıcı ara..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Dialog open={createAdminOpen} onOpenChange={setCreateAdminOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Admin Ekle
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Yeni Admin Oluştur</DialogTitle>
+                    </DialogHeader>
+                    <Form {...createAdminForm}>
+                      <form onSubmit={createAdminForm.handleSubmit(onCreateAdmin)} className="space-y-4">
+                        <FormField
+                          control={createAdminForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Kullanıcı Adı</FormLabel>
+                              <FormControl>
+                                <Input placeholder="admin_kullanici" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createAdminForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>E-posta</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="admin@example.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={createAdminForm.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Şifre</FormLabel>
+                              <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="flex gap-2 pt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setCreateAdminOpen(false)}
+                            className="flex-1"
+                          >
+                            İptal
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={createAdminMutation.isPending}
+                            className="flex-1"
+                          >
+                            {createAdminMutation.isPending ? "Oluşturuluyor..." : "Oluştur"}
+                          </Button>
+                        </div>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Admin Users Table */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Admin Kullanıcılar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {adminUsersLoading ? (
+                <div>Loading...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kullanıcı Adı</TableHead>
+                      <TableHead>E-posta</TableHead>
+                      <TableHead>Son Giriş</TableHead>
+                      <TableHead>Durum</TableHead>
+                      <TableHead>İşlemler</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAdmins.map((adminUser: any) => (
+                      <TableRow key={adminUser.id}>
+                        <TableCell className="font-medium">{adminUser.username}</TableCell>
+                        <TableCell>{adminUser.email || "Belirtilmemiş"}</TableCell>
+                        <TableCell>
+                          {adminUser.lastLoginAt 
+                            ? new Date(adminUser.lastLoginAt).toLocaleDateString('tr-TR')
+                            : "Hiç giriş yapmamış"
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={adminUser.isActive !== false ? "default" : "destructive"}>
+                            {adminUser.isActive !== false ? "Aktif" : "Askıya Alındı"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {admin?.username === "akivi" && adminUser.username !== "akivi" && (
+                            <Button
+                              variant={adminUser.isActive !== false ? "destructive" : "default"}
+                              size="sm"
+                              onClick={() => suspendAdminMutation.mutate({
+                                id: adminUser.id,
+                                suspend: adminUser.isActive !== false
+                              })}
+                              disabled={suspendAdminMutation.isPending}
+                            >
+                              {adminUser.isActive !== false ? (
+                                <>
+                                  <Ban className="w-4 h-4 mr-1" />
+                                  Askıya Al
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Aktif Et
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Regular Users Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Sistem Kullanıcıları
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {usersLoading ? (
+                <div>Loading...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>İsim</TableHead>
+                      <TableHead>E-posta</TableHead>
+                      <TableHead>Kayıt Tarihi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.id}</TableCell>
+                        <TableCell>{user.name || "Belirtilmemiş"}</TableCell>
+                        <TableCell>{user.email || "Belirtilmemiş"}</TableCell>
+                        <TableCell>
+                          {user.createdAt 
+                            ? new Date(user.createdAt).toLocaleDateString('tr-TR')
+                            : "Bilinmiyor"
+                          }
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </main>
+      </div>
     </div>
   );
 }

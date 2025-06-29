@@ -72,8 +72,10 @@ export interface IStorage {
 
   // Admin operations
   getAdminByUsername(username: string): Promise<AdminUser | undefined>;
+  getAdminById(id: number): Promise<AdminUser | undefined>;
   createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
   updateAdminLastLogin(id: number): Promise<void>;
+  updateAdminStatus(id: number, isActive: boolean): Promise<AdminUser>;
 
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -338,6 +340,23 @@ export class DatabaseStorage implements IStorage {
       .update(adminUsers)
       .set({ lastLoginAt: new Date() })
       .where(eq(adminUsers.id, id));
+  }
+
+  async getAdminById(id: number): Promise<AdminUser | undefined> {
+    const [admin] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.id, id));
+    return admin;
+  }
+
+  async updateAdminStatus(id: number, isActive: boolean): Promise<AdminUser> {
+    const [updatedAdmin] = await db
+      .update(adminUsers)
+      .set({ isActive })
+      .where(eq(adminUsers.id, id))
+      .returning();
+    return updatedAdmin;
   }
 
   async getAdminCount(): Promise<number> {

@@ -759,6 +759,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new admin user (only akivi can create)
+  app.post("/api/admin/create", requireAdminAuth, async (req, res) => {
+    try {
+      const session = req.session as any;
+      const currentAdmin = await storage.getAdminByUsername(session.adminUsername);
+      
+      if (!currentAdmin || currentAdmin.username !== "akivi") {
+        return res.status(403).json({ message: "Sadece akivi admin oluşturabilir" });
+      }
+
+      const { username, email, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Kullanıcı adı ve şifre gereklidir" });
+      }
+
+      // Check if username already exists
+      const existingAdmin = await storage.getAdminByUsername(username);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Bu kullanıcı adı zaten kullanılıyor" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const newAdmin = await storage.createAdminUser({
+        username,
+        email: email || null,
+        password: hashedPassword,
+        isActive: true,
+      });
+
+      // Remove password from response
+      const { password: _, ...adminResponse } = newAdmin;
+      res.status(201).json(adminResponse);
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      res.status(500).json({ message: "Admin oluşturulurken bir hata oluştu" });
+    }
+  });
+
+  // Suspend/unsuspend admin user (only akivi can do this)
+  app.put("/api/admin/:id/suspend", requireAdminAuth, async (req, res) => {
+    try {
+      const session = req.session as any;
+      const currentAdmin = await storage.getAdminByUsername(session.adminUsername);
+      
+      if (!currentAdmin || currentAdmin.username !== "akivi") {
+        return res.status(403).json({ message: "Sadece akivi bu işlemi yapabilir" });
+      }
+
+      const adminId = parseInt(req.params.id);
+      const { suspend } = req.body;
+
+      if (isNaN(adminId)) {
+        return res.status(400).json({ message: "Geçersiz admin ID" });
+      }
+
+      // Can't suspend akivi
+      const targetAdmin = await storage.getAdminById(adminId);
+      if (!targetAdmin) {
+        return res.status(404).json({ message: "Admin bulunamadı" });
+      }
+
+      if (targetAdmin.username === "akivi") {
+        return res.status(403).json({ message: "akivi hesabı askıya alınamaz" });
+      }
+
+      const updatedAdmin = await storage.updateAdminStatus(adminId, !suspend);
+      res.json(updatedAdmin);
+    } catch (error) {
+      console.error("Error updating admin status:", error);
+      res.status(500).json({ message: "Admin durumu güncellenirken bir hata oluştu" });
+    }
+  });
+
+  // Get admin list
+  app.get("/api/admin/list", requireAdminAuth, async (req, res) => {
+    try {
+      const admins = await storage.getAllAdmins();
+      res.json(admins);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ message: "Failed to fetch admin users" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

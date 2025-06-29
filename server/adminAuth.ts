@@ -29,8 +29,12 @@ export function setupAdminAuth(app: Express) {
       const { username, password }: AdminLogin = adminLoginSchema.parse(req.body);
       
       const admin = await storage.getAdminByUsername(username);
-      if (!admin || !admin.isActive) {
+      if (!admin) {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+      }
+
+      if (!admin.isActive) {
+        return res.status(403).json({ message: 'Hesabınız askıya alınmıştır. Lütfen sistem yöneticisiyle iletişime geçin.' });
       }
 
       const isValidPassword = await comparePassword(password, admin.password);
