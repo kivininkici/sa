@@ -18,44 +18,54 @@ import Settings from "@/pages/admin/settings";
 import AdminOrders from "@/pages/admin/orders";
 import ApiManagement from "@/pages/admin/api-management";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated: isUserAuthenticated } = useAuth();
+  const { isAuthenticated: isAdminAuthenticated } = useAdminAuth();
 
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <>
-          {/* Public routes */}
-          <Route path="/" component={Landing} />
-          <Route path="/auth" component={Auth} />
-          <Route path="/user" component={UserInterface} />
-          
-          {/* Admin login */}
-          <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin-login" component={AdminLogin} />
-        </>
-      ) : (
-        <>
-          {/* Authenticated user home */}
-          <Route path="/" component={Home} />
-          <Route path="/auth" component={Auth} />
-          <Route path="/user" component={UserInterface} />
-          
-          {/* Admin routes */}
-          <Route path="/admin/login" component={AdminLogin} />
-          <Route path="/admin-login" component={AdminLogin} />
-          <Route path="/admin/dashboard" component={Dashboard} />
-          <Route path="/admin/keys" component={Keys} />
-          <Route path="/admin/services" component={Services} />
-          <Route path="/admin/api-management" component={ApiManagement} />
-          <Route path="/admin/users" component={Users} />
-          <Route path="/admin/logs" component={Logs} />
-          <Route path="/admin/settings" component={Settings} />
-          <Route path="/admin/orders" component={AdminOrders} />
-        </>
-      )}
+      {/* Home route - conditional based on user auth */}
+      <Route path="/">
+        {isUserAuthenticated ? <Home /> : <Landing />}
+      </Route>
       
+      {/* Public routes */}
+      <Route path="/auth" component={Auth} />
+      <Route path="/user" component={UserInterface} />
+      
+      {/* Admin login routes */}
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin-login" component={AdminLogin} />
+      
+      {/* Protected admin routes */}
+      <Route path="/admin/dashboard">
+        {isAdminAuthenticated ? <Dashboard /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/keys">
+        {isAdminAuthenticated ? <Keys /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/services">
+        {isAdminAuthenticated ? <Services /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/api-management">
+        {isAdminAuthenticated ? <ApiManagement /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/users">
+        {isAdminAuthenticated ? <Users /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/logs">
+        {isAdminAuthenticated ? <Logs /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/settings">
+        {isAdminAuthenticated ? <Settings /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/orders">
+        {isAdminAuthenticated ? <AdminOrders /> : <AdminLogin />}
+      </Route>
+      
+      {/* 404 fallback */}
       <Route component={NotFound} />
     </Switch>
   );
