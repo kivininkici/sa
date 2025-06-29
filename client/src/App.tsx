@@ -22,10 +22,10 @@ function Router() {
       {/* Public routes */}
       <Route path="/" component={Landing} />
       <Route path="/user" component={UserInterface} />
-      
+
       {/* Admin login */}
       <Route path="/admin/login" component={AdminLogin} />
-      
+
       {/* Admin routes */}
       <Route path="/admin/dashboard" component={Dashboard} />
       <Route path="/admin/keys" component={Keys} />
@@ -35,7 +35,7 @@ function Router() {
       <Route path="/admin/logs" component={Logs} />
       <Route path="/admin/settings" component={Settings} />
       <Route path="/admin/orders" component={AdminOrders} />
-      
+
       <Route component={NotFound} />
     </Switch>
   );

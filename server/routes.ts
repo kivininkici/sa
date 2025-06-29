@@ -3,26 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAdminAuth, requireAdminAuth } from "./adminAuth";
 
-// Admin-only middleware
-const isAdmin = async (req: any, res: any, next: any) => {
-  try {
-    const userId = req.user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    // Check if user is admin (you can customize this logic)
-    const adminUsers = ["43169400"]; // Add your user ID and other admin IDs here
-
-    if (!adminUsers.includes(userId)) {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-
-    next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-  }
-};
+// Using admin session-based authentication only
 import { insertKeySchema, insertServiceSchema, insertOrderSchema, insertApiSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 
