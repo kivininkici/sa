@@ -1810,6 +1810,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Bildirim sistemi endpoint'leri
+  app.get("/api/admin/notifications", requireAdminAuth, async (req, res) => {
+    try {
+      const notifications = await storage.getAllNotifications();
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Bildirimler alınamadı" });
+    }
+  });
+
+  app.get("/api/admin/notifications/unread", requireAdminAuth, async (req, res) => {
+    try {
+      const notifications = await storage.getUnreadNotifications();
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching unread notifications:", error);
+      res.status(500).json({ message: "Okunmamış bildirimler alınamadı" });
+    }
+  });
+
+  app.put("/api/admin/notifications/:id/read", requireAdminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.markNotificationAsRead(id);
+      res.json({ success: true, message: "Bildirim okundu olarak işaretlendi" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Bildirim güncellenemedi" });
+    }
+  });
+
+  app.put("/api/admin/notifications/read-all", requireAdminAuth, async (req, res) => {
+    try {
+      await storage.markAllNotificationsAsRead();
+      res.json({ success: true, message: "Tüm bildirimler okundu" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Bildirimler güncellenemedi" });
+    }
+  });
+
+  // Sipariş ID ile arama endpoint'i
+  app.get("/api/admin/orders/search/:orderId", requireAdminAuth, async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      
+      if (!orderId) {
+        return res.status(400).json({ message: "Sipariş ID gerekli" });
+      }
+
+      const order = await storage.getOrderByOrderId(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Sipariş bulunamadı" });
+      }
+
+      // Sipariş detaylarını key ve servis bilgileriyle birlikte getir
+      const key = await storage.getKeyByValue(order.keyId.toString());
+      const service = await storage.getServiceById(order.serviceId);
+
+      res.json({
+        ...order,
+        keyDetails: key ? {
+          name: key.name,
+          value: key.value,
+          maxQuantity: key.maxQuantity
+        } : null,
+        serviceDetails: service ? {
+          name: service.name,
+          platform: service.platform,
+          type: service.type
+        } : null
+      });
+    } catch (error) {
+      console.error("Error searching order:", error);
+      res.status(500).json({ message: "Sipariş arama hatası" });
+    }
+  });
+
+  // Gelişmiş servis arama endpoint'i (sayfalama ile)
+  app.get("/api/admin/services/search", requireAdminAuth, async (req, res) => {
+    try {
+      const { page = 1, limit = 25, search, serviceId } = req.query;
+      const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+      
+      let services = await storage.getAllServices();
+      
+      // Servis ID ile arama
+      if (serviceId) {
+        services = services.filter(service => 
+          service.serviceId && service.serviceId.includes(serviceId as string)
+        );
+      }
+      
+      // Genel arama
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        services = services.filter(service => 
+          service.name.toLowerCase().includes(searchTerm) ||
+          service.platform.toLowerCase().includes(searchTerm) ||
+          service.type.toLowerCase().includes(searchTerm) ||
+          (service.serviceId && service.serviceId.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      const total = services.length;
+      const paginatedServices = services.slice(offset, offset + parseInt(limit as string));
+      
+      res.json({
+        services: paginatedServices,
+        pagination: {
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          total,
+          totalPages: Math.ceil(total / parseInt(limit as string))
+        }
+      });
+    } catch (error) {
+      console.error("Error searching services:", error);
+      res.status(500).json({ message: "Servis arama hatası" });
+    }
+  });
+
+  // Bildirim oluşturma helper function
+  async function createOrderNotification(type: string, orderId: string, orderData: any) {
+    try {
+      const titles = {
+        'order_cancelled': 'Sipariş İptal Edildi',
+        'order_completed': 'Sipariş Tamamlandı',
+        'order_failed': 'Sipariş Başarısız'
+      };
+      
+      const messages = {
+        'order_cancelled': `Sipariş ${orderId} iptal edildi. Bakiye yetersizliği veya servis arızası nedeniyle.`,
+        'order_completed': `Sipariş ${orderId} başarıyla tamamlandı.`,
+        'order_failed': `Sipariş ${orderId} başarısız oldu. Teknik bir sorun oluştu.`
+      };
+      
+      await storage.createNotification({
+        type,
+        title: titles[type as keyof typeof titles] || 'Sipariş Bildirimi',
+        message: messages[type as keyof typeof messages] || `Sipariş ${orderId} durumu güncellendi.`,
+        orderId,
+        orderData,
+        isRead: false
+      });
+    } catch (error) {
+      console.error('Error creating notification:', error);
+    }
+  }
+
+  // Sipariş işleme fonksiyonunda bildirim ekleme
+  async function processOrderAsync(orderId: number, service: any, quantity: number, targetUrl?: string) {
+    try {
+      const order = await storage.getOrderById(orderId);
+      if (!order) return;
+
+      // API çağrısı yap
+      const response = await makeServiceRequest(
+        service.apiEndpoint || '',
+        service.apiMethod || 'POST',
+        service.apiHeaders || {},
+        {
+          service: service.serviceId,
+          link: targetUrl,
+          quantity: quantity,
+          key: 'API_KEY_PLACEHOLDER'
+        }
+      );
+
+      if (response && response.error) {
+        // Sipariş başarısız
+        await storage.updateOrder(orderId, {
+          status: 'failed',
+          message: response.error,
+          response: response
+        });
+        
+        // Bildirim oluştur
+        await createOrderNotification('order_failed', order.orderId, {
+          service: service.name,
+          quantity,
+          targetUrl,
+          error: response.error
+        });
+      } else {
+        // Sipariş başarılı
+        await storage.updateOrder(orderId, {
+          status: 'completed',
+          message: 'Sipariş başarıyla tamamlandı',
+          response: response,
+          completedAt: new Date()
+        });
+        
+        // Bildirim oluştur
+        await createOrderNotification('order_completed', order.orderId, {
+          service: service.name,
+          quantity,
+          targetUrl
+        });
+      }
+    } catch (error) {
+      console.error('Order processing error:', error);
+      
+      const order = await storage.getOrderById(orderId);
+      if (order) {
+        await storage.updateOrder(orderId, {
+          status: 'cancelled',
+          message: 'API hatası nedeniyle iptal edildi'
+        });
+        
+        // İptal bildirimi oluştur
+        await createOrderNotification('order_cancelled', order.orderId, {
+          error: error instanceof Error ? error.message : 'API hatası'
+        });
+      }
+    }
+  }
+
   // Setup automatic expired key cleanup (run every hour)
   setInterval(async () => {
     try {

@@ -132,6 +132,18 @@ export const apiSettings = pgTable("api_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Bildirim sistemi için notification tablosu
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // 'order_cancelled', 'order_completed', 'order_failed'
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  orderId: varchar("order_id", { length: 50 }), // Sipariş ID'si
+  orderData: jsonb("order_data"), // Sipariş detayları
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema exports
 export const insertKeySchema = createInsertSchema(keys).omit({
   id: true,
@@ -160,6 +172,11 @@ export const insertApiSettingsSchema = createInsertSchema(apiSettings).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
@@ -198,3 +215,5 @@ export type InsertLog = z.infer<typeof insertLogSchema>;
 export type Log = typeof logs.$inferSelect;
 export type InsertApiSettings = z.infer<typeof insertApiSettingsSchema>;
 export type ApiSettings = typeof apiSettings.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

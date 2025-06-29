@@ -161,6 +161,11 @@ Changelog:
 - Otomatik expired key temizliği: Saatte bir çalışan arka plan temizleme sistemi
 - API servis çekme sistemi iyileştirildi: Servis ID'leri korunuyor
 - Servis arama sistemi geliştirildi: ID ile direkt arama imkanı (örn: 23424)
+- Bildirim sistemi eklendi: İptal olan siparişler için otomatik bildirim
+- Sipariş takip sistemi: Admin panelinde sipariş ID ile arama
+- Gelişmiş API yönetimi: Çoklu API desteği, sayfalama sistemi
+- Key geçerlilik süresi sistemi: Otomatik key temizleme
+- Maksimum miktar kontrolü: Kullanıcı limit aşımında uyarı
 
 ## User Preferences
 

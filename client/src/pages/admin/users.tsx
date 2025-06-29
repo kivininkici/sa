@@ -167,7 +167,7 @@ export default function UsersPage() {
           description="Sistem kullanıcılarını ve adminleri yönetin"
         />
         
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6 bg-[#020617]">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <StatsCard

@@ -6,6 +6,7 @@ import {
   orders,
   logs,
   apiSettings,
+  notifications,
   adminUsers,
   type User,
   type UpsertUser,
@@ -21,6 +22,8 @@ import {
   type InsertLog,
   type InsertApiSettings,
   type ApiSettings,
+  type Notification,
+  type InsertNotification,
   type AdminUser,
   type InsertAdminUser
 } from "@shared/schema";
@@ -88,6 +91,16 @@ export interface IStorage {
   updateAdminLastLogin(id: number): Promise<void>;
   updateAdminStatus(id: number, isActive: boolean): Promise<AdminUser>;
 
+  // Notification operations
+  getAllNotifications(): Promise<Notification[]>;
+  getUnreadNotifications(): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<void>;
+  markAllNotificationsAsRead(): Promise<void>;
+
+  // Order tracking - sipariş ID ile arama
+  getOrderByOrderId(orderId: string): Promise<Order | undefined>;
+  
   // Dashboard stats
   getDashboardStats(): Promise<{
     totalKeys: number;
@@ -487,6 +500,56 @@ export class DatabaseStorage implements IStorage {
       .values(user)
       .returning();
     return newUser;
+  }
+
+  // Notification operations
+  async getAllNotifications(): Promise<Notification[]> {
+    const results = await db
+      .select()
+      .from(notifications)
+      .orderBy(desc(notifications.createdAt));
+    return results;
+  }
+
+  async getUnreadNotifications(): Promise<Notification[]> {
+    const results = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.isRead, false))
+      .orderBy(desc(notifications.createdAt));
+    return results;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.isRead, false));
+  }
+
+  // Order tracking by order ID
+  async getOrderByOrderId(orderId: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.orderId, orderId))
+      .limit(1);
+    return order;
   }
 }
 
