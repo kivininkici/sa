@@ -42,6 +42,11 @@ function Router() {
 }
 
 function App() {
+  // import { useAuth } from "@/hooks/useAuth"; // Temporarily disabled
+  // const { user, isLoading } = useAuth(); // Temporarily disabled
+  const user = null;
+  const isLoading = false;
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
