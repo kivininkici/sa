@@ -133,6 +133,9 @@ Changelog:
 - Canlı destek sistemi (Tawk.to) tüm sayfalarda aktif
 - API ekleme işlemi sonrası otomatik servis çekme desteği
 - JSON body parser limiti 50MB'a çıkarıldı (büyük API responses için)
+- Admin kullanıcı bilgileri yeniden oluşturuldu: admin/admin123
+- Server kodundaki tip hataları düzeltildi
+- Sipariş oluşturma sistemi tamamen çalışır durumda
 
 ## User Preferences
 
