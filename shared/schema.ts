@@ -36,6 +36,17 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Admin users table for separate admin authentication
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(), // hashed password
+  email: varchar("email", { length: 255 }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastLoginAt: timestamp("last_login_at"),
+});
+
 export const keys = pgTable("keys", {
   id: serial("id").primaryKey(),
   value: varchar("value", { length: 255 }).notNull().unique(),
@@ -123,9 +134,23 @@ export const insertApiSettingsSchema = createInsertSchema(apiSettings).omit({
   updatedAt: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
+  id: true,
+  createdAt: true,
+  lastLoginAt: true,
+});
+
+export const adminLoginSchema = z.object({
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
+});
+
 // Type exports
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type AdminLogin = z.infer<typeof adminLoginSchema>;
 export type InsertKey = z.infer<typeof insertKeySchema>;
 export type Key = typeof keys.$inferSelect;
 export type InsertService = z.infer<typeof insertServiceSchema>;

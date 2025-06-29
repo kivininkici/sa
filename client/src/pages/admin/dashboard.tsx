@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -34,37 +34,40 @@ import { Key as KeyType } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAdminAuth();
   const [showKeyModal, setShowKeyModal] = useState(false);
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: "Giriş Gerekli",
+        description: "Admin paneline erişmek için giriş yapmalısınız",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/admin/login";
       }, 500);
       return;
     }
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: dashboardStats } = useQuery({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ["/api/admin/dashboard/stats"],
     retry: false,
+    enabled: isAuthenticated,
   });
 
   const { data: recentKeys } = useQuery({
-    queryKey: ["/api/keys"],
+    queryKey: ["/api/admin/keys"],
     retry: false,
+    enabled: isAuthenticated,
   });
 
   const { data: recentOrders } = useQuery({
-    queryKey: ["/api/orders"],
+    queryKey: ["/api/admin/orders"],
     retry: false,
+    enabled: isAuthenticated,
   });
 
   if (isLoading || !isAuthenticated) {

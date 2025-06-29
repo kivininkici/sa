@@ -17,22 +17,22 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Key Yönetimi", href: "/keys", icon: Key },
-  { name: "Servisler", href: "/services", icon: Settings },
-  { name: "API Yönetimi", href: "/api-management", icon: Download },
-  { name: "Siparişler", href: "/orders", icon: ShoppingCart },
-  { name: "Kullanıcılar", href: "/users", icon: Users },
-  { name: "Loglar", href: "/logs", icon: FileText },
-  { name: "Ayarlar", href: "/settings", icon: Cog },
+  { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { name: "Key Yönetimi", href: "/admin/keys", icon: Key },
+  { name: "Servisler", href: "/admin/services", icon: Settings },
+  { name: "API Yönetimi", href: "/admin/api-management", icon: Download },
+  { name: "Siparişler", href: "/admin/orders", icon: ShoppingCart },
+  { name: "Kullanıcılar", href: "/admin/users", icon: Users },
+  { name: "Loglar", href: "/admin/logs", icon: FileText },
+  { name: "Ayarlar", href: "/admin/settings", icon: Cog },
 ];
 
 export default function Sidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { admin, logout } = useAdminAuth();
 
   return (
     <aside className="w-64 bg-background border-r border-border flex flex-col backdrop-blur-xl">
@@ -74,14 +74,13 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border glass-card">
         <div className="flex items-center space-x-3">
           <Avatar className="w-10 h-10 border-2 border-primary/20">
-            <AvatarImage src={(user as any)?.profileImageUrl || ""} alt="Admin" />
             <AvatarFallback className="bg-primary/20 text-primary">
-              {(user as any)?.firstName?.[0] || "A"}
+              {admin?.username?.[0]?.toUpperCase() || "A"}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">
-              {(user as any)?.firstName || "Admin User"}
+              {admin?.username || "Admin User"}
             </p>
             <p className="text-xs text-muted-foreground">Yönetici</p>
           </div>
@@ -89,7 +88,7 @@ export default function Sidebar() {
             variant="ghost"
             size="sm"
             className="p-1 hover:bg-accent text-muted-foreground hover:text-foreground transition-all duration-300"
-            onClick={() => window.location.href = "/api/logout"}
+            onClick={() => logout()}
           >
             <LogOut className="w-4 h-4" />
           </Button>

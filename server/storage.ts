@@ -5,6 +5,7 @@ import {
   orders,
   logs,
   apiSettings,
+  adminUsers,
   type User,
   type UpsertUser,
   type Key,
@@ -16,7 +17,9 @@ import {
   type Log,
   type InsertLog,
   type InsertApiSettings,
-  type ApiSettings
+  type ApiSettings,
+  type AdminUser,
+  type InsertAdminUser
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, isNull, isNotNull, count } from "drizzle-orm";
@@ -66,6 +69,11 @@ export interface IStorage {
   getActiveApiSettings(): Promise<ApiSettings[]>;
   updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings>;
   deleteApiSettings(id: number): Promise<void>;
+
+  // Admin operations
+  getAdminByUsername(username: string): Promise<AdminUser | undefined>;
+  createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
+  updateAdminLastLogin(id: number): Promise<void>;
 
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -309,6 +317,27 @@ export class DatabaseStorage implements IStorage {
       activeServices: activeServicesResult.count,
       dailyTransactions: dailyTransactionsResult.count,
     };
+  }
+
+  // Admin operations
+  async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
+    const [admin] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.username, username));
+    return admin;
+  }
+
+  async createAdminUser(admin: InsertAdminUser): Promise<AdminUser> {
+    const [newAdmin] = await db.insert(adminUsers).values(admin).returning();
+    return newAdmin;
+  }
+
+  async updateAdminLastLogin(id: number): Promise<void> {
+    await db
+      .update(adminUsers)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(adminUsers.id, id));
   }
 }
 
