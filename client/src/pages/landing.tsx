@@ -1,47 +1,58 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Shield, Zap, Users, Star, CheckCircle, TrendingUp, Activity } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { KeyRound, Shield, Zap, Users, Star, CheckCircle, TrendingUp, Activity, LogIn, UserPlus, Crown, Sparkles } from "lucide-react";
+import { useState } from "react";
 
 export default function Landing() {
-  const { toast } = useToast();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-blue-500/5"></div>
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-2xl animate-bounce"></div>
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
+        <div className="absolute top-40 right-20 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-500"></div>
+        <div className="absolute bottom-32 left-1/3 w-3 h-3 bg-pink-400 rounded-full animate-ping delay-1000"></div>
+      </div>
 
       <div className="relative z-10">
         {/* Header */}
-        <header className="border-b border-border backdrop-blur-xl bg-background">
+        <header className="border-b border-white/10 backdrop-blur-xl bg-black/20">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 slide-up">
-                <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center glow-effect">
-                  <KeyRound className="w-6 h-6 text-white" />
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <KeyRound className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
+                  <h1 className="text-3xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                     KeyPanel
                   </h1>
-                  <p className="text-sm text-muted-foreground">Modern Key Yönetim Sistemi</p>
+                  <p className="text-sm text-gray-400">Premium Key Yönetimi</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4 slide-up">
+              <div className="flex items-center space-x-4">
                 <Button 
                   variant="outline" 
-                  className="border-border bg-background backdrop-blur-sm hover:bg-accent transition-all duration-300"
+                  className="border-white/20 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm"
                   onClick={() => window.location.href = '/user'}
                 >
+                  <KeyRound className="w-4 h-4 mr-2" />
                   Kullanıcı Paneli
                 </Button>
                 <Button 
-                  onClick={() => window.location.href = '/admin/login'}
-                  className="gradient-bg hover:scale-105 transition-all duration-300 pulse-glow"
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  Admin Girişi
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Giriş Yap
                 </Button>
               </div>
             </div>
@@ -49,233 +60,252 @@ export default function Landing() {
         </header>
 
         {/* Hero Section */}
-        <section className="py-32 relative">
+        <section className="py-20 relative">
           <div className="container mx-auto px-4 text-center">
-            <div className="slide-up">
-              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/30 rounded-full mb-8 backdrop-blur-sm">
-                <Star className="w-5 h-5 text-blue-400 mr-2" />
-                <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Türkiye'nin En Gelişmiş Sosyal Medya Paneli
+            <div className="mb-8">
+              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 rounded-full mb-8 backdrop-blur-sm">
+                <Crown className="w-5 h-5 text-yellow-400 mr-2" />
+                <span className="text-sm font-medium text-white">
+                  Türkiye'nin #1 Sosyal Medya Paneli
                 </span>
               </div>
-              <h2 className="text-7xl md:text-8xl font-black mb-8 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent leading-tight tracking-tight">
-                KeyPanel
-                <span className="block text-5xl md:text-6xl mt-4 font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                  Premium Yönetim
+              
+              <h2 className="text-6xl md:text-8xl font-black mb-8 leading-tight">
+                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  KeyPanel
+                </span>
+                <br />
+                <span className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  Premium Experience
                 </span>
               </h2>
-              <p className="text-2xl text-muted-foreground mb-12 max-w-5xl mx-auto leading-relaxed">
-                <span className="text-blue-400 font-bold">5000+ servis</span> ile Instagram, TikTok, YouTube ve daha fazlası.
-                <br className="hidden md:block" />
+              
+              <p className="text-xl text-gray-300 mb-12 max-w-4xl mx-auto">
+                <span className="text-blue-400 font-bold">5000+</span> aktif servis ile Instagram, TikTok, YouTube ve daha fazlası.
+                <br />
                 <span className="text-emerald-400 font-bold">Anlık teslimat</span> ve 
-                <span className="text-purple-400 font-bold"> 7/24 güvenilir</span> hizmet.
+                <span className="text-purple-400 font-bold"> 7/24 güvenilir</span> destek.
               </p>
               
-              {/* Stats */}
+              {/* Live Stats */}
               <div className="flex flex-wrap justify-center gap-8 mb-16">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <CheckCircle className="w-5 h-5 text-emerald-400" />
-                  <span className="text-lg font-semibold text-foreground">5000+ Aktif Servis</span>
+                  <span className="text-white font-semibold">5.847 Aktif Servis</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <TrendingUp className="w-5 h-5 text-blue-400" />
-                  <span className="text-lg font-semibold text-foreground">%99 Başarı Oranı</span>
+                  <span className="text-white font-semibold">%99.8 Başarı Oranı</span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                   <Activity className="w-5 h-5 text-purple-400" />
-                  <span className="text-lg font-semibold text-foreground">Anlık Teslimat</span>
+                  <span className="text-white font-semibold">2-30 Sn Teslimat</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-8 mb-20 slide-up">
+            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-20">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = '/admin/login'}
-                className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white hover:scale-110 transition-all duration-500 px-12 py-6 text-xl font-bold rounded-3xl shadow-[0_20px_50px_rgba(59,130,246,0.3)] hover:shadow-[0_25px_60px_rgba(59,130,246,0.4)] relative overflow-hidden group"
+                onClick={() => setShowAuthModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-6 text-xl rounded-2xl shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Shield className="w-7 h-7 mr-3 relative z-10" />
-                <span className="relative z-10">Admin Paneli</span>
+                <Shield className="w-6 h-6 mr-3" />
+                Hemen Başla
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
-                className="border-3 border-emerald-500/50 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 hover:from-emerald-500/20 hover:to-cyan-500/20 text-emerald-400 hover:text-emerald-300 hover:border-emerald-400/70 hover:scale-110 transition-all duration-500 px-12 py-6 text-xl font-bold rounded-3xl backdrop-blur-xl shadow-[0_20px_50px_rgba(16,185,129,0.2)] hover:shadow-[0_25px_60px_rgba(16,185,129,0.3)] relative overflow-hidden group"
+                className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
                 onClick={() => window.location.href = '/user'}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <KeyRound className="w-7 h-7 mr-3 relative z-10" />
-                <span className="relative z-10">Servis Kullan</span>
+                <KeyRound className="w-6 h-6 mr-3" />
+                Key Kullan
               </Button>
             </div>
 
-            {/* Floating Elements */}
-            <div className="relative max-w-6xl mx-auto h-32">
-              <div className="floating-animation absolute -top-8 left-16 w-20 h-20 bg-gradient-to-br from-blue-500/30 to-purple-500/30 rounded-3xl flex items-center justify-center backdrop-blur-xl border border-blue-400/30">
-                <Shield className="w-10 h-10 text-blue-400" />
+            {/* Floating Service Icons */}
+            <div className="relative max-w-4xl mx-auto h-32">
+              <div className="absolute -top-4 left-16 w-16 h-16 bg-gradient-to-br from-pink-500/30 to-red-500/30 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-pink-400/30 animate-bounce">
+                <span className="text-2xl">📷</span>
               </div>
-              <div className="floating-animation absolute top-8 right-20 w-16 h-16 bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-emerald-400/30" style={{animationDelay: '2s'}}>
-                <Zap className="w-8 h-8 text-emerald-400" />
+              <div className="absolute top-8 right-20 w-14 h-14 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-blue-400/30 animate-bounce delay-500">
+                <span className="text-xl">🎵</span>
               </div>
-              <div className="floating-animation absolute -bottom-4 left-1/3 w-18 h-18 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl flex items-center justify-center backdrop-blur-xl border border-purple-400/30" style={{animationDelay: '4s'}}>
-                <Users className="w-9 h-9 text-purple-400" />
+              <div className="absolute -bottom-2 left-1/3 w-18 h-18 bg-gradient-to-br from-red-500/30 to-pink-500/30 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-red-400/30 animate-bounce delay-1000">
+                <span className="text-2xl">📹</span>
               </div>
-              <div className="floating-animation absolute top-4 left-1/2 w-14 h-14 bg-gradient-to-br from-pink-500/30 to-rose-500/30 rounded-xl flex items-center justify-center backdrop-blur-xl border border-pink-400/30" style={{animationDelay: '6s'}}>
-                <Star className="w-7 h-7 text-pink-400" />
+              <div className="absolute top-4 left-1/2 w-12 h-12 bg-gradient-to-br from-purple-500/30 to-indigo-500/30 rounded-xl flex items-center justify-center backdrop-blur-sm border border-purple-400/30 animate-bounce delay-1500">
+                <span className="text-lg">💎</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="py-32 bg-gradient-to-b from-blue-500/5 via-purple-500/10 to-pink-500/5 relative overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
-          </div>
-          
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-20 slide-up">
-              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600/10 to-blue-600/10 border border-emerald-500/30 rounded-full mb-8 backdrop-blur-sm">
-                <CheckCircle className="w-5 h-5 text-emerald-400 mr-2" />
-                <span className="text-sm font-medium bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                  Premium Özellikler
-                </span>
+        {/* Features Section */}
+        <section className="py-20 relative">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 rounded-full mb-8 backdrop-blur-sm">
+                <Sparkles className="w-5 h-5 text-emerald-400 mr-2" />
+                <span className="text-sm font-medium text-white">Premium Özellikler</span>
               </div>
-              <h3 className="text-5xl md:text-6xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <h3 className="text-5xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                 Neden KeyPanel?
               </h3>
-              <p className="text-2xl text-muted-foreground max-w-4xl mx-auto">
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
                 Sektörün en gelişmiş teknolojisi ile sosyal medya büyümenizi hızlandırın
               </p>
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <Card className="group relative overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/30 hover:border-purple-400/50 transition-all duration-700 hover:scale-110 hover:shadow-[0_25px_50px_rgba(168,85,247,0.4)] backdrop-blur-xl">
-                <CardHeader className="relative z-10 p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg">
-                    <Shield className="w-10 h-10 text-white" />
+              <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/30 hover:border-purple-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
+                <CardHeader className="p-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-4">
+                    <Shield className="w-8 h-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-black text-foreground mb-3">Güvenli Key Sistemi</CardTitle>
+                  <CardTitle className="text-xl font-bold text-white">Güvenli Key Sistemi</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10 p-8 pt-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Tek kullanımlık anahtarlar ile maksimum güvenlik ve kontrol. Her key özel şifreleme ile korunur.
+                <CardContent className="p-6 pt-0">
+                  <p className="text-gray-300">
+                    Tek kullanımlık anahtarlar ile maksimum güvenlik ve kontrol.
                   </p>
                 </CardContent>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-600/30 to-pink-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               </Card>
 
-              <Card className="group relative overflow-hidden bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-700 hover:scale-110 hover:shadow-[0_25px_50px_rgba(16,185,129,0.4)] backdrop-blur-xl" style={{animationDelay: '0.1s'}}>
-                <CardHeader className="relative z-10 p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg">
-                    <Zap className="w-10 h-10 text-white" />
+              <Card className="bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-emerald-400/30 hover:border-emerald-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
+                <CardHeader className="p-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
+                    <Zap className="w-8 h-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-black text-foreground mb-3">Anlık Teslimat</CardTitle>
+                  <CardTitle className="text-xl font-bold text-white">Anlık Teslimat</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10 p-8 pt-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Saniyeler içinde sipariş işleme ve gerçek zamanlı teslimat garantisi.
+                <CardContent className="p-6 pt-0">
+                  <p className="text-gray-300">
+                    2-30 saniye içinde sipariş işleme ve gerçek zamanlı teslimat.
                   </p>
                 </CardContent>
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/30 to-cyan-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               </Card>
 
-              <Card className="group relative overflow-hidden bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-500/30 hover:border-blue-400/50 transition-all duration-700 hover:scale-110 hover:shadow-[0_25px_50px_rgba(59,130,246,0.4)] backdrop-blur-xl" style={{animationDelay: '0.2s'}}>
-                <CardHeader className="relative z-10 p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg">
-                    <Users className="w-10 h-10 text-white" />
+              <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-400/30 hover:border-blue-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
+                <CardHeader className="p-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-black text-foreground mb-3">Çoklu Platform</CardTitle>
+                  <CardTitle className="text-xl font-bold text-white">Çoklu Platform</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10 p-8 pt-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Instagram, YouTube, TikTok ve 100+ platform için kapsamlı servis desteği.
+                <CardContent className="p-6 pt-0">
+                  <p className="text-gray-300">
+                    Instagram, YouTube, TikTok ve 100+ platform desteği.
                   </p>
                 </CardContent>
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/30 to-cyan-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               </Card>
 
-              <Card className="group relative overflow-hidden bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30 hover:border-amber-400/50 transition-all duration-700 hover:scale-110 hover:shadow-[0_25px_50px_rgba(245,158,11,0.4)] backdrop-blur-xl" style={{animationDelay: '0.3s'}}>
-                <CardHeader className="relative z-10 p-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg">
-                    <KeyRound className="w-10 h-10 text-white" />
+              <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-400/30 hover:border-amber-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
+                <CardHeader className="p-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
+                    <KeyRound className="w-8 h-8 text-white" />
                   </div>
-                  <CardTitle className="text-2xl font-black text-foreground mb-3">Kolay Yönetim</CardTitle>
+                  <CardTitle className="text-xl font-bold text-white">Kolay Yönetim</CardTitle>
                 </CardHeader>
-                <CardContent className="relative z-10 p-8 pt-0">
-                  <p className="text-lg text-muted-foreground leading-relaxed">
-                    Sezgisel admin paneli ile gelişmiş analitik ve tam kontrol.
+                <CardContent className="p-6 pt-0">
+                  <p className="text-gray-300">
+                    Gelişmiş admin paneli ile tam kontrol ve analitik.
                   </p>
                 </CardContent>
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-600/30 to-orange-600/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
               </Card>
             </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="relative overflow-hidden border-t border-purple-500/30 bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 py-16">
-          <div className="absolute inset-0">
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-pink-600/10"></div>
-            <div className="absolute top-10 left-20 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl"></div>
-            <div className="absolute bottom-10 right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl"></div>
-          </div>
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center space-x-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 via-blue-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <KeyRound className="w-7 h-7 text-white" />
+        <footer className="border-t border-white/10 bg-black/20 py-12">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                  <KeyRound className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-3xl font-black bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400 bg-clip-text text-transparent">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   KeyPanel
-                </span>
+                </h3>
               </div>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-                Sosyal medya büyümenizin en güvenilir partneri
+              <p className="text-gray-400 mb-8">
+                Türkiye'nin en güvenilir sosyal medya paneli
               </p>
-              
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">5000+</div>
-                  <div className="text-sm text-muted-foreground">Aktif Servis</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">%99</div>
-                  <div className="text-sm text-muted-foreground">Başarı Oranı</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent mb-2">24/7</div>
-                  <div className="text-sm text-muted-foreground">Destek</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-purple-400 bg-clip-text text-transparent mb-2">1M+</div>
-                  <div className="text-sm text-muted-foreground">Mutlu Müşteri</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-purple-500/20">
-              <p className="text-muted-foreground text-center mb-4 md:mb-0">
-                © 2025 KeyPanel. Tüm hakları saklıdır. Profesyonel sosyal medya çözümleri.
-              </p>
-              <div className="flex items-center space-x-6">
-                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-300">
-                  Gizlilik Politikası
-                </Button>
-                <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all duration-300">
-                  Kullanım Şartları
-                </Button>
-                <Button variant="ghost" size="sm" className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 transition-all duration-300">
-                  İletişim
-                </Button>
+              <div className="flex justify-center space-x-8 text-sm text-gray-500">
+                <span>© 2025 KeyPanel</span>
+                <span>•</span>
+                <span>Tüm hakları saklıdır</span>
+                <span>•</span>
+                <span>Premium Hizmet</span>
               </div>
             </div>
           </div>
         </footer>
       </div>
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-white/20 rounded-2xl p-8 max-w-md w-full relative">
+            <button 
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+            
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <KeyRound className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">KeyPanel'e Hoş Geldin</h3>
+              <p className="text-gray-400">Hesabınıza giriş yapın veya yeni hesap oluşturun</p>
+            </div>
+
+            <div className="space-y-4">
+              <Button 
+                onClick={() => window.location.href = '/api/login'}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 rounded-xl transition-all duration-300 hover:scale-105"
+              >
+                <LogIn className="w-5 h-5 mr-2" />
+                Replit ile Giriş Yap
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-600"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-slate-800 text-gray-400">veya</span>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => window.location.href = '/admin/login'}
+                variant="outline"
+                className="w-full border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-semibold py-3 rounded-xl transition-all duration-300"
+              >
+                <Shield className="w-5 h-5 mr-2" />
+                Admin Girişi
+              </Button>
+            </div>
+
+            <div className="mt-8 p-4 bg-blue-500/10 border border-blue-400/30 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <Star className="w-5 h-5 text-blue-400 mt-0.5" />
+                <div>
+                  <p className="text-sm text-blue-400 font-semibold">Premium Üyelik</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Replit hesabınızla giriş yaparak tüm premium özelliklerden yararlanın
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
