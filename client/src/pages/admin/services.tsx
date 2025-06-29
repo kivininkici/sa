@@ -38,7 +38,7 @@ export default function Services() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: services, isLoading: servicesLoading } = useQuery({
-    queryKey: ["/api/services/all"],
+    queryKey: ["/api/admin/services/all"],
     retry: false,
   });
 
@@ -51,7 +51,7 @@ export default function Services() {
         title: "Başarılı",
         description: "Servis başarıyla silindi",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/services/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -106,12 +106,12 @@ export default function Services() {
                 <div className="col-span-full text-center text-slate-400">
                   Yükleniyor...
                 </div>
-              ) : services?.length === 0 ? (
+              ) : !services || services.length === 0 ? (
                 <div className="col-span-full text-center text-slate-400">
                   Henüz servis eklenmemiş
                 </div>
               ) : (
-                services?.map((service: Service) => (
+                (services || []).map((service: Service) => (
                   <Card key={service.id} className="dashboard-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
