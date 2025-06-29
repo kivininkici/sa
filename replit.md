@@ -132,6 +132,7 @@ Changelog:
 - MedyaBayim API için özel işleyici eklendi (https://medyabayim.com/api/v2)
 - Canlı destek sistemi (Tawk.to) tüm sayfalarda aktif
 - API ekleme işlemi sonrası otomatik servis çekme desteği
+- JSON body parser limiti 50MB'a çıkarıldı (büyük API responses için)
 
 ## User Preferences
 
