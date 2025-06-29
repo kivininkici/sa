@@ -55,6 +55,7 @@ export const keys = pgTable("keys", {
   type: varchar("type", { length: 50 }).notNull().default("single-use"),
   serviceId: integer("service_id"),
   maxQuantity: integer("max_quantity"),
+  usedQuantity: integer("used_quantity").notNull().default(0),
   isUsed: boolean("is_used").notNull().default(false),
   usedAt: timestamp("used_at"),
   usedBy: varchar("used_by", { length: 255 }),

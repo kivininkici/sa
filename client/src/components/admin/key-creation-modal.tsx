@@ -34,7 +34,7 @@ const keySchema = z.object({
   name: z.string().min(1, "Key adı gerekli"),
   type: z.string().default("single-use"),
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
-  maxQuantity: z.number().min(1, "Miktar en az 1 olmalı").max(250, "Miktar en fazla 250 olabilir"),
+  maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
 });
 
 interface KeyCreationModalProps {

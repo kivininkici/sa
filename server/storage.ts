@@ -36,6 +36,7 @@ export interface IStorage {
   updateKey(id: number, updates: Partial<Key>): Promise<Key>;
   deleteKey(id: number): Promise<void>;
   markKeyAsUsed(id: number, usedBy: string): Promise<Key>;
+  updateKeyUsedQuantity(id: number, additionalQuantity: number): Promise<Key>;
   getKeyStats(): Promise<{
     total: number;
     used: number;
@@ -147,6 +148,32 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(keys.id, id))
       .returning();
+    return updatedKey;
+  }
+
+  async updateKeyUsedQuantity(id: number, additionalQuantity: number): Promise<Key> {
+    // First get current key data
+    const [currentKey] = await db.select().from(keys).where(eq(keys.id, id));
+    if (!currentKey) {
+      throw new Error("Key not found");
+    }
+
+    const newUsedQuantity = (currentKey.usedQuantity || 0) + additionalQuantity;
+    const maxQuantity = currentKey.maxQuantity || 0;
+    
+    // Check if key should be marked as fully used
+    const shouldMarkAsUsed = newUsedQuantity >= maxQuantity;
+
+    const [updatedKey] = await db
+      .update(keys)
+      .set({
+        usedQuantity: newUsedQuantity,
+        isUsed: shouldMarkAsUsed,
+        usedAt: shouldMarkAsUsed ? new Date() : currentKey.usedAt,
+      })
+      .where(eq(keys.id, id))
+      .returning();
+    
     return updatedKey;
   }
 

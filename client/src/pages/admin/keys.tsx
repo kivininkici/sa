@@ -182,9 +182,9 @@ export default function Keys() {
                     <TableHeader className="bg-slate-900">
                       <TableRow className="border-slate-700">
                         <TableHead className="text-slate-400">Key</TableHead>
+                        <TableHead className="text-slate-400">Limit/Kullanılan</TableHead>
                         <TableHead className="text-slate-400">Durum</TableHead>
                         <TableHead className="text-slate-400">Oluşturulma</TableHead>
-                        <TableHead className="text-slate-400">Kullanım</TableHead>
                         <TableHead className="text-slate-400">İşlemler</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -205,9 +205,29 @@ export default function Keys() {
                         filteredKeys?.map((key: KeyType) => (
                           <TableRow key={key.id} className="border-slate-700">
                             <TableCell>
-                              <code className="px-2 py-1 bg-slate-900 text-blue-400 text-sm rounded font-mono">
-                                {key.value}
-                              </code>
+                              <div>
+                                <code className="px-2 py-1 bg-slate-900 text-blue-400 text-sm rounded font-mono">
+                                  {key.value}
+                                </code>
+                                {key.name && (
+                                  <div className="text-xs text-slate-400 mt-1">{key.name}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                <div className="text-slate-300">
+                                  {key.usedQuantity || 0} / {key.maxQuantity || 0}
+                                </div>
+                                <div className="w-full bg-slate-700 rounded-full h-2">
+                                  <div 
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ 
+                                      width: `${key.maxQuantity ? ((key.usedQuantity || 0) / key.maxQuantity) * 100 : 0}%` 
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
                             </TableCell>
                             <TableCell>
                               <Badge 
@@ -217,14 +237,11 @@ export default function Keys() {
                                   : "bg-amber-900 text-amber-300"
                                 }
                               >
-                                {key.isUsed ? "Kullanılmış" : "Kullanılmamış"}
+                                {key.isUsed ? "Tamamlandı" : "Aktif"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-slate-300">
                               {key.createdAt ? new Date(key.createdAt).toLocaleString("tr-TR") : "-"}
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {key.usedAt ? new Date(key.usedAt).toLocaleString("tr-TR") : "-"}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">

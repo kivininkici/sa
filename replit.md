@@ -126,19 +126,17 @@ Changelog:
 - June 29, 2025. Admin oluşturma ve askıya alma sistemi eklendi, MedyaBayim API entegrasyonu, canlı destek sistemi entegre edildi
 
 ## Recent Changes
-- Admin kullanıcı oluşturma: Sadece akivi kullanıcısı yeni admin oluşturabilir
-- Hesap askıya alma: akivi diğer admin hesaplarını askıya alabilir
-- Askıya alınan hesaplar giriş yaparken uyarı mesajı alır
-- MedyaBayim API için özel işleyici eklendi (https://medyabayim.com/api/v2)
-- Canlı destek sistemi (Tawk.to) tüm sayfalarda aktif
-- API ekleme işlemi sonrası otomatik servis çekme desteği
-- JSON body parser limiti 50MB'a çıkarıldı (büyük API responses için)
-- Admin kullanıcı bilgileri yeniden oluşturuldu: admin/admin123
-- Server kodundaki tip hataları düzeltildi
-- Sipariş oluşturma sistemi tamamen çalışır durumda
-- Orders tablosundaki eksik kolonlar (order_id, message) eklendi
-- 5122 servis başarıyla ResellerProvider'dan import edildi
-- Key oluşturma sistemi tam çalışır durumda
+- Kümülatif key kullanım sistemi uygulandı
+- Keys tablosuna used_quantity kolonu eklendi
+- Key oluşturmada sabit 250 limit kaldırıldı, admin belirlediği limiti ayarlayabilir  
+- Kullanıcılar key limitine kadar birden fazla sipariş verebilir (örn: 500 limitli key ile önce 50, sonra 450 kullanım)
+- Admin panelinde key kullanım durumu progress bar ile görüntüleniyor
+- Key doğrulama sisteminde kalan miktar bilgisi gösteriliyor
+- Sipariş oluşturma sırasında key'in kullanılan miktarı otomatik güncelleniyor
+- Backend'de updateKeyUsedQuantity methodu eklendi
+- Frontend'de ValidatedKey interface güncellendi (usedQuantity, remainingQuantity alanları)
+- Admin Services endpoint'i (/api/admin/services/all) eklendi
+- 15366 servis aktif ve API Management sayfasında görünüyor
 
 ## User Preferences
 

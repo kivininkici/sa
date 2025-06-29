@@ -37,6 +37,8 @@ interface ValidatedKey {
   id: number;
   value: string;
   maxQuantity: number;
+  usedQuantity: number;
+  remainingQuantity: number;
   service: {
     id: number;
     name: string;
@@ -75,11 +77,11 @@ export default function UserInterface() {
     onSuccess: (data: ValidatedKey) => {
       setValidatedKey(data);
       orderForm.setValue("keyValue", data.value);
-      orderForm.setValue("quantity", Math.min(data.maxQuantity, 250));
+      orderForm.setValue("quantity", Math.min(data.remainingQuantity, 1));
       setCurrentStep('order-form');
       toast({
         title: "Key Doğrulandı",
-        description: `${data.service.name} servisi için key başarıyla doğrulandı`,
+        description: `${data.service.name} servisi için key başarıyla doğrulandı. Kalan limit: ${data.remainingQuantity}`,
       });
     },
     onError: (error: Error) => {
@@ -266,24 +268,24 @@ export default function UserInterface() {
                   </div>
                   <p className="text-slate-400 text-sm">{validatedKey.service.type}</p>
                   <p className="text-slate-300 text-sm mt-1">
-                    Maksimum miktar: {validatedKey.maxQuantity}
+                    Toplam limit: {validatedKey.maxQuantity} | Kullanılan: {validatedKey.usedQuantity} | Kalan: {validatedKey.remainingQuantity}
                   </p>
                 </div>
 
                 <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
                   <div>
                     <label className="text-slate-200 text-sm font-medium mb-2 block">
-                      Miktar (1-{validatedKey.maxQuantity})
+                      Miktar (1-{validatedKey.remainingQuantity})
                     </label>
                     <Input
                       type="number"
                       min="1"
-                      max={validatedKey.maxQuantity}
+                      max={validatedKey.remainingQuantity}
                       className="bg-slate-700 border-slate-600 text-slate-50"
                       {...orderForm.register("quantity", { 
                         valueAsNumber: true,
                         min: 1,
-                        max: validatedKey.maxQuantity 
+                        max: validatedKey.remainingQuantity 
                       })}
                     />
                     {orderForm.formState.errors.quantity && (

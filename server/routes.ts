@@ -200,15 +200,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Invalid key" });
       }
 
-      if (foundKey.isUsed) {
-        return res.status(400).json({ message: "Key has already been used" });
+      // Check if key has remaining quantity
+      const maxQuantity = foundKey.maxQuantity || 0;
+      const usedQuantity = foundKey.usedQuantity || 0;
+      const remainingQuantity = maxQuantity - usedQuantity;
+      if (remainingQuantity <= 0) {
+        return res.status(400).json({ message: "Key limit has been reached" });
       }
 
       res.json({ 
         valid: true, 
         keyId: foundKey.id,
         serviceId: foundKey.serviceId,
-        maxQuantity: foundKey.maxQuantity
+        maxQuantity: maxQuantity,
+        usedQuantity: usedQuantity,
+        remainingQuantity: remainingQuantity
       });
     } catch (error) {
       console.error("Error validating key:", error);
@@ -222,8 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate key
       const key = await storage.getKeyByValue(keyValue);
-      if (!key || key.isUsed) {
-        return res.status(400).json({ message: "Invalid or used key" });
+      if (!key) {
+        return res.status(400).json({ message: "Invalid key" });
       }
 
       // Check if key is service-specific
@@ -231,9 +237,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bu key sadece belirli bir servis için kullanılabilir" });
       }
 
-      // Check quantity limit
-      if (key.maxQuantity && quantity > key.maxQuantity) {
-        return res.status(400).json({ message: `Maksimum ${key.maxQuantity} adet sipariş verebilirsiniz` });
+      // Check remaining quantity
+      const usedQuantity = key.usedQuantity || 0;
+      const maxQuantity = key.maxQuantity || 0;
+      const remainingQuantity = maxQuantity - usedQuantity;
+      if (remainingQuantity <= 0) {
+        return res.status(400).json({ message: "Key limit has been reached" });
+      }
+
+      if (quantity > remainingQuantity) {
+        return res.status(400).json({ message: `Bu key ile en fazla ${remainingQuantity} adet sipariş verebilirsiniz` });
       }
 
       // Get service
@@ -282,6 +295,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requestData
         );
 
+        // Update key usage
+        await storage.updateKeyUsedQuantity(key.id, quantity);
+
         // Update order with response
         const updatedOrder = await storage.updateOrder(order.id, {
           status: "completed",
@@ -292,10 +308,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log success
         await storage.createLog({
           type: "order_completed",
-          message: `Order completed successfully`,
+          message: `Order completed successfully - Used ${quantity} from key (Total: ${(key.usedQuantity || 0) + quantity}/${key.maxQuantity})`,
           keyId: key.id,
           orderId: order.id,
-          data: { response },
+          data: { response, quantityUsed: quantity },
         });
 
         res.json({
