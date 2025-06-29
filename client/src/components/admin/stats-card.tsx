@@ -31,24 +31,29 @@ export default function StatsCard({
   };
 
   return (
-    <Card className="glass-card hover:scale-105 transition-all duration-300 group">
-      <CardContent className="p-6">
+    <Card className="group relative overflow-hidden bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50 hover:border-purple-500/30 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+      <CardContent className="p-6 relative z-10">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground text-sm font-medium">{title}</p>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
+          <div className="space-y-2">
+            <p className="text-slate-400 text-sm font-medium tracking-wide">{title}</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              {value}
+            </p>
           </div>
-          <div className={`w-12 h-12 ${iconColor} rounded-lg flex items-center justify-center glow-effect group-hover:scale-110 transition-all duration-300`}>
-            <Icon className="w-6 h-6 text-white" />
+          <div className={`w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:shadow-purple-500/30 transition-all duration-300`}>
+            <Icon className="w-7 h-7 text-white" />
           </div>
         </div>
         {change && (
-          <p className={`text-sm mt-2 ${changeColors[changeType]}`}>
-            <span className="mr-1">{changeIcons[changeType]}</span>
-            {change}
-          </p>
+          <div className="mt-4 pt-3 border-t border-slate-700/50">
+            <p className={`text-sm font-medium ${changeColors[changeType]} flex items-center`}>
+              <span className="mr-2 text-lg">{changeIcons[changeType]}</span>
+              {change}
+            </p>
+          </div>
         )}
       </CardContent>
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
     </Card>
   );
 }

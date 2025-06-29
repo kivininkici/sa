@@ -82,64 +82,74 @@ export default function Dashboard() {
   }
 
   // Get recent 5 keys and orders
-  const recentKeysData = recentKeys?.slice(0, 5) || [];
-  const recentOrdersData = recentOrders?.slice(0, 5) || [];
+  const recentKeysData = Array.isArray(recentKeys) ? recentKeys.slice(0, 5) : [];
+  const recentOrdersData = Array.isArray(recentOrders) ? recentOrders.slice(0, 5) : [];
 
   return (
-    <div className="min-h-screen flex bg-slate-950">
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <Sidebar />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden relative">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none"></div>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        
         <Header 
           title="Dashboard" 
           description="Sistem genel bakış ve istatistikler" 
         />
         
-        <div className="content-area">
-          <div className="p-6 space-y-6">
+        <div className="content-area relative z-10">
+          <div className="p-8 space-y-8">
             {/* Welcome Section */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20">
               <div>
-                <h2 className="text-2xl font-bold text-slate-50">Hoş Geldiniz</h2>
-                <p className="text-slate-400">Sistemin genel durumunu buradan takip edebilirsiniz</p>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Hoş Geldiniz 👋
+                </h2>
+                <p className="text-slate-400 mt-2">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
               </div>
               <Button 
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105"
                 onClick={() => setShowKeyModal(true)}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-5 h-5 mr-2" />
                 Hızlı Key Oluştur
               </Button>
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatsCard
                 title="Toplam Key"
                 value={dashboardStats?.totalKeys || 0}
                 icon={Key}
                 iconColor="bg-blue-600"
-                subtitle="Oluşturulmuş"
+                change="+12% bu ay"
+                changeType="positive"
               />
               <StatsCard
-                title="Aktif Kullanıcı"
-                value={dashboardStats?.totalUsers || 0}
+                title="Kullanılmış Key"
+                value={dashboardStats?.usedKeys || 0}
                 icon={Users}
                 iconColor="bg-green-600"
-                subtitle="Kayıtlı"
+                change="+8% bu hafta"
+                changeType="positive"
               />
               <StatsCard
-                title="Toplam Sipariş"
-                value={dashboardStats?.totalOrders || 0}
+                title="Aktif Servis"
+                value={dashboardStats?.activeServices || 0}
                 icon={ShoppingCart}
                 iconColor="bg-purple-600"
-                subtitle="İşlem"
+                change="5 servis aktif"
+                changeType="neutral"
               />
               <StatsCard
-                title="Sistem Durumu"
-                value="Aktif"
+                title="Günlük İşlem"
+                value={dashboardStats?.dailyTransactions || 0}
                 icon={Activity}
                 iconColor="bg-emerald-600"
-                subtitle="Çalışıyor"
+                change="+25% dün"
+                changeType="positive"
               />
             </div>
 
