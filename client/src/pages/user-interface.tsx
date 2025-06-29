@@ -29,7 +29,9 @@ const orderSchema = z.object({
   keyValue: z.string().min(1),
   serviceId: z.number().min(1),
   quantity: z.number().min(1, "Miktar en az 1 olmalı"),
-  targetUrl: z.string().url("Geçerli bir URL giriniz").optional(),
+  targetUrl: z.string().optional().refine((val) => !val || val === "" || /^https?:\/\//.test(val), {
+    message: "Geçerli bir URL giriniz"
+  }),
 });
 
 type KeyValidationData = z.infer<typeof keyValidationSchema>;
@@ -159,7 +161,13 @@ export default function UserInterface() {
   };
 
   const onOrderSubmit = (data: OrderData) => {
-    if (!validatedKey) return;
+    console.log("Form submitted with data:", data);
+    console.log("Form errors:", orderForm.formState.errors);
+    
+    if (!validatedKey) {
+      console.log("No validated key");
+      return;
+    }
     
     // Check remaining quantity
     const maxAllowed = validatedKey.remainingQuantity || validatedKey.maxQuantity;
@@ -172,6 +180,7 @@ export default function UserInterface() {
       return;
     }
     
+    console.log("Sending order mutation...");
     // Send order with serviceId from validated key
     createOrderMutation.mutate({
       keyValue: validatedKey.value,
@@ -382,6 +391,7 @@ export default function UserInterface() {
                     type="submit"
                     disabled={createOrderMutation.isPending}
                     className="w-full bg-green-600 hover:bg-green-700 h-12"
+                    onClick={() => console.log("Button clicked!")}
                   >
                     {createOrderMutation.isPending ? "Sipariş Oluşturuluyor..." : "Siparişi Oluştur"}
                   </Button>
