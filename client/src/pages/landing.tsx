@@ -57,14 +57,14 @@ export default function Landing() {
                   🚀 Profesyonel Sosyal Medya Yönetimi
                 </span>
               </div>
-              <h2 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent leading-tight">
+              <h2 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-pink-500 via-pink-400 to-rose-400 bg-clip-text text-transparent leading-tight">
                 KeyPanel
                 <span className="block text-4xl md:text-5xl mt-2">Yönetim Sistemi</span>
               </h2>
               <p className="text-xl text-muted-foreground mb-16 max-w-4xl mx-auto leading-relaxed">
                 Sosyal medya servislerinizi profesyonel düzeyde yönetin. Güvenli key sistemi ile 
-                <span className="text-purple-400 font-semibold"> otomatik sipariş yönetimi</span> ve 
-                <span className="text-pink-400 font-semibold"> gelişmiş analitik</span> özellikleri.
+                <span className="text-pink-500 font-semibold"> otomatik sipariş yönetimi</span> ve 
+                <span className="text-rose-500 font-semibold"> gelişmiş analitik</span> özellikleri.
               </p>
             </div>
 
