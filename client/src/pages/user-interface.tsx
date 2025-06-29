@@ -347,9 +347,8 @@ export default function UserInterface() {
                       {validatedKey.service.platform}
                     </Badge>
                   </div>
-                  <p className="text-slate-400 text-sm">{validatedKey.service.type}</p>
-                  <p className="text-slate-300 text-sm mt-1">
-                    Toplam limit: {validatedKey.maxQuantity} | Kullanılan: {validatedKey.usedQuantity} | Kalan: {validatedKey.remainingQuantity}
+                  <p className="text-slate-300 text-sm">
+                    Kullanılabilir miktar: {validatedKey.remainingQuantity}
                   </p>
                 </div>
 

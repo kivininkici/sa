@@ -394,10 +394,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid key" });
       }
 
-      // Check if key is service-specific
-      if (key.serviceId && key.serviceId !== serviceId) {
-        return res.status(400).json({ message: "Bu key sadece belirli bir servis için kullanılabilir" });
-      }
+      // Key artık herhangi bir servis için kullanılabilir
+      // Servis kısıtlaması kaldırıldı
 
       // Check remaining quantity
       const usedQuantity = key.usedQuantity || 0;
@@ -1762,6 +1760,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             completedAt: new Date()
           });
 
+          // Create success notification
+          const order = await storage.getOrderById(orderId);
+          if (order) {
+            await createOrderNotification('order_completed', order.orderId, {
+              service: service.name,
+              quantity,
+              targetUrl
+            });
+          }
+
           // Log success
           await storage.createLog({
             type: "order_completed",
@@ -1779,6 +1787,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message: 'Sipariş işlenirken hata oluştu. Lütfen destek ekibiyle iletişime geçin.',
             response: { error: apiError instanceof Error ? apiError.message : 'Unknown error' }
           });
+
+          // Create failure notification
+          const order = await storage.getOrderById(orderId);
+          if (order) {
+            await createOrderNotification('order_failed', order.orderId, {
+              service: service.name,
+              quantity,
+              targetUrl,
+              error: apiError instanceof Error ? apiError.message : 'Unknown error'
+            });
+          }
 
           // Log failure to admin panel
           await storage.createLog({
@@ -1962,73 +1981,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Sipariş işleme fonksiyonunda bildirim ekleme
-  async function processOrderAsync(orderId: number, service: any, quantity: number, targetUrl?: string) {
-    try {
-      const order = await storage.getOrderById(orderId);
-      if (!order) return;
 
-      // API çağrısı yap
-      const response = await makeServiceRequest(
-        service.apiEndpoint || '',
-        service.apiMethod || 'POST',
-        service.apiHeaders || {},
-        {
-          service: service.serviceId,
-          link: targetUrl,
-          quantity: quantity,
-          key: 'API_KEY_PLACEHOLDER'
-        }
-      );
-
-      if (response && response.error) {
-        // Sipariş başarısız
-        await storage.updateOrder(orderId, {
-          status: 'failed',
-          message: response.error,
-          response: response
-        });
-        
-        // Bildirim oluştur
-        await createOrderNotification('order_failed', order.orderId, {
-          service: service.name,
-          quantity,
-          targetUrl,
-          error: response.error
-        });
-      } else {
-        // Sipariş başarılı
-        await storage.updateOrder(orderId, {
-          status: 'completed',
-          message: 'Sipariş başarıyla tamamlandı',
-          response: response,
-          completedAt: new Date()
-        });
-        
-        // Bildirim oluştur
-        await createOrderNotification('order_completed', order.orderId, {
-          service: service.name,
-          quantity,
-          targetUrl
-        });
-      }
-    } catch (error) {
-      console.error('Order processing error:', error);
-      
-      const order = await storage.getOrderById(orderId);
-      if (order) {
-        await storage.updateOrder(orderId, {
-          status: 'cancelled',
-          message: 'API hatası nedeniyle iptal edildi'
-        });
-        
-        // İptal bildirimi oluştur
-        await createOrderNotification('order_cancelled', order.orderId, {
-          error: error instanceof Error ? error.message : 'API hatası'
-        });
-      }
-    }
-  }
 
   // Setup automatic expired key cleanup (run every hour)
   setInterval(async () => {
