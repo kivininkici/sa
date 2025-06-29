@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
+import { isUnauthorizedError from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -121,7 +121,7 @@ export default function ApiManagement() {
     const servicesToImport = fetchedServices.filter((_, index) => 
       selectedServices.includes(index)
     );
-    
+
     if (servicesToImport.length === 0) {
       toast({
         title: "Hata",
@@ -156,7 +156,7 @@ export default function ApiManagement() {
           title="API Yönetimi" 
           description="Harici API'lerden servis içe aktarın" 
         />
-        
+
         <div className="content-area">
           <div className="p-6 space-y-6">
             {/* Header Actions */}
@@ -165,7 +165,7 @@ export default function ApiManagement() {
                 <h2 className="text-2xl font-bold text-slate-50">API Yönetimi</h2>
                 <p className="text-slate-400">Harici API'lerden servis içe aktarın ve yönetin</p>
               </div>
-              
+
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
@@ -177,14 +177,14 @@ export default function ApiManagement() {
                   <DialogHeader>
                     <DialogTitle>API'den Servis İçe Aktar</DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="apiUrl">API URL</Label>
                         <Input
                           id="apiUrl"
-                          placeholder="https://api.example.com/services"
+                          placeholder="https://example.com/api/v2"
                           value={apiUrl}
                           onChange={(e) => setApiUrl(e.target.value)}
                         />
@@ -201,7 +201,7 @@ export default function ApiManagement() {
                         />
                       </div>
                     </div>
-                    
+
                     <Button 
                       onClick={handleFetchServices}
                       disabled={fetchServicesMutation.isPending}
@@ -232,7 +232,7 @@ export default function ApiManagement() {
                             </Button>
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                           {fetchedServices.map((service: any, index) => (
                             <Card 
@@ -260,7 +260,7 @@ export default function ApiManagement() {
                             </Card>
                           ))}
                         </div>
-                        
+
                         <Button 
                           onClick={handleImportServices}
                           disabled={importServicesMutation.isPending || selectedServices.length === 0}
