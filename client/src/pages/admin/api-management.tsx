@@ -25,6 +25,7 @@ export default function ApiManagement() {
   const { toast } = useToast();
   const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
+  const [apiName, setApiName] = useState("");
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [fetchedServices, setFetchedServices] = useState([]);
@@ -33,6 +34,44 @@ export default function ApiManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50); // 50 servis per page for better performance
+
+  // API creation mutation with auto-import
+  const createApiMutation = useMutation({
+    mutationFn: async ({ name, apiUrl, apiKey }: { name: string; apiUrl: string; apiKey: string }) => {
+      const response = await apiRequest("POST", "/api/admin/api-settings", { name, apiUrl, apiKey, isActive: true });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.autoImport?.success) {
+        toast({
+          title: "Başarılı",
+          description: `API eklendi ve ${data.autoImport.imported} servis otomatik içe aktarıldı`,
+        });
+      } else {
+        toast({
+          title: "API Eklendi",
+          description: data.autoImport?.message || "API eklendi ama servisler çekilemedi",
+          variant: data.autoImport ? "destructive" : "default",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/services/all"] });
+      setIsDialogOpen(false);
+      setApiName("");
+      setApiUrl("");
+      setApiKey("");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -120,6 +159,37 @@ export default function ApiManagement() {
     fetchServicesMutation.mutate({ apiUrl, apiKey });
   };
 
+  const handleCreateApi = () => {
+    if (!apiName) {
+      toast({
+        title: "Hata",
+        description: "API adı gereklidir",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!apiUrl) {
+      toast({
+        title: "Hata",
+        description: "API URL gereklidir",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!apiKey) {
+      toast({
+        title: "Hata",
+        description: "API Key zorunludur",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createApiMutation.mutate({ name: apiName, apiUrl, apiKey });
+  };
+
   const handleImportServices = () => {
     const servicesToImport = fetchedServices.filter((_, index) => 
       selectedServices.includes(index)
@@ -193,7 +263,17 @@ export default function ApiManagement() {
                   </DialogHeader>
 
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="apiName">API Adı</Label>
+                        <Input
+                          id="apiName"
+                          placeholder="ResellerProvider"
+                          value={apiName}
+                          onChange={(e) => setApiName(e.target.value)}
+                          required
+                        />
+                      </div>
                       <div>
                         <Label htmlFor="apiUrl">API URL</Label>
                         <Input
@@ -216,14 +296,26 @@ export default function ApiManagement() {
                       </div>
                     </div>
 
-                    <Button 
-                      onClick={handleFetchServices}
-                      disabled={fetchServicesMutation.isPending}
-                      className="w-full"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {fetchServicesMutation.isPending ? "Getiriliyor..." : "Servisleri Getir"}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleFetchServices}
+                        disabled={fetchServicesMutation.isPending}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {fetchServicesMutation.isPending ? "Getiriliyor..." : "Servisleri Getir"}
+                      </Button>
+                      
+                      <Button 
+                        onClick={handleCreateApi}
+                        disabled={createApiMutation.isPending}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        {createApiMutation.isPending ? "Ekleniyor..." : "API Ekle ve Servisleri İçe Aktar"}
+                      </Button>
+                    </div>
 
                     {fetchedServices.length > 0 && (
                       <div className="space-y-4">

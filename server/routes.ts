@@ -787,7 +787,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertApiSettingsSchema.parse(req.body);
       const apiSetting = await storage.createApiSettings(validatedData);
-      res.json(apiSetting);
+      
+      // Automatically fetch and import services after API is added
+      try {
+        console.log('Auto-fetching services for new API:', validatedData.name);
+        
+        // Fetch services from the API using the same logic as fetch-services endpoint
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+        let formattedServices: any[] = [];
+        try {
+          // Try form-data format first
+          const formData = new URLSearchParams();
+          formData.append('key', validatedData.apiKey || '');
+          formData.append('action', 'services');
+
+          const response = await fetch(validatedData.apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            body: formData.toString(),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const responseText = await response.text();
+            const fetchResponse = JSON.parse(responseText);
+            formattedServices = formatServicesResponse(fetchResponse, validatedData.apiUrl, validatedData.apiKey || '');
+          } else {
+            throw new Error(`API request failed: ${response.status}`);
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
+        
+        if (Array.isArray(formattedServices) && formattedServices.length > 0) {
+          console.log(`Auto-importing ${formattedServices.length} services...`);
+          
+          // Validate and import services
+          const validatedServices = [];
+          const errors = [];
+          
+          for (const serviceData of formattedServices) {
+            try {
+              const validated = insertServiceSchema.parse(serviceData);
+              validatedServices.push(validated);
+            } catch (validationError) {
+              errors.push({
+                service: serviceData.name || 'Unknown',
+                error: validationError instanceof Error ? validationError.message : 'Validation failed'
+              });
+            }
+          }
+          
+          if (validatedServices.length > 0) {
+            const importedServices = await storage.bulkCreateServices(validatedServices);
+            console.log(`Auto-import completed: ${importedServices.length}/${formattedServices.length} services imported`);
+            
+            res.json({
+              ...apiSetting,
+              autoImport: {
+                success: true,
+                imported: importedServices.length,
+                total: formattedServices.length,
+                errors: errors.length
+              }
+            });
+          } else {
+            res.json({
+              ...apiSetting,
+              autoImport: {
+                success: false,
+                message: 'Servislerin hiçbiri import edilemedi - validation hataları',
+                errors: errors
+              }
+            });
+          }
+        } else {
+          res.json({
+            ...apiSetting,
+            autoImport: {
+              success: false,
+              message: 'API\'den servis bulunamadı'
+            }
+          });
+        }
+      } catch (fetchError) {
+        console.error('Auto-fetch failed:', fetchError);
+        res.json({
+          ...apiSetting,
+          autoImport: {
+            success: false,
+            message: 'Servisleri otomatik çekme başarısız: ' + (fetchError instanceof Error ? fetchError.message : 'Unknown error')
+          }
+        });
+      }
     } catch (error) {
       console.error("Error creating API setting:", error);
       res.status(500).json({ message: "Failed to create API setting" });
