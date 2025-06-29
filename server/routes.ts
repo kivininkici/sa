@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAdminAuth, requireAdminAuth } from "./adminAuth";
+import { setupAdminAuth, requireAdminAuth, hashPassword } from "./adminAuth";
 
 // Using admin session-based authentication only
 import { insertKeySchema, insertServiceSchema, insertOrderSchema, insertApiSettingsSchema } from "@shared/schema";
@@ -333,10 +333,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         url: process.env.DATABASE_URL ? "Set" : "Not set",
         timestamp: new Date().toISOString()
       };
-      
+
       // Try to get admin users count
       const adminCount = await storage.getAdminCount();
-      
+
       res.json({
         database: dbInfo,
         adminUsersCount: adminCount
@@ -374,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/create-direct", async (req, res) => {
     try {
       const { username, password, email } = req.body;
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Kullanıcı adı ve şifre gerekli" });
       }
@@ -386,8 +386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await hashPassword(password);
 
       // Create new admin
       const newAdmin = await storage.createAdminUser({
@@ -417,7 +416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/create", requireAdminAuth, async (req, res) => {
     try {
       const { username, password, email } = req.body;
-      
+
       if (!username || !password) {
         return res.status(400).json({ message: "Kullanıcı adı ve şifre gerekli" });
       }
@@ -429,8 +428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const bcrypt = require('bcryptjs');
-      const hashedPassword = await bcrypt.hash(password, 10);
+      const hashedPassword = await hashPassword(password);
 
       // Create new admin
       const newAdmin = await storage.createAdminUser({
