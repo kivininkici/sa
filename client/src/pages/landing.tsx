@@ -82,7 +82,7 @@ export default function Landing() {
                 <span className="text-blue-400 font-bold">5000+</span> aktif servis ile Instagram, TikTok, YouTube ve daha fazlası.
                 <br />
                 <span className="text-emerald-400 font-bold">Anlık teslimat</span> ve 
-                <span className="text-purple-400 font-bold"> 7/24 güvenilir</span> destek.
+                <span className="text-purple-400 font-bold"> 7/24 güvenilir</span> hizmet.
               </p>
               
               {/* Live Stats */}

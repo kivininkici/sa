@@ -127,14 +127,15 @@ Changelog:
 
 ## Recent Changes
 - Ana sayfa tamamen yeniden tasarlandı (modern gradient, animasyonlar)
-- Replit Auth sistemi aktif hale getirildi
+- Replit Auth sistemi kaldırıldı, özel giriş/kayıt sistemi eklendi
 - Giriş yapmamış kullanıcılar için landing sayfası oluşturuldu
 - Giriş yapmış kullanıcılar için ayrı home sayfası eklendi
-- Modern auth modal ile Replit giriş sistemi entegre edildi
+- Smooth form geçiş animasyonları (Framer Motion)
 - Kartlardaki yazılar daha okunabilir hale getirildi (daha büyük font, beyaz renk)
 - Responsive tasarım ve hover animasyonları eklendi
 - Premium görünüm ve profesyonel arayüz tasarımı
 - Floating particles ve gradient background efektleri
+- Canlı destek sistemi referansları tamamen kaldırıldı
 - Kümülatif key kullanım sistemi uygulandı
 - Keys tablosuna used_quantity kolonu eklendi
 - Key oluşturmada sabit 250 limit kaldırıldı, admin belirlediği limiti ayarlayabilir  

@@ -194,7 +194,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="p-8 pt-0">
               <p className="text-lg text-white/90 font-medium leading-relaxed">
-                100+ sosyal medya platformu kapsamlı desteği
+                100+ sosyal medya platformu kapsamlı hizmeti
               </p>
             </CardContent>
           </Card>
@@ -208,7 +208,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="p-8 pt-0">
               <p className="text-lg text-white/90 font-medium leading-relaxed">
-                Yüksek kaliteli servis ve güvenilir destek garantisi
+                Yüksek kaliteli servis ve güvenilir hizmet garantisi
               </p>
             </CardContent>
           </Card>
