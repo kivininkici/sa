@@ -242,12 +242,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Service not available" });
       }
 
+      // Generate unique order ID
+      const orderId = generateOrderId();
+
       // Create order
       const order = await storage.createOrder({
+        orderId,
         keyId: key.id,
-        serviceId,
-        targetUrl,
-        quantity,
+        serviceId: service.id,
+        targetUrl: targetUrl || null,
+        quantity: parseInt(quantity),
         status: "pending",
       });
 
