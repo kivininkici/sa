@@ -339,6 +339,15 @@ export class DatabaseStorage implements IStorage {
       .set({ lastLoginAt: new Date() })
       .where(eq(adminUsers.id, id));
   }
+
+  async getAdminCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(adminUsers);
+    return result.count;
+  }
+
+  async getAllAdmins(): Promise<AdminUser[]> {
+    return await db.select().from(adminUsers).orderBy(desc(adminUsers.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
