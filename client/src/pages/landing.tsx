@@ -193,7 +193,7 @@ export default function Landing() {
                   <CardTitle className="text-2xl font-black text-white mb-3">Çoklu Platform</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 pt-0">
-                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                  <p className="text-lg font-medium leading-relaxed text-[#3c445c]">
                     Instagram, YouTube, TikTok ve 100+ platform için kapsamlı destek.
                   </p>
                 </CardContent>
