@@ -79,6 +79,8 @@ export const services = pgTable("services", {
   responseFormat: jsonb("response_format"),
   serviceId: varchar("service_id", { length: 100 }), // For external API service ID
   category: varchar("category", { length: 100 }),
+  minQuantity: integer("min_quantity").default(1),
+  maxQuantity: integer("max_quantity").default(10000),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

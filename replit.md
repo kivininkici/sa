@@ -136,7 +136,10 @@ Changelog:
 - Backend'de updateKeyUsedQuantity methodu eklendi
 - Frontend'de ValidatedKey interface güncellendi (usedQuantity, remainingQuantity alanları)
 - Admin Services endpoint'i (/api/admin/services/all) eklendi
-- 15366 servis aktif ve API Management sayfasında görünüyor
+- API yönetim sistemi geliştirildi: API silme, bakım modu kontrolü
+- Her API için "Servisleri Çek" butonu eklendi
+- Bakım modunda sadece adminler key kullanabilir
+- API silme işlemi bağlı servisleri de otomatik siler
 
 ## User Preferences
 

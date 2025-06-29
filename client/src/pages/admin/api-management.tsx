@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Edit2,
   Power,
-  PowerOff
+  PowerOff,
+  RefreshCw
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -116,6 +117,58 @@ export default function ApiManagement() {
         description: data.message,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/maintenance-mode"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch services from specific API mutation
+  const fetchServicesFromApiMutation = useMutation({
+    mutationFn: async ({ apiUrl, apiKey }: { apiUrl: string; apiKey: string }) => {
+      const response = await apiRequest("POST", "/api/admin/fetch-services", { apiUrl, apiKey });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı",
+        description: `${data.length} servis bulundu ve içe aktarıldı`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Auto fetch and import services for existing API
+  const autoFetchServicesMutation = useMutation({
+    mutationFn: async ({ apiUrl, apiKey }: { apiUrl: string; apiKey: string }) => {
+      const response = await apiRequest("POST", "/api/admin/fetch-and-import-services", { apiUrl, apiKey });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı",
+        description: `${data.imported || 0} servis otomatik içe aktarıldı`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -593,9 +646,19 @@ export default function ApiManagement() {
                           <p className="text-xs text-slate-500 truncate mb-2">
                             {api.apiUrl}
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-slate-400 mb-3">
                             Oluşturulma: {new Date(api.createdAt).toLocaleDateString('tr-TR')}
                           </p>
+                          <Button
+                            onClick={() => autoFetchServicesMutation.mutate({ apiUrl: api.apiUrl, apiKey: api.apiKey })}
+                            disabled={autoFetchServicesMutation.isPending}
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs"
+                          >
+                            <RefreshCw className={`w-3 h-3 mr-1 ${autoFetchServicesMutation.isPending ? 'animate-spin' : ''}`} />
+                            {autoFetchServicesMutation.isPending ? "Çekiliyor..." : "Servisleri Çek"}
+                          </Button>
                         </CardContent>
                       </Card>
                     ))}

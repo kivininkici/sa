@@ -1042,6 +1042,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch and auto-import services from existing API
+  app.post("/api/admin/fetch-and-import-services", requireAdminAuth, async (req, res) => {
+    try {
+      const { apiUrl, apiKey } = req.body;
+      
+      if (!apiUrl || !apiKey) {
+        return res.status(400).json({ message: "API URL ve API Key gereklidir" });
+      }
+
+      console.log(`Fetching and auto-importing services from: ${apiUrl}`);
+      
+      // First, fetch services from the API
+      const servicesResponse = await makeServiceRequest(
+        apiUrl,
+        "GET",
+        { "Authorization": `Bearer ${apiKey}` },
+        {}
+      );
+
+      // Format the services
+      const formattedServices = formatServicesResponse(servicesResponse, apiUrl, apiKey);
+      
+      if (formattedServices.error) {
+        return res.status(400).json({ 
+          message: formattedServices.error,
+          details: formattedServices.suggestedFix 
+        });
+      }
+
+      if (!Array.isArray(formattedServices) || formattedServices.length === 0) {
+        return res.status(400).json({ message: "API'den hiç servis bulunamadı" });
+      }
+
+      // Auto-import all services
+      console.log(`Auto-importing ${formattedServices.length} services...`);
+      
+      let imported = 0;
+      let errors = [];
+      
+      for (const serviceData of formattedServices) {
+        try {
+          const validated = insertServiceSchema.parse(serviceData);
+          await storage.createService(validated);
+          imported++;
+        } catch (validationError) {
+          console.error("Validation error for service:", serviceData.name, validationError);
+          errors.push({
+            service: serviceData.name || 'Unknown',
+            error: validationError instanceof Error ? validationError.message : 'Validation failed'
+          });
+        }
+      }
+
+      console.log(`Successfully imported ${imported} services`);
+      
+      res.json({
+        success: true,
+        imported,
+        total: formattedServices.length,
+        errors: errors.length > 0 ? errors.slice(0, 5) : [], // Limit error details
+        message: `${imported} servis başarıyla içe aktarıldı`
+      });
+
+    } catch (error) {
+      console.error("Error in fetch-and-import-services:", error);
+      res.status(500).json({ 
+        message: "Servisler çekilirken hata oluştu",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Helper function to format API responses
   function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
     let formattedServices = [];
@@ -1201,8 +1273,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         responseFormat: {},
         serviceId: serviceId,
         category: service.category || service.category_name || service.type || 'general',
-        minQuantity: parseInt(service.min || service.minimum || service.min_quantity || '1'),
-        maxQuantity: parseInt(service.max || service.maximum || service.max_quantity || '10000'),
+        minQuantity: Math.max(1, parseInt(service.min || service.minimum || service.min_quantity || '1') || 1),
+        maxQuantity: Math.max(1, parseInt(service.max || service.maximum || service.max_quantity || '10000') || 10000),
         originalData: service // Keep original for debugging
       };
     });
