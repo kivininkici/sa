@@ -85,11 +85,20 @@ export default function UserInterface() {
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Key Doğrulama Hatası",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Check if it's maintenance mode error
+      if (error.message.includes("bakım modunda")) {
+        toast({
+          title: "Bakım Modu",
+          description: "Sistem şu anda bakım modunda. Lütfen daha sonra tekrar deneyin.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Key Doğrulama Hatası",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -108,11 +117,20 @@ export default function UserInterface() {
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Sipariş Oluşturma Hatası",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Check if it's maintenance mode error
+      if (error.message.includes("bakım modunda")) {
+        toast({
+          title: "Bakım Modu",
+          description: "Sistem şu anda bakım modunda. Lütfen daha sonra tekrar deneyin.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sipariş Oluşturma Hatası",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 

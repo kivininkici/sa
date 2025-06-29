@@ -15,7 +15,10 @@ import {
   Trash2, 
   Settings,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit2,
+  Power,
+  PowerOff
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -55,10 +58,64 @@ export default function ApiManagement() {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] });
       setIsDialogOpen(false);
       setApiName("");
       setApiUrl("");
       setApiKey("");
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // API deletion mutation
+  const deleteApiMutation = useMutation({
+    mutationFn: async (apiId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/api-settings/${apiId}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı",
+        description: data.message || `API silindi ve ${data.deletedServices || 0} servis kaldırıldı`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        window.location.href = "/admin/login";
+        return;
+      }
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Maintenance mode toggle mutation
+  const toggleMaintenanceMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const response = await apiRequest("POST", "/api/admin/maintenance-mode", { enabled });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı",
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/maintenance-mode"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -83,6 +140,18 @@ export default function ApiManagement() {
 
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/admin/services/all"],
+    retry: false,
+  });
+
+  // Fetch API settings
+  const { data: apiSettings, isLoading: apiSettingsLoading } = useQuery({
+    queryKey: ["/api/admin/api-settings"],
+    retry: false,
+  });
+
+  // Fetch maintenance mode status
+  const { data: maintenanceMode, isLoading: maintenanceModeLoading } = useQuery({
+    queryKey: ["/api/admin/maintenance-mode"],
     retry: false,
   });
 
@@ -231,6 +300,8 @@ export default function ApiManagement() {
   }
 
   const servicesList = Array.isArray(services) ? services : [];
+  const apiSettingsList = Array.isArray(apiSettings) ? apiSettings : [];
+  const maintenanceModeStatus = maintenanceMode as { maintenanceMode: boolean } | undefined;
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -427,6 +498,111 @@ export default function ApiManagement() {
                 </DialogContent>
               </Dialog>
             </div>
+
+            {/* Maintenance Mode Control */}
+            <Card className="dashboard-card">
+              <CardHeader className="border-b border-slate-700">
+                <CardTitle className="text-lg font-semibold text-slate-50 flex items-center justify-between">
+                  <span>Bakım Modu</span>
+                  {maintenanceModeLoading ? (
+                    <div className="text-sm text-slate-400">Yükleniyor...</div>
+                  ) : (
+                    <Button
+                      onClick={() => toggleMaintenanceMutation.mutate(!maintenanceModeStatus?.maintenanceMode)}
+                      disabled={toggleMaintenanceMutation.isPending}
+                      variant={maintenanceModeStatus?.maintenanceMode ? "destructive" : "default"}
+                      size="sm"
+                    >
+                      {maintenanceModeStatus?.maintenanceMode ? (
+                        <>
+                          <PowerOff className="w-4 h-4 mr-2" />
+                          Bakım Modunu Kapat
+                        </>
+                      ) : (
+                        <>
+                          <Power className="w-4 h-4 mr-2" />
+                          Bakım Modunu Aç
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-3 h-3 rounded-full ${
+                    maintenanceModeStatus?.maintenanceMode ? 'bg-red-500' : 'bg-green-500'
+                  }`}></div>
+                  <div>
+                    <p className="text-slate-50 font-medium">
+                      {maintenanceModeStatus?.maintenanceMode ? 'Bakım Modu Aktif' : 'Normal Çalışma Modu'}
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      {maintenanceModeStatus?.maintenanceMode 
+                        ? 'Sadece adminler key kullanabilir' 
+                        : 'Tüm kullanıcılar key kullanabilir'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Active APIs */}
+            <Card className="dashboard-card">
+              <CardHeader className="border-b border-slate-700">
+                <CardTitle className="text-lg font-semibold text-slate-50">
+                  Aktif API'ler
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {apiSettingsLoading ? (
+                  <div className="text-center text-slate-400">Yükleniyor...</div>
+                ) : !apiSettingsList || apiSettingsList.length === 0 ? (
+                  <div className="text-center text-slate-400">Henüz API eklenmemiş</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {apiSettingsList.map((api: any) => (
+                      <Card key={api.id} className="dashboard-card relative">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <Settings className="w-4 h-4 text-blue-400" />
+                              <h4 className="font-semibold text-slate-50">{api.name}</h4>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Badge 
+                                variant={api.isActive ? "default" : "secondary"}
+                                className={api.isActive 
+                                  ? "bg-green-900 text-green-300" 
+                                  : "bg-slate-700 text-slate-400"
+                                }
+                              >
+                                {api.isActive ? "Aktif" : "Pasif"}
+                              </Badge>
+                              <Button
+                                onClick={() => deleteApiMutation.mutate(api.id)}
+                                disabled={deleteApiMutation.isPending}
+                                variant="destructive"
+                                size="sm"
+                                className="w-8 h-8 p-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-500 truncate mb-2">
+                            {api.apiUrl}
+                          </p>
+                          <p className="text-xs text-slate-400">
+                            Oluşturulma: {new Date(api.createdAt).toLocaleDateString('tr-TR')}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Current Services */}
             <Card className="dashboard-card">

@@ -195,6 +195,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Key is required" });
       }
 
+      // Check maintenance mode - only allow admins
+      const settings = await storage.getAllApiSettings();
+      const maintenanceSetting = settings.find(s => s.name === 'maintenance_mode');
+      const isMaintenanceMode = maintenanceSetting ? maintenanceSetting.isActive : false;
+      
+      if (isMaintenanceMode) {
+        // Check if user is admin (we'll need to modify this based on your admin auth system)
+        const isAdmin = req.session?.adminId; // Check if admin is logged in
+        if (!isAdmin) {
+          return res.status(503).json({ 
+            message: "Sistem bakım modunda. Lütfen daha sonra tekrar deneyin.",
+            maintenanceMode: true
+          });
+        }
+      }
+
       const foundKey = await storage.getKeyByValue(key);
       if (!foundKey) {
         return res.status(404).json({ message: "Invalid key" });
@@ -224,6 +240,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", async (req, res) => {
     try {
+      // Check maintenance mode first
+      const settings = await storage.getAllApiSettings();
+      const maintenanceSetting = settings.find(s => s.name === 'maintenance_mode');
+      const isMaintenanceMode = maintenanceSetting ? maintenanceSetting.isActive : false;
+      
+      if (isMaintenanceMode) {
+        const isAdmin = req.session?.adminId;
+        if (!isAdmin) {
+          return res.status(503).json({ 
+            message: "Sistem bakım modunda. Lütfen daha sonra tekrar deneyin.",
+            maintenanceMode: true
+          });
+        }
+      }
+
       const { keyValue, serviceId, targetUrl, quantity } = req.body;
 
       // Validate key
@@ -962,7 +993,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+  // Maintenance mode endpoints
+  app.get("/api/admin/maintenance-mode", requireAdminAuth, async (req, res) => {
+    try {
+      // Check if maintenance mode setting exists in database
+      const settings = await storage.getAllApiSettings();
+      const maintenanceSetting = settings.find(s => s.name === 'maintenance_mode');
+      
+      res.json({ 
+        maintenanceMode: maintenanceSetting ? maintenanceSetting.isActive : false,
+        message: maintenanceSetting ? "Bakım modu durumu alındı" : "Bakım modu ayarı bulunamadı"
+      });
+    } catch (error) {
+      console.error("Error getting maintenance mode:", error);
+      res.status(500).json({ message: "Bakım modu durumu alınamadı" });
+    }
+  });
+
+  app.post("/api/admin/maintenance-mode", requireAdminAuth, async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      
+      // Check if maintenance mode setting exists
+      const settings = await storage.getAllApiSettings();
+      const maintenanceSetting = settings.find(s => s.name === 'maintenance_mode');
+      
+      if (maintenanceSetting) {
+        // Update existing setting
+        await storage.updateApiSettings(maintenanceSetting.id, { isActive: enabled });
+      } else {
+        // Create new maintenance mode setting
+        await storage.createApiSettings({
+          name: 'maintenance_mode',
+          apiUrl: 'internal://maintenance',
+          apiKey: 'system',
+          isActive: enabled
+        });
+      }
+      
+      res.json({ 
+        success: true,
+        maintenanceMode: enabled,
+        message: enabled ? "Bakım modu etkinleştirildi" : "Bakım modu devre dışı bırakıldı"
+      });
+    } catch (error) {
+      console.error("Error setting maintenance mode:", error);
+      res.status(500).json({ message: "Bakım modu ayarlanamadı" });
+    }
+  });
 
   // Helper function to format API responses
   function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
