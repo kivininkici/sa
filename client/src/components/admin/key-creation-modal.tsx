@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Service } from "@shared/schema";
+import { Search } from "lucide-react";
 
 const keySchema = z.object({
   name: z.string().min(1, "Key adı gerekli"),
@@ -48,6 +49,7 @@ export default function KeyCreationModal({
 }: KeyCreationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [serviceSearchTerm, setServiceSearchTerm] = useState("");
 
   const { data: services } = useQuery({
     queryKey: ["/api/admin/services/all"],
@@ -125,24 +127,55 @@ export default function KeyCreationModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-slate-200">Servis Seç</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                    <FormControl>
-                      <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
-                        <SelectValue placeholder="Servis seçin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-slate-700 border-slate-600">
-                      {servicesList.map((service: Service) => (
-                        <SelectItem 
-                          key={service.id} 
-                          value={service.id.toString()}
-                          className="text-slate-50 focus:bg-slate-600"
-                        >
-                          {service.name} - {service.platform}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                      <Input
+                        placeholder="Servis ara..."
+                        value={serviceSearchTerm}
+                        onChange={(e) => setServiceSearchTerm(e.target.value)}
+                        className="bg-slate-700 border-slate-600 text-slate-50 pl-10"
+                      />
+                    </div>
+                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                      <FormControl>
+                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
+                          <SelectValue placeholder="Servis seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-slate-700 border-slate-600 max-h-60 overflow-y-auto">
+                        {servicesList
+                          .filter((service: Service) => 
+                            serviceSearchTerm === "" || 
+                            service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+                            service.platform.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+                            service.type?.toLowerCase().includes(serviceSearchTerm.toLowerCase())
+                          )
+                          .map((service: Service) => (
+                            <SelectItem 
+                              key={service.id} 
+                              value={service.id.toString()}
+                              className="text-slate-50 focus:bg-slate-600"
+                            >
+                              <div className="flex flex-col">
+                                <span>{service.name}</span>
+                                <span className="text-xs text-slate-400">{service.platform} - {service.type}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        {servicesList.filter((service: Service) => 
+                          serviceSearchTerm === "" || 
+                          service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+                          service.platform.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
+                          service.type?.toLowerCase().includes(serviceSearchTerm.toLowerCase())
+                        ).length === 0 && serviceSearchTerm !== "" && (
+                          <div className="text-slate-400 text-center py-2 text-sm">
+                            Arama için sonuç bulunamadı
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

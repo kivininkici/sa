@@ -123,7 +123,7 @@ KeyPanel is a modern key management system designed for social media services. I
 
 Changelog:
 - June 28, 2025. Initial setup
-- June 29, 2025. Admin oluşturma ve askıya alma sistemi eklendi, MedyaBayim API entegrasyonu, canlı destek sistemi entegre edildi
+- June 29, 2025. Admin oluşturma ve askıya alma sistemi eklendi, MedyaBayim API entegrasyonu
 
 ## Recent Changes
 - Kümülatif key kullanım sistemi uygulandı
@@ -140,6 +140,8 @@ Changelog:
 - Her API için "Servisleri Çek" butonu eklendi
 - Bakım modunda sadece adminler key kullanabilir
 - API silme işlemi bağlı servisleri de otomatik siler
+- Key oluşturmada servis arama özelliği eklendi
+- Canlı destek sistemi kaldırıldı
 
 ## User Preferences
 
