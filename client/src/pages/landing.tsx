@@ -159,58 +159,58 @@ export default function Landing() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/30 hover:border-purple-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-                <CardHeader className="p-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mb-4">
-                    <Shield className="w-8 h-8 text-white" />
+              <Card className="bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-purple-400/50 hover:border-purple-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg">
+                <CardHeader className="p-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                    <Shield className="w-10 h-10 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-white">Güvenli Key Sistemi</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-3">Güvenli Key Sistemi</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-gray-300">
-                    Tek kullanımlık anahtarlar ile maksimum güvenlik ve kontrol.
+                <CardContent className="p-8 pt-0">
+                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                    Tek kullanımlık anahtarlar ile maksimum güvenlik ve tam kontrol sağlar.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-emerald-400/30 hover:border-emerald-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-                <CardHeader className="p-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
-                    <Zap className="w-8 h-8 text-white" />
+              <Card className="bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 border-emerald-400/50 hover:border-emerald-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg">
+                <CardHeader className="p-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                    <Zap className="w-10 h-10 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-white">Anlık Teslimat</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-3">Anlık Teslimat</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-gray-300">
-                    2-30 saniye içinde sipariş işleme ve gerçek zamanlı teslimat.
+                <CardContent className="p-8 pt-0">
+                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                    2-30 saniye içinde sipariş işleme ve gerçek zamanlı teslimat garantisi.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-400/30 hover:border-blue-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-                <CardHeader className="p-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-4">
-                    <Users className="w-8 h-8 text-white" />
+              <Card className="bg-gradient-to-br from-blue-500/30 to-cyan-500/30 border-blue-400/50 hover:border-blue-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg">
+                <CardHeader className="p-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                    <Users className="w-10 h-10 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-white">Çoklu Platform</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-3">Çoklu Platform</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-gray-300">
-                    Instagram, YouTube, TikTok ve 100+ platform desteği.
+                <CardContent className="p-8 pt-0">
+                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                    Instagram, YouTube, TikTok ve 100+ platform için kapsamlı destek.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-400/30 hover:border-amber-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-                <CardHeader className="p-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center mb-4">
-                    <KeyRound className="w-8 h-8 text-white" />
+              <Card className="bg-gradient-to-br from-amber-500/30 to-orange-500/30 border-amber-400/50 hover:border-amber-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg">
+                <CardHeader className="p-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                    <KeyRound className="w-10 h-10 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-bold text-white">Kolay Yönetim</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-3">Kolay Yönetim</CardTitle>
                 </CardHeader>
-                <CardContent className="p-6 pt-0">
-                  <p className="text-gray-300">
-                    Gelişmiş admin paneli ile tam kontrol ve analitik.
+                <CardContent className="p-8 pt-0">
+                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                    Gelişmiş admin paneli ile tam kontrol ve detaylı analitik.
                   </p>
                 </CardContent>
               </Card>

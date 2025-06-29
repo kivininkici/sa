@@ -126,6 +126,15 @@ Changelog:
 - June 29, 2025. Admin oluşturma ve askıya alma sistemi eklendi, MedyaBayim API entegrasyonu
 
 ## Recent Changes
+- Ana sayfa tamamen yeniden tasarlandı (modern gradient, animasyonlar)
+- Replit Auth sistemi aktif hale getirildi
+- Giriş yapmamış kullanıcılar için landing sayfası oluşturuldu
+- Giriş yapmış kullanıcılar için ayrı home sayfası eklendi
+- Modern auth modal ile Replit giriş sistemi entegre edildi
+- Kartlardaki yazılar daha okunabilir hale getirildi (daha büyük font, beyaz renk)
+- Responsive tasarım ve hover animasyonları eklendi
+- Premium görünüm ve profesyonel arayüz tasarımı
+- Floating particles ve gradient background efektleri
 - Kümülatif key kullanım sistemi uygulandı
 - Keys tablosuna used_quantity kolonu eklendi
 - Key oluşturmada sabit 250 limit kaldırıldı, admin belirlediği limiti ayarlayabilir  
@@ -141,12 +150,10 @@ Changelog:
 - Bakım modunda sadece adminler key kullanabilir
 - API silme işlemi bağlı servisleri de otomatik siler
 - Key oluşturmada servis arama özelliği eklendi
-- Canlı destek sistemi kaldırıldı
 - Site performansı optimize edildi: servis listesi 25'lik sayfalara bölündü
 - Servis ID ile hızlı arama özelliği eklendi (örn: 7205)
 - Memoized filtering ile performans artırıldı
 - Sayfalama sistemi ile büyük servis listelerinde kasma sorunu çözüldü
-- Ana sayfa tasarımı güncellendi ve rota düzeltmeleri yapıldı
 - Servis import işleminde serviceId alanı düzgün kaydediliyor
 
 ## User Preferences
