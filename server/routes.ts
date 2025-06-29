@@ -1,11 +1,31 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAdminAuth, requireAdminAuth, hashPassword } from "./adminAuth";
+import { setupAdminAuth, requireAdminAuth, hashPassword, comparePassword } from "./adminAuth";
 
 // Using admin session-based authentication only
 import { insertKeySchema, insertServiceSchema, insertOrderSchema, insertApiSettingsSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Normal user auth schemas
+const userLoginSchema = z.object({
+  username: z.string().min(3),
+  password: z.string().min(6),
+});
+
+const userRegisterSchema = z.object({
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+// Normal user auth middleware
+const requireUserAuth = (req: any, res: any, next: any) => {
+  if (!req.session?.userId) {
+    return res.status(401).json({ message: 'Giriş yapmanız gerekli' });
+  }
+  next();
+};
 
 // Generate random key
 function generateKey(): string {
@@ -43,6 +63,92 @@ async function makeServiceRequest(
 export async function registerRoutes(app: Express): Promise<Server> {
   // Admin auth setup
   setupAdminAuth(app);
+
+  // Normal user auth routes
+  app.post('/api/register', async (req, res) => {
+    try {
+      const { username, email, password } = userRegisterSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsernameOrEmail(username, email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Kullanıcı adı veya email zaten kullanımda' });
+      }
+
+      // Create user
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createNormalUser({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+
+      res.status(201).json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        message: 'Kayıt başarılı' 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Kayıt sırasında hata oluştu' });
+    }
+  });
+
+  app.post('/api/login', async (req, res) => {
+    try {
+      const { username, password } = userLoginSchema.parse(req.body);
+      
+      // Find user
+      const user = await storage.getNormalUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+      }
+
+      // Check password
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
+      }
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+
+      res.json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        message: 'Giriş başarılı' 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Giriş sırasında hata oluştu' });
+    }
+  });
+
+  app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Çıkış sırasında hata oluştu' });
+      }
+      res.json({ message: 'Çıkış başarılı' });
+    });
+  });
+
+  app.get('/api/user', (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ message: 'Giriş yapılmamış' });
+    }
+    
+    res.json({
+      id: req.session.userId,
+      username: req.session.username,
+      authenticated: true
+    });
+  });
 
   // Admin Dashboard routes
   app.get("/api/admin/dashboard/stats", requireAdminAuth, async (req, res) => {

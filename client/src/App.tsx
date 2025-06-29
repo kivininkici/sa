@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import Auth from "@/pages/auth";
 import UserInterface from "@/pages/user-interface";
 import AdminLogin from "@/pages/admin-login";
 import Dashboard from "@/pages/admin/dashboard";
@@ -27,6 +28,7 @@ function Router() {
         <>
           {/* Public routes */}
           <Route path="/" component={Landing} />
+          <Route path="/auth" component={Auth} />
           <Route path="/user" component={UserInterface} />
           
           {/* Admin login */}
@@ -37,6 +39,7 @@ function Router() {
         <>
           {/* Authenticated user home */}
           <Route path="/" component={Home} />
+          <Route path="/auth" component={Auth} />
           <Route path="/user" component={UserInterface} />
           
           {/* Admin routes */}

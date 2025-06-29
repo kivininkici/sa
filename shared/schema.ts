@@ -48,6 +48,17 @@ export const adminUsers = pgTable("admin_users", {
   lastLoginAt: timestamp("last_login_at"),
 });
 
+// Normal users table for regular user authentication
+export const normalUsers = pgTable("normal_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(), // hashed password
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastLoginAt: timestamp("last_login_at"),
+});
+
 export const keys = pgTable("keys", {
   id: serial("id").primaryKey(),
   value: varchar("value", { length: 255 }).notNull().unique(),
@@ -155,6 +166,13 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
   lastLoginAt: true,
 });
 
+export const insertNormalUserSchema = createInsertSchema(normalUsers).omit({
+  id: true,
+  createdAt: true,
+  lastLoginAt: true,
+  isActive: true,
+});
+
 export const adminLoginSchema = z.object({
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı"),
   password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
@@ -165,6 +183,8 @@ export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertNormalUser = z.infer<typeof insertNormalUserSchema>;
+export type NormalUser = typeof normalUsers.$inferSelect;
 export type AdminLogin = z.infer<typeof adminLoginSchema>;
 export type InsertKey = z.infer<typeof insertKeySchema>;
 export type Key = typeof keys.$inferSelect;

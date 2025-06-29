@@ -1,5 +1,6 @@
 import {
   users,
+  normalUsers,
   keys,
   services,
   orders,
@@ -8,6 +9,8 @@ import {
   adminUsers,
   type User,
   type UpsertUser,
+  type NormalUser,
+  type InsertNormalUser,
   type Key,
   type InsertKey,
   type Service,

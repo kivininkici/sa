@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 const keyValidationSchema = z.object({
   keyValue: z.string().min(1, "Key değeri gerekli"),
@@ -49,6 +50,7 @@ interface ValidatedKey {
 
 export default function UserInterface() {
   const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<'key-entry' | 'order-form' | 'order-tracking'>('key-entry');
   const [validatedKey, setValidatedKey] = useState<ValidatedKey | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -173,6 +175,53 @@ export default function UserInterface() {
     keyForm.reset();
     orderForm.reset();
   };
+
+  // Login required check
+  if (!isLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
+          <CardHeader className="text-center">
+            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-white">Giriş Gerekli</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-slate-300">
+              Key kullanmak için önce hesabınıza giriş yapmalısınız.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/auth'}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              Giriş Yap
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/'}
+              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              Ana Sayfaya Dön
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Key className="w-8 h-8 text-white" />
+          </div>
+          <p className="text-white text-lg">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">

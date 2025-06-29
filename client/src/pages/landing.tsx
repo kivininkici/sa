@@ -14,14 +14,12 @@ export default function Landing() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/10 rounded-full blur-2xl animate-bounce"></div>
       </div>
-
       {/* Floating Particles */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
         <div className="absolute top-40 right-20 w-1 h-1 bg-purple-400 rounded-full animate-ping delay-500"></div>
         <div className="absolute bottom-32 left-1/3 w-3 h-3 bg-pink-400 rounded-full animate-ping delay-1000"></div>
       </div>
-
       <div className="relative z-10">
         {/* Header */}
         <header className="border-b border-white/10 backdrop-blur-xl bg-black/20">
@@ -181,7 +179,7 @@ export default function Landing() {
                   <CardTitle className="text-2xl font-black text-white mb-3">Anlık Teslimat</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8 pt-0">
-                  <p className="text-lg text-white/90 font-medium leading-relaxed">
+                  <p className="text-lg font-medium leading-relaxed text-[#3c445c]">
                     2-30 saniye içinde sipariş işleme ve gerçek zamanlı teslimat garantisi.
                   </p>
                 </CardContent>
@@ -244,7 +242,6 @@ export default function Landing() {
           </div>
         </footer>
       </div>
-
       {/* Auth Modal */}
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -266,11 +263,14 @@ export default function Landing() {
 
             <div className="space-y-4">
               <Button 
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => {
+                  setShowAuthModal(false);
+                  window.location.href = '/auth';
+                }}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 rounded-xl transition-all duration-300 hover:scale-105"
               >
-                <LogIn className="w-5 h-5 mr-2" />
-                Replit ile Giriş Yap
+                <UserPlus className="w-5 h-5 mr-2" />
+                Kayıt Ol / Giriş Yap
               </Button>
               
               <div className="relative">
@@ -292,13 +292,13 @@ export default function Landing() {
               </Button>
             </div>
 
-            <div className="mt-8 p-4 bg-blue-500/10 border border-blue-400/30 rounded-xl">
+            <div className="mt-8 p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl">
               <div className="flex items-start space-x-3">
-                <Star className="w-5 h-5 text-blue-400 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-blue-400 font-semibold">Premium Üyelik</p>
+                  <p className="text-sm text-emerald-400 font-semibold">Güvenli Giriş</p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Replit hesabınızla giriş yaparak tüm premium özelliklerden yararlanın
+                    Hızlı kayıt olun ve güvenli key yönetimi sistemimize erişin
                   </p>
                 </div>
               </div>
