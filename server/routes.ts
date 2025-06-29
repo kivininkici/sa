@@ -370,6 +370,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create admin directly (for initial setup)
+  app.post("/api/admin/create-direct", async (req, res) => {
+    try {
+      const { username, password, email } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Kullanıcı adı ve şifre gerekli" });
+      }
+
+      // Check if username already exists
+      const existingAdmin = await storage.getAdminByUsername(username);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Bu kullanıcı adı zaten kullanılıyor" });
+      }
+
+      // Hash password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create new admin
+      const newAdmin = await storage.createAdminUser({
+        username,
+        password: hashedPassword,
+        email: email || '',
+        isActive: true
+      });
+
+      res.json({ 
+        message: "Admin başarıyla oluşturuldu",
+        admin: {
+          id: newAdmin.id,
+          username: newAdmin.username,
+          email: newAdmin.email,
+          isActive: newAdmin.isActive,
+          createdAt: newAdmin.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Direct admin creation error:", error);
+      res.status(500).json({ message: "Admin oluşturulamadı" });
+    }
+  });
+
   // Create new admin (requires admin auth)
   app.post("/api/admin/create", requireAdminAuth, async (req, res) => {
     try {
