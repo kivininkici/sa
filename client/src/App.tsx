@@ -25,6 +25,7 @@ function Router() {
 
       {/* Admin login */}
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin-login" component={AdminLogin} />
 
       {/* Admin routes */}
       <Route path="/admin/dashboard" component={Dashboard} />
