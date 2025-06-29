@@ -52,7 +52,7 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: dashboardStats } = useQuery({
+  const { data: dashboardStats }: { data?: { totalKeys: number; usedKeys: number; activeServices: number; dailyTransactions: number } } = useQuery({
     queryKey: ["/api/admin/dashboard/stats"],
     retry: false,
     enabled: isAuthenticated,
@@ -90,8 +90,8 @@ export default function Dashboard() {
       <Sidebar />
       <main className="flex-1 overflow-hidden relative">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 pointer-events-none"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 pointer-events-none"></div>
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
         
         <Header 
           title="Dashboard" 
@@ -139,7 +139,7 @@ export default function Dashboard() {
                 title="Aktif Servis"
                 value={dashboardStats?.activeServices || 0}
                 icon={ShoppingCart}
-                iconColor="bg-purple-600"
+                iconColor="bg-cyan-600"
                 change="5 servis aktif"
                 changeType="neutral"
               />
