@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -95,6 +95,30 @@ export default function KeyCreationModal({
 
   const servicesList = Array.isArray(services) ? services : [];
 
+  // Memoized filtering for better performance
+  const filteredServices = useMemo(() => {
+    if (!serviceSearchTerm) return servicesList.slice(0, 50); // Show only first 50 services when no search
+
+    const searchLower = serviceSearchTerm.toLowerCase();
+    
+    // Check if search term is a number (service ID)
+    if (/^\d+$/.test(serviceSearchTerm)) {
+      const serviceId = parseInt(serviceSearchTerm);
+      const exactMatch = servicesList.find(service => service.id === serviceId);
+      if (exactMatch) return [exactMatch];
+    }
+
+    // Text search with limit for performance
+    return servicesList
+      .filter((service: Service) => 
+        service.name.toLowerCase().includes(searchLower) ||
+        service.platform.toLowerCase().includes(searchLower) ||
+        service.type?.toLowerCase().includes(searchLower) ||
+        service.id.toString().includes(serviceSearchTerm)
+      )
+      .slice(0, 100); // Limit to 100 results for performance
+  }, [servicesList, serviceSearchTerm]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
@@ -131,7 +155,7 @@ export default function KeyCreationModal({
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                       <Input
-                        placeholder="Servis ara..."
+                        placeholder="Servis ara... (ID: 7205 veya isim: Instagram)"
                         value={serviceSearchTerm}
                         onChange={(e) => setServiceSearchTerm(e.target.value)}
                         className="bg-slate-700 border-slate-600 text-slate-50 pl-10"
@@ -144,33 +168,26 @@ export default function KeyCreationModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-slate-700 border-slate-600 max-h-60 overflow-y-auto">
-                        {servicesList
-                          .filter((service: Service) => 
-                            serviceSearchTerm === "" || 
-                            service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
-                            service.platform.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
-                            service.type?.toLowerCase().includes(serviceSearchTerm.toLowerCase())
-                          )
-                          .map((service: Service) => (
-                            <SelectItem 
-                              key={service.id} 
-                              value={service.id.toString()}
-                              className="text-slate-50 focus:bg-slate-600"
-                            >
-                              <div className="flex flex-col">
-                                <span>{service.name}</span>
-                                <span className="text-xs text-slate-400">{service.platform} - {service.type}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        {servicesList.filter((service: Service) => 
-                          serviceSearchTerm === "" || 
-                          service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
-                          service.platform.toLowerCase().includes(serviceSearchTerm.toLowerCase()) ||
-                          service.type?.toLowerCase().includes(serviceSearchTerm.toLowerCase())
-                        ).length === 0 && serviceSearchTerm !== "" && (
+                        {filteredServices.map((service: Service) => (
+                          <SelectItem 
+                            key={service.id} 
+                            value={service.id.toString()}
+                            className="text-slate-50 focus:bg-slate-600"
+                          >
+                            <div className="flex flex-col">
+                              <span>#{service.id} - {service.name}</span>
+                              <span className="text-xs text-slate-400">{service.platform} - {service.type}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        {filteredServices.length === 0 && serviceSearchTerm !== "" && (
                           <div className="text-slate-400 text-center py-2 text-sm">
                             Arama için sonuç bulunamadı
+                          </div>
+                        )}
+                        {!serviceSearchTerm && servicesList.length > 50 && (
+                          <div className="text-slate-400 text-center py-2 text-sm border-t border-slate-600">
+                            İlk 50 servis gösteriliyor. Aramak için yazmaya başlayın.
                           </div>
                         )}
                       </SelectContent>
