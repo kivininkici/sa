@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, User, Mail, Lock, ArrowLeft, UserPlus, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { motion, AnimatePresence } from "framer-motion";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı"),
@@ -101,6 +102,12 @@ export default function Auth() {
     registerMutation.mutate(data);
   };
 
+  const switchMode = () => {
+    setMode(mode === 'login' ? 'register' : 'login');
+    loginForm.reset();
+    registerForm.reset();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       {/* Background Effects */}
@@ -111,200 +118,245 @@ export default function Auth() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Back to home button */}
-        <Button 
-          variant="ghost"
-          onClick={() => window.location.href = '/'}
-          className="mb-6 text-white hover:bg-white/10"
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Ana Sayfaya Dön
-        </Button>
+          <Button 
+            variant="ghost"
+            onClick={() => window.location.href = '/'}
+            className="mb-6 text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Ana Sayfaya Dön
+          </Button>
+        </motion.div>
 
-        <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm shadow-2xl">
-          <CardHeader className="text-center pb-8">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <KeyRound className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-3xl font-black text-white mb-2">
-              {mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
-            </CardTitle>
-            <p className="text-slate-400">
-              {mode === 'login' 
-                ? 'Hesabınıza giriş yapın ve key yönetimini başlatın'
-                : 'Yeni hesap oluşturun ve hemen başlayın'
-              }
-            </p>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
-            {mode === 'login' ? (
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-white">Kullanıcı Adı</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="Kullanıcı adınızı giriniz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...loginForm.register("username")}
-                    />
-                  </div>
-                  {loginForm.formState.errors.username && (
-                    <p className="text-red-400 text-sm">{loginForm.formState.errors.username.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white">Şifre</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Şifrenizi giriniz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...loginForm.register("password")}
-                    />
-                  </div>
-                  {loginForm.formState.errors.password && (
-                    <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
-                  )}
-                </div>
-
-                <Button 
-                  type="submit"
-                  disabled={loginMutation.isPending}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300"
-                >
-                  {loginMutation.isPending ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      Giriş yapılıyor...
-                    </div>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Giriş Yap
-                    </>
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reg-username" className="text-white">Kullanıcı Adı</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="reg-username"
-                      type="text"
-                      placeholder="Kullanıcı adınızı seçiniz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...registerForm.register("username")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.username && (
-                    <p className="text-red-400 text-sm">{registerForm.formState.errors.username.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Email adresinizi giriniz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...registerForm.register("email")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.email && (
-                    <p className="text-red-400 text-sm">{registerForm.formState.errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password" className="text-white">Şifre</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="reg-password"
-                      type="password"
-                      placeholder="Şifrenizi oluşturunuz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...registerForm.register("password")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.password && (
-                    <p className="text-red-400 text-sm">{registerForm.formState.errors.password.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-white">Şifre Tekrar</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="Şifrenizi tekrar giriniz"
-                      className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
-                      {...registerForm.register("confirmPassword")}
-                    />
-                  </div>
-                  {registerForm.formState.errors.confirmPassword && (
-                    <p className="text-red-400 text-sm">{registerForm.formState.errors.confirmPassword.message}</p>
-                  )}
-                </div>
-
-                <Button 
-                  type="submit"
-                  disabled={registerMutation.isPending}
-                  className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold py-3 rounded-xl transition-all duration-300"
-                >
-                  {registerMutation.isPending ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      Kayıt yapılıyor...
-                    </div>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Kayıt Ol
-                    </>
-                  )}
-                </Button>
-              </form>
-            )}
-
-            {/* Mode Switch */}
-            <div className="pt-6 border-t border-slate-600">
-              <div className="text-center">
-                <p className="text-slate-400 mb-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm shadow-2xl overflow-hidden">
+            <CardHeader className="text-center pb-8">
+              <motion.div 
+                className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <KeyRound className="w-8 h-8 text-white" />
+              </motion.div>
+              
+              <motion.div
+                key={mode}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <CardTitle className="text-3xl font-black text-white mb-2">
+                  {mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
+                </CardTitle>
+                <p className="text-slate-400">
                   {mode === 'login' 
-                    ? 'Henüz hesabınız yok mu?' 
-                    : 'Zaten hesabınız var mı?'
+                    ? 'Hesabınıza giriş yapın ve key yönetimini başlatın'
+                    : 'Yeni hesap oluşturun ve hemen başlayın'
                   }
                 </p>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setMode(mode === 'login' ? 'register' : 'login');
-                    loginForm.reset();
-                    registerForm.reset();
-                  }}
-                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                >
-                  {mode === 'login' ? 'Kayıt Ol' : 'Giriş Yap'}
-                </Button>
+              </motion.div>
+            </CardHeader>
+
+            <CardContent className="space-y-6">
+              <div className="relative min-h-[320px]">
+                <AnimatePresence mode="wait">
+                  {mode === 'login' ? (
+                    <motion.form 
+                      key="login"
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 50 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      onSubmit={loginForm.handleSubmit(onLoginSubmit)} 
+                      className="space-y-4 absolute inset-0"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="username" className="text-white">Kullanıcı Adı</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="username"
+                            type="text"
+                            placeholder="Kullanıcı adınızı giriniz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...loginForm.register("username")}
+                          />
+                        </div>
+                        {loginForm.formState.errors.username && (
+                          <p className="text-red-400 text-sm">{loginForm.formState.errors.username.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-white">Şifre</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="password"
+                            type="password"
+                            placeholder="Şifrenizi giriniz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...loginForm.register("password")}
+                          />
+                        </div>
+                        {loginForm.formState.errors.password && (
+                          <p className="text-red-400 text-sm">{loginForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+
+                      <Button 
+                        type="submit"
+                        disabled={loginMutation.isPending}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6"
+                      >
+                        {loginMutation.isPending ? (
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            Giriş yapılıyor...
+                          </div>
+                        ) : (
+                          <>
+                            <LogIn className="w-4 h-4 mr-2" />
+                            Giriş Yap
+                          </>
+                        )}
+                      </Button>
+                    </motion.form>
+                  ) : (
+                    <motion.form 
+                      key="register"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.4, ease: "easeInOut" }}
+                      onSubmit={registerForm.handleSubmit(onRegisterSubmit)} 
+                      className="space-y-4 absolute inset-0"
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-username" className="text-white">Kullanıcı Adı</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="reg-username"
+                            type="text"
+                            placeholder="Kullanıcı adınızı seçiniz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...registerForm.register("username")}
+                          />
+                        </div>
+                        {registerForm.formState.errors.username && (
+                          <p className="text-red-400 text-sm">{registerForm.formState.errors.username.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-white">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="Email adresinizi giriniz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...registerForm.register("email")}
+                          />
+                        </div>
+                        {registerForm.formState.errors.email && (
+                          <p className="text-red-400 text-sm">{registerForm.formState.errors.email.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="reg-password" className="text-white">Şifre</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="reg-password"
+                            type="password"
+                            placeholder="Şifrenizi oluşturunuz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...registerForm.register("password")}
+                          />
+                        </div>
+                        {registerForm.formState.errors.password && (
+                          <p className="text-red-400 text-sm">{registerForm.formState.errors.password.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="confirm-password" className="text-white">Şifre Tekrar</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                          <Input
+                            id="confirm-password"
+                            type="password"
+                            placeholder="Şifrenizi tekrar giriniz"
+                            className="pl-10 bg-slate-700/50 border-slate-600 text-white placeholder-slate-400"
+                            {...registerForm.register("confirmPassword")}
+                          />
+                        </div>
+                        {registerForm.formState.errors.confirmPassword && (
+                          <p className="text-red-400 text-sm">{registerForm.formState.errors.confirmPassword.message}</p>
+                        )}
+                      </div>
+
+                      <Button 
+                        type="submit"
+                        disabled={registerMutation.isPending}
+                        className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6"
+                      >
+                        {registerMutation.isPending ? (
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            Kayıt yapılıyor...
+                          </div>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Kayıt Ol
+                          </>
+                        )}
+                      </Button>
+                    </motion.form>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+
+              {/* Mode Switch */}
+              <motion.div 
+                className="pt-6 border-t border-slate-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <div className="text-center">
+                  <p className="text-slate-400 mb-4">
+                    {mode === 'login' 
+                      ? 'Henüz hesabınız yok mu?' 
+                      : 'Zaten hesabınız var mı?'
+                    }
+                  </p>
+                  <Button
+                    variant="ghost"
+                    onClick={switchMode}
+                    className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-all duration-300"
+                  >
+                    {mode === 'login' ? 'Kayıt Ol' : 'Giriş Yap'}
+                  </Button>
+                </div>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
