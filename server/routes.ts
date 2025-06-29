@@ -1579,35 +1579,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Geçersiz key" });
       }
 
-      if (key.isUsed) {
-        return res.status(400).json({ message: "Bu key daha önce kullanılmış" });
-      }
-
-      if (!key.serviceId) {
-        return res.status(400).json({ message: "Key'e bağlı servis bulunamadı" });
-      }
-
-      // Get service information
-      const service = await storage.getServiceById(key.serviceId);
+      // Check cumulative usage instead of isUsed flag
+      const currentUsed = key.usedQuantity || 0;
+      const remainingQuantity = (key.maxQuantity || 1000) - currentUsed;
       
-      if (!service) {
-        return res.status(404).json({ message: "Key'e bağlı servis bulunamadı" });
+      if (remainingQuantity <= 0) {
+        return res.status(400).json({ message: "Bu key'in kullanım limiti dolmuş" });
       }
 
-      if (!service.isActive) {
-        return res.status(400).json({ message: "Bu servis şu anda aktif değil" });
-      }
+      // For display purposes, use the first available service (user can select any service)
+      const services = await storage.getActiveServices();
+      const defaultService = services.length > 0 ? services[0] : null;
 
-      // Return validated key with service info
+      // Return validated key info (any service can be used)
       res.json({
         id: key.id,
         value: key.value,
-        maxQuantity: key.maxQuantity || 250,
-        service: {
-          id: service.id,
-          name: service.name,
-          platform: service.platform,
-          type: service.type
+        maxQuantity: key.maxQuantity || 1000,
+        usedQuantity: currentUsed,
+        remainingQuantity: remainingQuantity,
+        service: defaultService ? {
+          id: defaultService.id,
+          name: defaultService.name,
+          platform: defaultService.platform,
+          type: defaultService.type
+        } : {
+          id: 0,
+          name: "Herhangi Bir Servis",
+          platform: "Universal",
+          type: "universal"
         }
       });
 
@@ -1620,10 +1620,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Order creation endpoint (public)
   app.post("/api/orders", async (req, res) => {
     try {
-      const { keyValue, quantity, targetUrl } = req.body;
+      const { keyValue, serviceId, quantity, targetUrl } = req.body;
 
-      if (!keyValue || !quantity) {
-        return res.status(400).json({ message: "Key ve miktar gerekli" });
+      if (!keyValue || !serviceId || !quantity) {
+        return res.status(400).json({ message: "Key, servis ve miktar gerekli" });
       }
 
       // Validate key again
@@ -1633,18 +1633,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Geçersiz key" });
       }
 
-      if (key.isUsed) {
-        return res.status(400).json({ message: "Bu key daha önce kullanılmış" });
-      }
-
-      if (quantity > (key.maxQuantity || 1000)) {
+      // Check cumulative usage
+      const currentUsed = key.usedQuantity || 0;
+      const totalUsage = currentUsed + quantity;
+      
+      if (totalUsage > (key.maxQuantity || 1000)) {
         return res.status(400).json({ 
-          message: `Miktar maksimum limiti aştı. Maksimum: ${key.maxQuantity || 1000}` 
+          message: `Toplam kullanım limiti aştı. Kalan miktar: ${(key.maxQuantity || 1000) - currentUsed}` 
         });
       }
 
-      // Get service
-      const service = await storage.getServiceById(key.serviceId!);
+      // Get service - ANY service can be used with ANY key
+      const service = await storage.getServiceById(serviceId);
       
       if (!service || !service.isActive) {
         return res.status(400).json({ message: "Servis aktif değil" });
@@ -1664,8 +1664,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Sipariş oluşturuldu, işleme alınıyor...'
       });
 
-      // Mark key as used
-      await storage.markKeyAsUsed(key.id, `order_${orderId}`);
+      // Update key used quantity (cumulative usage)
+      await storage.updateKeyUsedQuantity(key.id, quantity);
 
       // Log order creation
       await storage.createLog({

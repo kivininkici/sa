@@ -27,6 +27,7 @@ const keyValidationSchema = z.object({
 
 const orderSchema = z.object({
   keyValue: z.string().min(1),
+  serviceId: z.number().min(1),
   quantity: z.number().min(1, "Miktar en az 1 olmalı"),
   targetUrl: z.string().url("Geçerli bir URL giriniz").optional(),
 });
@@ -179,7 +180,13 @@ export default function UserInterface() {
       return;
     }
     
-    createOrderMutation.mutate(data);
+    // Send order with serviceId from validated key
+    createOrderMutation.mutate({
+      keyValue: validatedKey.value,
+      serviceId: validatedKey.service.id,
+      quantity: data.quantity,
+      targetUrl: data.targetUrl
+    });
   };
 
   const resetForm = () => {
@@ -338,20 +345,7 @@ export default function UserInterface() {
                   <span>Sipariş Detayları</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Service Info */}
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-slate-50 font-medium">{validatedKey.service.name}</h3>
-                    <Badge className="bg-blue-900 text-blue-300">
-                      {validatedKey.service.platform}
-                    </Badge>
-                  </div>
-                  <p className="text-slate-300 text-sm">
-                    Kullanılabilir miktar: {validatedKey.remainingQuantity}
-                  </p>
-                </div>
-
+              <CardContent className="space-y-4">
                 <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
                   <div>
                     <label className="text-slate-200 text-sm font-medium mb-2 block">
