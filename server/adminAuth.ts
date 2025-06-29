@@ -130,5 +130,7 @@ declare module 'express-session' {
   interface SessionData {
     adminId?: number;
     adminUsername?: string;
+    userId?: number;
+    username?: string;
   }
 }

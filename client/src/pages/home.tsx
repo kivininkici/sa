@@ -54,7 +54,14 @@ export default function Home() {
                 <span className="text-white font-medium">{(user as any)?.firstName || 'Kullanıcı'}</span>
               </div>
               <Button 
-                onClick={() => window.location.href = '/api/logout'}
+                onClick={async () => {
+                  try {
+                    await fetch('/api/logout', { method: 'POST' });
+                    window.location.href = '/';
+                  } catch (error) {
+                    window.location.href = '/';
+                  }
+                }}
                 variant="outline"
                 className="border-white/20 bg-white/10 hover:bg-red-500/20 text-white hover:border-red-400/50"
               >

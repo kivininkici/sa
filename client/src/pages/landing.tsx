@@ -272,24 +272,6 @@ export default function Landing() {
                 <UserPlus className="w-5 h-5 mr-2" />
                 Kayıt Ol / Giriş Yap
               </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-800 text-gray-400">veya</span>
-                </div>
-              </div>
-
-              <Button 
-                onClick={() => window.location.href = '/admin/login'}
-                variant="outline"
-                className="w-full border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-semibold py-3 rounded-xl transition-all duration-300"
-              >
-                <Shield className="w-5 h-5 mr-2" />
-                Admin Girişi
-              </Button>
             </div>
 
             <div className="mt-8 p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl">

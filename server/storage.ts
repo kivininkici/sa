@@ -75,6 +75,11 @@ export interface IStorage {
   updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings>;
   deleteApiSettings(id: number): Promise<void>;
 
+  // Normal User operations
+  getNormalUserByUsername(username: string): Promise<NormalUser | undefined>;
+  getUserByUsernameOrEmail(username: string, email: string): Promise<NormalUser | undefined>;
+  createNormalUser(user: InsertNormalUser): Promise<NormalUser>;
+
   // Admin operations
   getAdminByUsername(username: string): Promise<AdminUser | undefined>;
   getAdminById(id: number): Promise<AdminUser | undefined>;
@@ -422,6 +427,33 @@ export class DatabaseStorage implements IStorage {
 
   async getAllAdmins(): Promise<AdminUser[]> {
     return await db.select().from(adminUsers).orderBy(desc(adminUsers.createdAt));
+  }
+
+  // Normal User operations
+  async getNormalUserByUsername(username: string): Promise<NormalUser | undefined> {
+    const [user] = await db
+      .select()
+      .from(normalUsers)
+      .where(eq(normalUsers.username, username));
+    return user;
+  }
+
+  async getUserByUsernameOrEmail(username: string, email: string): Promise<NormalUser | undefined> {
+    const [user] = await db
+      .select()
+      .from(normalUsers)
+      .where(
+        sql`${normalUsers.username} = ${username} OR ${normalUsers.email} = ${email}`
+      );
+    return user;
+  }
+
+  async createNormalUser(user: InsertNormalUser): Promise<NormalUser> {
+    const [newUser] = await db
+      .insert(normalUsers)
+      .values(user)
+      .returning();
+    return newUser;
   }
 }
 
