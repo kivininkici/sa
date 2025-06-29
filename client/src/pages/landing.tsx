@@ -110,8 +110,8 @@ export default function Landing() {
                 onClick={() => setShowAuthModal(true)}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-6 text-xl rounded-2xl shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300"
               >
-                <Shield className="w-6 h-6 mr-3" />
-                Hemen Başla
+                <UserPlus className="w-6 h-6 mr-3" />
+                Kayıt Ol / Giriş Yap
               </Button>
               <Button 
                 size="lg" 
