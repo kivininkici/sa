@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -37,43 +37,37 @@ import {
 
 export default function Orders() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { admin, isLoading } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+    if (!isLoading && !admin) {
+      window.location.href = "/admin/login";
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [admin, isLoading]);
 
   const { data: orders, isLoading: ordersLoading } = useQuery({
     queryKey: ["/api/orders"],
     retry: false,
   });
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
 
   // Calculate stats
+  const ordersArray = Array.isArray(orders) ? orders : [];
   const orderStats = {
-    total: orders?.length || 0,
-    completed: orders?.filter((order: any) => order.status === "completed").length || 0,
-    pending: orders?.filter((order: any) => order.status === "pending").length || 0,
-    failed: orders?.filter((order: any) => order.status === "failed").length || 0,
+    total: ordersArray.length,
+    completed: ordersArray.filter((order: any) => order.status === "completed").length,
+    pending: ordersArray.filter((order: any) => order.status === "pending").length,
+    failed: ordersArray.filter((order: any) => order.status === "failed").length,
   };
 
-  const filteredOrders = orders?.filter((order: any) => {
+  const filteredOrders = ordersArray.filter((order: any) => {
     const matchesSearch = 
       order.id.toString().includes(searchTerm) ||
       order.targetUrl?.toLowerCase().includes(searchTerm.toLowerCase()) ||

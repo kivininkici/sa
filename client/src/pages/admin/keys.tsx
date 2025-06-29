@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
@@ -39,26 +39,19 @@ import { Key as KeyType } from "@shared/schema";
 
 export default function Keys() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+    if (!isLoading && !admin) {
+      window.location.href = "/admin/login";
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [admin, isLoading]);
 
   const { data: keys, isLoading: keysLoading } = useQuery({
     queryKey: ["/api/admin/keys"],
@@ -84,14 +77,7 @@ export default function Keys() {
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
+        window.location.href = "/admin/login";
         return;
       }
       toast({
@@ -102,7 +88,7 @@ export default function Keys() {
     },
   });
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
 

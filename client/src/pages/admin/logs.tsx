@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import Sidebar from "@/components/layout/sidebar";
@@ -39,31 +39,24 @@ import { Log } from "@shared/schema";
 
 export default function Logs() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { admin, isLoading } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+    if (!isLoading && !admin) {
+      window.location.href = "/admin/login";
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [admin, isLoading]);
 
   const { data: logs, isLoading: logsLoading } = useQuery({
     queryKey: ["/api/admin/logs"],
     retry: false,
   });
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
 

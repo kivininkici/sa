@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -8,24 +8,17 @@ import { Settings } from "lucide-react";
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { admin, isLoading } = useAdminAuth();
 
-  // Redirect to home if not authenticated
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
+    if (!isLoading && !admin) {
+      window.location.href = "/admin/login";
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [admin, isLoading]);
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
 

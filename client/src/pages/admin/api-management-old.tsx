@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -58,7 +59,14 @@ export default function ApiManagement() {
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        window.location.href = "/admin/login";
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
         return;
       }
       toast({
@@ -86,7 +94,14 @@ export default function ApiManagement() {
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        window.location.href = "/admin/login";
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
         return;
       }
       toast({
@@ -137,8 +152,6 @@ export default function ApiManagement() {
   if (isLoading || !admin) {
     return <div>Loading...</div>;
   }
-
-  const servicesList = Array.isArray(services) ? services : [];
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -279,12 +292,12 @@ export default function ApiManagement() {
                     <div className="col-span-full text-center text-slate-400">
                       Yükleniyor...
                     </div>
-                  ) : servicesList.length === 0 ? (
+                  ) : !Array.isArray(services) || services.length === 0 ? (
                     <div className="col-span-full text-center text-slate-400">
                       Henüz servis eklenmemiş
                     </div>
                   ) : (
-                    servicesList.map((service: any) => (
+                    Array.isArray(services) && services.map((service: any) => (
                       <Card key={service.id} className="dashboard-card">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
