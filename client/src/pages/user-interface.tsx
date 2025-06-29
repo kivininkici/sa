@@ -49,6 +49,7 @@ export default function UserInterface() {
   const [selectedService, setSelectedService] = useState<number | null>(null);
   const [keyValidated, setKeyValidated] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [keyInfo, setKeyInfo] = useState<{serviceId?: number, maxQuantity?: number} | null>(null);
 
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ["/api/services"],
@@ -68,15 +69,29 @@ export default function UserInterface() {
       const response = await apiRequest("POST", "/api/validate-key", { key });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setKeyValidated(true);
-      toast({
-        title: "Key Geçerli",
-        description: "Key doğrulandı, sipariş verebilirsiniz",
-      });
+      setKeyInfo({ serviceId: data.serviceId, maxQuantity: data.maxQuantity });
+      if (data.serviceId) {
+        const service = servicesToShow?.find((s: any) => s.id === data.serviceId);
+        toast({
+          title: "Key Geçerli",
+          description: data.maxQuantity 
+            ? `Bu key sadece "${service?.name}" servisi için kullanılabilir. Maksimum ${data.maxQuantity} adet.`
+            : `Bu key sadece "${service?.name}" servisi için kullanılabilir.`,
+        });
+        setSelectedService(data.serviceId);
+        form.setValue("serviceId", data.serviceId);
+      } else {
+        toast({
+          title: "Key Geçerli",
+          description: "Key doğrulandı, sipariş verebilirsiniz",
+        });
+      }
     },
     onError: (error) => {
       setKeyValidated(false);
+      setKeyInfo(null);
       toast({
         title: "Geçersiz Key",
         description: error.message,
@@ -225,6 +240,8 @@ export default function UserInterface() {
                   onChange={(e) => {
                     form.setValue("keyValue", e.target.value);
                     setKeyValidated(false);
+                    setKeyInfo(null);
+                    setSelectedService(null);
                   }}
                 />
                 <Button
@@ -288,6 +305,14 @@ export default function UserInterface() {
                       iconColor={getServiceColor(service.platform)}
                       isSelected={selectedService === service.id}
                       onClick={() => {
+                        if (keyInfo?.serviceId && keyInfo.serviceId !== service.id) {
+                          toast({
+                            title: "Servis Kısıtlaması",
+                            description: "Bu key sadece belirli bir servis için kullanılabilir",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
                         setSelectedService(service.id);
                         form.setValue("serviceId", service.id);
                       }}
@@ -333,18 +358,42 @@ export default function UserInterface() {
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-300">İstediğiniz Miktarı Yazın</FormLabel>
+                        <FormLabel className="text-slate-300">
+                          İstediğiniz Miktarı Yazın
+                          {keyInfo?.maxQuantity && (
+                            <span className="text-blue-400 ml-2">
+                              (Maksimum: {keyInfo.maxQuantity})
+                            </span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="Örn: 1000"
+                            placeholder={keyInfo?.maxQuantity ? `1-${keyInfo.maxQuantity} arası` : "Örn: 1000"}
                             className="bg-slate-900 border-slate-600 text-slate-50"
                             value={field.value || ""}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 0;
+                              if (keyInfo?.maxQuantity && value > keyInfo.maxQuantity) {
+                                toast({
+                                  title: "Limit Aşıldı",
+                                  description: `Maksimum ${keyInfo.maxQuantity} adet girebilirsiniz`,
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              field.onChange(value);
+                            }}
                             min="1"
+                            max={keyInfo?.maxQuantity || undefined}
                           />
                         </FormControl>
                         <FormMessage />
+                        {keyInfo?.maxQuantity && (
+                          <p className="text-xs text-slate-400">
+                            Bu key ile 0-{keyInfo.maxQuantity} arasında sipariş verebilirsiniz
+                          </p>
+                        )}
                       </FormItem>
                     )}
                   />

@@ -204,7 +204,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Key has already been used" });
       }
 
-      res.json({ valid: true, keyId: foundKey.id });
+      res.json({ 
+        valid: true, 
+        keyId: foundKey.id,
+        serviceId: foundKey.serviceId,
+        maxQuantity: foundKey.maxQuantity
+      });
     } catch (error) {
       console.error("Error validating key:", error);
       res.status(500).json({ message: "Failed to validate key" });
@@ -219,6 +224,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const key = await storage.getKeyByValue(keyValue);
       if (!key || key.isUsed) {
         return res.status(400).json({ message: "Invalid or used key" });
+      }
+
+      // Check if key is service-specific
+      if (key.serviceId && key.serviceId !== serviceId) {
+        return res.status(400).json({ message: "Bu key sadece belirli bir servis için kullanılabilir" });
+      }
+
+      // Check quantity limit
+      if (key.maxQuantity && quantity > key.maxQuantity) {
+        return res.status(400).json({ message: `Maksimum ${key.maxQuantity} adet sipariş verebilirsiniz` });
       }
 
       // Get service

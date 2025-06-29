@@ -53,6 +53,8 @@ export const keys = pgTable("keys", {
   value: varchar("value", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   type: varchar("type", { length: 50 }).notNull().default("single-use"),
+  serviceId: integer("service_id"),
+  maxQuantity: integer("max_quantity"),
   isUsed: boolean("is_used").notNull().default(false),
   usedAt: timestamp("used_at"),
   usedBy: varchar("used_by", { length: 255 }),

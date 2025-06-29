@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,10 +28,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Service } from "@shared/schema";
 
 const keySchema = z.object({
   name: z.string().optional(),
   type: z.string().default("single-use"),
+  serviceId: z.number().optional(),
+  maxQuantity: z.number().min(1).optional(),
 });
 
 interface KeyCreationModalProps {
@@ -45,6 +48,11 @@ export default function KeyCreationModal({
 }: KeyCreationModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: services } = useQuery({
+    queryKey: ["/api/services/all"],
+    retry: false,
+  });
 
   const form = useForm<z.infer<typeof keySchema>>({
     resolver: zodResolver(keySchema),
@@ -131,6 +139,55 @@ export default function KeyCreationModal({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="serviceId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-300">Servis Seçin (Opsiyonel)</FormLabel>
+                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <FormControl>
+                      <SelectTrigger className="bg-slate-900 border-slate-600 text-slate-50">
+                        <SelectValue placeholder="Servis seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-slate-900 border-slate-600">
+                      {services?.map((service: Service) => (
+                        <SelectItem key={service.id} value={service.id.toString()}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.watch("serviceId") && (
+              <FormField
+                control={form.control}
+                name="maxQuantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-300">Maksimum Miktar</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Örn: 250"
+                        className="bg-slate-900 border-slate-600 text-slate-50"
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        min="1"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="text-xs text-slate-400">
+                      Key sahibi bu miktara kadar sipariş verebilir (0-{field.value || 0} arası)
+                    </p>
+                  </FormItem>
+                )}
+              />
+            )}
             <div className="flex items-center space-x-3 pt-2">
               <Button
                 type="button"
