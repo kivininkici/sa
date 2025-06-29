@@ -624,83 +624,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "API URL gereklidir" });
       }
 
+      if (!apiKey) {
+        return res.status(400).json({ message: "API Key gereklidir" });
+      }
+
       let requestData: any = {};
-      let method = 'GET';
+      let method = 'POST'; // Default to POST for most SMM panel APIs
       let headers: any = {
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       };
 
       // Special handling for medyabayim.com API
       if (apiUrl.includes('medyabayim.com')) {
-        method = 'POST';
+        requestData = {
+          key: apiKey,
+          action: 'services'
+        };
+      } else if (apiUrl.includes('api/v2') || apiUrl.includes('smm')) {
+        // Common SMM panel API format
         requestData = {
           key: apiKey,
           action: 'services'
         };
       } else {
-        // Generic API handling
-        if (apiKey) {
-          headers['Authorization'] = `Bearer ${apiKey}`;
-        }
+        // Try both formats for unknown APIs
+        requestData = {
+          key: apiKey,
+          action: 'services'
+        };
       }
 
+      console.log('Making API request to:', apiUrl);
+      console.log('Request data:', requestData);
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       const fetchOptions: any = {
         method,
         headers,
+        body: JSON.stringify(requestData),
         signal: controller.signal,
       };
-
-      if (method === 'POST') {
-        fetchOptions.body = JSON.stringify(requestData);
-      }
 
       const response = await fetch(apiUrl, fetchOptions);
       
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
+        // Try alternative request format if first fails
+        console.log('First request failed, trying alternative format...');
+        
+        const altRequestData = new URLSearchParams({
+          key: apiKey,
+          action: 'services'
+        });
+
+        const altResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          body: altRequestData.toString(),
+        });
+
+        if (!altResponse.ok) {
+          throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
+        }
+
+        const altData = await altResponse.json();
+        return res.json(formatServicesResponse(altData, apiUrl, apiKey));
       }
 
       const data = await response.json();
+      console.log('API Response received:', Array.isArray(data) ? `Array with ${data.length} items` : typeof data);
       
-      // Handle medyabayim.com API response format
-      let formattedServices = [];
-      
-      if (apiUrl.includes('medyabayim.com')) {
-        // Parse medyabayim.com API response
-        if (Array.isArray(data)) {
-          formattedServices = data.map((service: any) => ({
-            name: service.name || service.service || `Service ${service.service}`,
-            description: service.name || service.description || '',
-            platform: 'MedyaBayim',
-            type: service.type || 'social_media',
-            price: parseFloat(service.rate) || 0,
-            isActive: true,
-            apiEndpoint: apiUrl,
-            apiMethod: 'POST',
-            apiHeaders: { 'Content-Type': 'application/json' },
-            requestTemplate: {
-              key: apiKey,
-              action: 'add',
-              service: service.service,
-              link: '{{link}}',
-              quantity: '{{quantity}}'
-            },
-            responseFormat: {},
-            serviceId: service.service,
-            category: service.category || 'general'
-          }));
-        }
-      } else {
-        // Generic API response handling
-        formattedServices = Array.isArray(data) ? data : data.services || [];
-      }
-      
+      const formattedServices = formatServicesResponse(data, apiUrl, apiKey);
       res.json(formattedServices);
+      
     } catch (error) {
       console.error("Error fetching services from API:", error);
       res.status(500).json({ 
@@ -709,6 +712,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Helper function to format API responses
+  function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
+    let formattedServices = [];
+    
+    if (Array.isArray(data)) {
+      formattedServices = data.map((service: any) => ({
+        name: service.name || service.description || `Service ${service.service || service.id}`,
+        description: service.description || service.name || '',
+        platform: apiUrl.includes('medyabayim.com') ? 'MedyaBayim' : 'External API',
+        type: service.type || service.category || 'social_media',
+        price: parseFloat(service.rate || service.price || service.cost || 0),
+        isActive: true,
+        apiEndpoint: apiUrl,
+        apiMethod: 'POST',
+        apiHeaders: { 'Content-Type': 'application/json' },
+        requestTemplate: {
+          key: apiKey,
+          action: 'add',
+          service: service.service || service.id,
+          link: '{{link}}',
+          quantity: '{{quantity}}'
+        },
+        responseFormat: {},
+        serviceId: service.service || service.id,
+        category: service.category || service.type || 'general',
+        minQuantity: service.min || 1,
+        maxQuantity: service.max || 10000
+      }));
+    } else if (data && data.services && Array.isArray(data.services)) {
+      formattedServices = data.services.map((service: any) => ({
+        name: service.name || service.description || `Service ${service.service || service.id}`,
+        description: service.description || service.name || '',
+        platform: apiUrl.includes('medyabayim.com') ? 'MedyaBayim' : 'External API',
+        type: service.type || service.category || 'social_media',
+        price: parseFloat(service.rate || service.price || service.cost || 0),
+        isActive: true,
+        apiEndpoint: apiUrl,
+        apiMethod: 'POST',
+        apiHeaders: { 'Content-Type': 'application/json' },
+        requestTemplate: {
+          key: apiKey,
+          action: 'add',
+          service: service.service || service.id,
+          link: '{{link}}',
+          quantity: '{{quantity}}'
+        },
+        responseFormat: {},
+        serviceId: service.service || service.id,
+        category: service.category || service.type || 'general',
+        minQuantity: service.min || 1,
+        maxQuantity: service.max || 10000
+      }));
+    } else {
+      console.log('Unexpected API response format:', data);
+      formattedServices = [];
+    }
+    
+    return formattedServices;
+  }
 
   // Import services from external API
   app.post("/api/admin/import-services", requireAdminAuth, async (req, res) => {
