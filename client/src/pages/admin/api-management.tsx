@@ -54,7 +54,7 @@ export default function ApiManagement() {
           variant: data.autoImport ? "destructive" : "default",
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["/api/services/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
       setIsDialogOpen(false);
       setApiName("");
       setApiUrl("");
@@ -82,7 +82,7 @@ export default function ApiManagement() {
   }, [admin, isLoading]);
 
   const { data: services, isLoading: servicesLoading } = useQuery({
-    queryKey: ["/api/services/all"],
+    queryKey: ["/api/admin/services/all"],
     retry: false,
   });
 
@@ -121,7 +121,7 @@ export default function ApiManagement() {
         title: "Başarılı",
         description: `${data.imported} servis içe aktarıldı`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/services/all"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
       setIsDialogOpen(false);
       setFetchedServices([]);
       setSelectedServices([]);
