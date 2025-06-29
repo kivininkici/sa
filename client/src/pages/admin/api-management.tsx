@@ -106,6 +106,14 @@ export default function ApiManagement() {
       });
       return;
     }
+    if (!apiKey) {
+      toast({
+        title: "Hata",
+        description: "API Key zorunludur",
+        variant: "destructive",
+      });
+      return;
+    }
     fetchServicesMutation.mutate({ apiUrl, apiKey });
   };
 
@@ -182,13 +190,14 @@ export default function ApiManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="apiKey">API Key (Opsiyonel)</Label>
+                        <Label htmlFor="apiKey">API Key (Zorunlu)</Label>
                         <Input
                           id="apiKey"
                           type="password"
-                          placeholder="API anahtarı"
+                          placeholder="1555c7dc7e6367f1bd1039305671f2e1"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
+                          required
                         />
                       </div>
                     </div>

@@ -625,83 +625,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!apiKey) {
-        return res.status(400).json({ message: "API Key gereklidir" });
+        return res.status(400).json({ message: "API Key zorunludur" });
       }
+
+      // Set default API URL and validate it
+      const targetApiUrl = apiUrl || "https://medyabayim.com/api/v2";
+      const targetApiKey = apiKey || "1555c7dc7e6367f1bd1039305671f2e1";
+
+      console.log('Making API request to:', targetApiUrl);
+      console.log('Using API key:', targetApiKey.substring(0, 8) + '...');
 
       let requestData: any = {};
-      let method = 'POST'; // Default to POST for most SMM panel APIs
       let headers: any = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       };
 
-      // Special handling for medyabayim.com API
-      if (apiUrl.includes('medyabayim.com')) {
-        requestData = {
-          key: apiKey,
-          action: 'services'
-        };
-      } else if (apiUrl.includes('api/v2') || apiUrl.includes('smm')) {
-        // Common SMM panel API format
-        requestData = {
-          key: apiKey,
-          action: 'services'
-        };
-      } else {
-        // Try both formats for unknown APIs
-        requestData = {
-          key: apiKey,
-          action: 'services'
-        };
-      }
+      // Use form data format for medyabayim.com API
+      const formData = new URLSearchParams();
+      formData.append('key', targetApiKey);
+      formData.append('action', 'services');
 
-      console.log('Making API request to:', apiUrl);
-      console.log('Request data:', requestData);
+      console.log('Request data:', formData.toString());
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       const fetchOptions: any = {
-        method,
+        method: 'POST',
         headers,
-        body: JSON.stringify(requestData),
+        body: formData.toString(),
         signal: controller.signal,
       };
 
-      const response = await fetch(apiUrl, fetchOptions);
+      const response = await fetch(targetApiUrl, fetchOptions);
       
       clearTimeout(timeoutId);
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        // Try alternative request format if first fails
-        console.log('First request failed, trying alternative format...');
+        // Try JSON format if form data fails
+        console.log('Form data request failed, trying JSON format...');
         
-        const altRequestData = new URLSearchParams({
-          key: apiKey,
+        const jsonHeaders = {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        };
+
+        const jsonRequestData = {
+          key: targetApiKey,
           action: 'services'
-        });
+        };
 
-        const altResponse = await fetch(apiUrl, {
+        const jsonResponse = await fetch(targetApiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-          },
-          body: altRequestData.toString(),
+          headers: jsonHeaders,
+          body: JSON.stringify(jsonRequestData),
         });
 
-        if (!altResponse.ok) {
-          throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
+        if (!jsonResponse.ok) {
+          const errorText = await response.text();
+          console.log('Error response:', errorText);
+          throw new Error(`API isteği başarısız: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        const altData = await altResponse.json();
-        return res.json(formatServicesResponse(altData, apiUrl, apiKey));
+        const jsonData = await jsonResponse.json();
+        return res.json(formatServicesResponse(jsonData, targetApiUrl, targetApiKey));
       }
 
-      const data = await response.json();
-      console.log('API Response received:', Array.isArray(data) ? `Array with ${data.length} items` : typeof data);
+      const responseText = await response.text();
+      console.log('Raw response:', responseText.substring(0, 500) + '...');
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('API yanıtı geçerli JSON formatında değil');
+      }
+
+      console.log('Parsed response type:', typeof data);
+      console.log('Response data keys:', Object.keys(data || {}));
       
-      const formattedServices = formatServicesResponse(data, apiUrl, apiKey);
+      const formattedServices = formatServicesResponse(data, targetApiUrl, targetApiKey);
       res.json(formattedServices);
       
     } catch (error) {
