@@ -1054,12 +1054,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Fetching and auto-importing services from: ${apiUrl}`);
       
       // First, fetch services from the API
-      const servicesResponse = await makeServiceRequest(
-        apiUrl,
-        "GET",
-        { "Authorization": `Bearer ${apiKey}` },
-        {}
-      );
+      const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const servicesResponse = await response.json();
 
       // Format the services
       const formattedServices = formatServicesResponse(servicesResponse, apiUrl, apiKey);
