@@ -492,93 +492,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Making API request to:', apiUrl);
       console.log('Using API key:', apiKey.substring(0, 8) + '...');
 
-      // Special handling for medyabayim.com API
-      if (apiUrl.includes('medyabayim.com')) {
-        // Use form data format for medyabayim.com API
-        const formData = new URLSearchParams();
-        formData.append('key', apiKey);
-        formData.append('action', 'services');
+      // Try multiple API request formats to support various APIs
+      let response;
+      let data;
+      let requestSuccessful = false;
 
-        console.log('Request data (form):', formData.toString());
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-        const headers = {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        };
-
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        try {
-          const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers,
-            body: formData.toString(),
-            signal: controller.signal,
-          });
-          
-          clearTimeout(timeoutId);
-
-          console.log('Response status:', response.status);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.log('Error response:', errorText);
-            throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
-          }
-
-          const responseText = await response.text();
-          console.log('Raw response:', responseText.substring(0, 500) + '...');
-
-          let data;
+      try {
+        // Method 1: Try form-data format (like medyabayim.com and similar sites)
+        if (!requestSuccessful) {
           try {
-            data = JSON.parse(responseText);
-          } catch (parseError) {
-            console.error('JSON parse error:', parseError);
-            // If not JSON, try to create a basic response
-            data = { error: 'Invalid JSON response' };
+            console.log('Trying form-data format...');
+            const formData = new URLSearchParams();
+            formData.append('key', apiKey);
+            formData.append('action', 'services');
+
+            const headers = {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            };
+
+            response = await fetch(apiUrl, {
+              method: 'POST',
+              headers,
+              body: formData.toString(),
+              signal: controller.signal,
+            });
+
+            if (response.ok) {
+              const responseText = await response.text();
+              console.log('Form-data response received, length:', responseText.length);
+              
+              try {
+                data = JSON.parse(responseText);
+                requestSuccessful = true;
+                console.log('Form-data format successful');
+              } catch (parseError) {
+                console.log('Form-data response not valid JSON, trying other methods...');
+              }
+            } else {
+              console.log('Form-data format returned:', response.status);
+            }
+          } catch (error) {
+            console.log('Form-data method failed:', error instanceof Error ? error.message : 'Unknown error');
           }
-
-          const formattedServices = formatServicesResponse(data, apiUrl, apiKey);
-          return res.json(formattedServices);
-          
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          console.error('Fetch error:', fetchError);
-          throw fetchError;
-        }
-      } else {
-        // Generic API handling
-        const headers: any = {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        };
-
-        if (apiKey) {
-          headers['Authorization'] = `Bearer ${apiKey}`;
         }
 
-        const requestData = {
-          action: 'services'
-        };
+        // Method 2: Try JSON format with Bearer token
+        if (!requestSuccessful) {
+          try {
+            console.log('Trying JSON format with Bearer token...');
+            const headers: any = {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            };
 
-        console.log('Request data (json):', JSON.stringify(requestData));
+            const requestData = {
+              action: 'services'
+            };
 
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(requestData),
-        });
+            response = await fetch(apiUrl, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(requestData),
+              signal: controller.signal,
+            });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.log('Error response:', errorText);
-          throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
+            if (response.ok) {
+              data = await response.json();
+              requestSuccessful = true;
+              console.log('JSON Bearer format successful');
+            } else {
+              console.log('JSON Bearer format returned:', response.status);
+            }
+          } catch (error) {
+            console.log('JSON Bearer method failed:', error instanceof Error ? error.message : 'Unknown error');
+          }
         }
 
-        const data = await response.json();
+        // Method 3: Try JSON format with key in body
+        if (!requestSuccessful) {
+          try {
+            console.log('Trying JSON format with key in body...');
+            const headers: any = {
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            };
+
+            const requestData = {
+              key: apiKey,
+              action: 'services'
+            };
+
+            response = await fetch(apiUrl, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify(requestData),
+              signal: controller.signal,
+            });
+
+            if (response.ok) {
+              data = await response.json();
+              requestSuccessful = true;
+              console.log('JSON body key format successful');
+            } else {
+              console.log('JSON body key format returned:', response.status);
+            }
+          } catch (error) {
+            console.log('JSON body key method failed:', error instanceof Error ? error.message : 'Unknown error');
+          }
+        }
+
+        // Method 4: Try GET request with query parameters
+        if (!requestSuccessful) {
+          try {
+            console.log('Trying GET format with query parameters...');
+            const urlWithParams = new URL(apiUrl);
+            urlWithParams.searchParams.append('key', apiKey);
+            urlWithParams.searchParams.append('action', 'services');
+
+            const headers: any = {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            };
+
+            response = await fetch(urlWithParams.toString(), {
+              method: 'GET',
+              headers,
+              signal: controller.signal,
+            });
+
+            if (response.ok) {
+              data = await response.json();
+              requestSuccessful = true;
+              console.log('GET query params format successful');
+            } else {
+              console.log('GET query params format returned:', response.status);
+            }
+          } catch (error) {
+            console.log('GET query params method failed:', error instanceof Error ? error.message : 'Unknown error');
+          }
+        }
+
+        // Method 5: Try different action parameter names
+        if (!requestSuccessful) {
+          try {
+            console.log('Trying alternative action names...');
+            const formData = new URLSearchParams();
+            formData.append('key', apiKey);
+            formData.append('method', 'services'); // Some APIs use 'method' instead of 'action'
+
+            const headers = {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            };
+
+            response = await fetch(apiUrl, {
+              method: 'POST',
+              headers,
+              body: formData.toString(),
+              signal: controller.signal,
+            });
+
+            if (response.ok) {
+              const responseText = await response.text();
+              try {
+                data = JSON.parse(responseText);
+                requestSuccessful = true;
+                console.log('Alternative action name successful');
+              } catch (parseError) {
+                console.log('Alternative action response not valid JSON');
+              }
+            }
+          } catch (error) {
+            console.log('Alternative action method failed:', error instanceof Error ? error.message : 'Unknown error');
+          }
+        }
+
+        clearTimeout(timeoutId);
+
+        if (!requestSuccessful) {
+          throw new Error('Tüm API format denemeleri başarısız oldu. API dokümantasyonunu kontrol edin.');
+        }
+
         const formattedServices = formatServicesResponse(data, apiUrl, apiKey);
         return res.json(formattedServices);
+
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        console.error('All API methods failed:', fetchError);
+        throw fetchError;
       }
       
     } catch (error) {
@@ -701,31 +806,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
     let formattedServices = [];
     
-    console.log('Formatting response data:', data);
+    console.log('Formatting response data type:', typeof data);
+    console.log('Response data keys:', data && typeof data === 'object' ? Object.keys(data) : 'Not an object');
     
     // Handle different response formats
     let servicesToProcess = [];
     
     if (Array.isArray(data)) {
       servicesToProcess = data;
+      console.log('Data is direct array with', data.length, 'items');
     } else if (data && data.services && Array.isArray(data.services)) {
       servicesToProcess = data.services;
+      console.log('Found services array with', data.services.length, 'items');
     } else if (data && typeof data === 'object') {
-      // Check for other possible keys
-      const possibleKeys = ['data', 'results', 'items', 'list'];
+      // Check for all possible keys that might contain services
+      const possibleKeys = [
+        'data', 'results', 'items', 'list', 'response', 'payload', 
+        'content', 'body', 'services_list', 'service_list', 'all_services',
+        'smm_services', 'api_services', 'available_services'
+      ];
+      
       for (const key of possibleKeys) {
         if (data[key] && Array.isArray(data[key])) {
           servicesToProcess = data[key];
+          console.log(`Found services in '${key}' with ${data[key].length} items`);
           break;
         }
       }
       
-      // If still no array found, try to extract from object values
+      // If still no array found, try to extract from nested objects
+      if (servicesToProcess.length === 0) {
+        const checkNested = (obj: any, depth = 0) => {
+          if (depth > 3) return; // Prevent deep recursion
+          
+          for (const [key, value] of Object.entries(obj)) {
+            if (Array.isArray(value) && value.length > 0) {
+              // Check if this looks like a services array
+              const firstItem = value[0];
+              if (firstItem && typeof firstItem === 'object' && 
+                  (firstItem.service || firstItem.id || firstItem.name || firstItem.title)) {
+                servicesToProcess = value;
+                console.log(`Found nested services in '${key}' with ${value.length} items`);
+                return;
+              }
+            } else if (value && typeof value === 'object') {
+              checkNested(value, depth + 1);
+            }
+          }
+        };
+        
+        checkNested(data);
+      }
+      
+      // Last resort: try all object values
       if (servicesToProcess.length === 0) {
         const values = Object.values(data);
         for (const value of values) {
-          if (Array.isArray(value)) {
+          if (Array.isArray(value) && value.length > 0) {
             servicesToProcess = value;
+            console.log(`Found services in object values with ${value.length} items`);
             break;
           }
         }
@@ -733,66 +872,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     if (servicesToProcess.length === 0) {
-      console.log('No services found in response. Creating sample services for testing.');
-      // Create some sample services for testing
-      servicesToProcess = [
-        {
-          service: '1',
-          name: 'Instagram Followers',
-          description: 'High quality Instagram followers',
-          rate: '1.50',
-          min: '100',
-          max: '10000',
-          category: 'Instagram'
-        },
-        {
-          service: '2', 
-          name: 'YouTube Views',
-          description: 'Real YouTube video views',
-          rate: '0.80',
-          min: '1000',
-          max: '100000',
-          category: 'YouTube'
-        }
-      ];
+      console.log('No services found in response. Response might be in unexpected format.');
+      console.log('Raw response sample:', JSON.stringify(data).substring(0, 1000));
+      
+      // Don't create sample services, return empty array with error message
+      return {
+        error: 'API yanıtında servis bulunamadı. API dokümantasyonunu kontrol edin.',
+        rawResponse: data,
+        suggestedFix: 'API yanıtı beklenen formatta değil. Servisler array formatında olmalı.'
+      };
+    }
+    
+    // Detect API format based on domain or response structure
+    const getDomainName = (url: string) => {
+      try {
+        return new URL(url).hostname.toLowerCase();
+      } catch {
+        return url.toLowerCase();
+      }
+    };
+    
+    const domain = getDomainName(apiUrl);
+    let platformName = 'External API';
+    
+    // Set platform name based on domain
+    if (domain.includes('medyabayim')) platformName = 'MedyaBayim';
+    else if (domain.includes('resellerprovider')) platformName = 'ResellerProvider';
+    else if (domain.includes('smmpanel')) platformName = 'SMM Panel';
+    else if (domain.includes('smmkings')) platformName = 'SMM Kings';
+    else if (domain.includes('followersup')) platformName = 'FollowersUp';
+    else if (domain.includes('socialpanel')) platformName = 'Social Panel';
+    else {
+      // Extract domain name as platform
+      const domainParts = domain.split('.');
+      if (domainParts.length > 1) {
+        platformName = domainParts[domainParts.length - 2].charAt(0).toUpperCase() + 
+                     domainParts[domainParts.length - 2].slice(1);
+      }
     }
     
     formattedServices = servicesToProcess.map((service: any, index: number) => {
-      const serviceId = service.service || service.id || index + 1;
-      const serviceName = service.name || service.title || service.description || `Service ${serviceId}`;
+      // Handle various service ID formats
+      const serviceId = service.service || service.id || service.service_id || 
+                       service.serviceId || service.service_number || (index + 1).toString();
       
-      return {
-        name: serviceName,
-        description: service.description || service.name || serviceName,
-        platform: apiUrl.includes('medyabayim.com') ? 'MedyaBayim' : 'External API',
-        type: service.type || service.category || 'social_media',
-        price: parseFloat(service.rate || service.price || service.cost || 0),
-        isActive: true,
-        apiEndpoint: apiUrl,
-        apiMethod: 'POST',
-        apiHeaders: apiUrl.includes('medyabayim.com') 
-          ? { 'Content-Type': 'application/x-www-form-urlencoded' }
-          : { 'Content-Type': 'application/json' },
-        requestTemplate: apiUrl.includes('medyabayim.com') ? {
+      // Handle various name formats
+      const serviceName = service.name || service.title || service.service_name || 
+                         service.serviceName || service.description || service.desc ||
+                         `Service ${serviceId}`;
+      
+      // Handle various price/rate formats
+      const price = parseFloat(
+        service.rate || service.price || service.cost || service.amount || 
+        service.price_per_1000 || service.rate_per_1000 || 0
+      );
+      
+      // Detect request format based on successful method
+      let apiHeaders = { 'Content-Type': 'application/json' };
+      let requestTemplate: any = {
+        service: serviceId,
+        link: '{{link}}',
+        quantity: '{{quantity}}'
+      };
+      
+      // Check domain-specific patterns
+      if (domain.includes('medyabayim') || domain.includes('reseller')) {
+        apiHeaders = { 'Content-Type': 'application/x-www-form-urlencoded' };
+        requestTemplate = {
           key: apiKey,
           action: 'add',
           service: serviceId,
           link: '{{link}}',
           quantity: '{{quantity}}'
-        } : {
-          service: serviceId,
-          link: '{{link}}',
-          quantity: '{{quantity}}'
-        },
+        };
+      }
+      
+      return {
+        name: serviceName,
+        description: service.description || service.desc || service.details || serviceName,
+        platform: platformName,
+        type: service.type || service.category || service.category_name || 'social_media',
+        price: price,
+        isActive: true,
+        apiEndpoint: apiUrl,
+        apiMethod: 'POST',
+        apiHeaders: apiHeaders,
+        requestTemplate: requestTemplate,
         responseFormat: {},
         serviceId: serviceId,
-        category: service.category || service.type || 'general',
-        minQuantity: parseInt(service.min || '1'),
-        maxQuantity: parseInt(service.max || '10000')
+        category: service.category || service.category_name || service.type || 'general',
+        minQuantity: parseInt(service.min || service.minimum || service.min_quantity || '1'),
+        maxQuantity: parseInt(service.max || service.maximum || service.max_quantity || '10000'),
+        originalData: service // Keep original for debugging
       };
     });
     
-    console.log(`Formatted ${formattedServices.length} services`);
+    console.log(`Successfully formatted ${formattedServices.length} services from ${platformName}`);
     return formattedServices;
   }
 
