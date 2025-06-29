@@ -50,6 +50,8 @@ export default function KeyCreationModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
+  const SERVICES_PER_PAGE = 25;
 
   const { data: services } = useQuery({
     queryKey: ["/api/admin/services/all"],
@@ -97,27 +99,50 @@ export default function KeyCreationModal({
 
   // Memoized filtering for better performance
   const filteredServices = useMemo(() => {
-    if (!serviceSearchTerm) return servicesList.slice(0, 50); // Show only first 50 services when no search
-
-    const searchLower = serviceSearchTerm.toLowerCase();
+    let results: Service[] = [];
     
-    // Check if search term is a number (service ID)
-    if (/^\d+$/.test(serviceSearchTerm)) {
-      const serviceId = parseInt(serviceSearchTerm);
-      const exactMatch = servicesList.find(service => service.id === serviceId);
-      if (exactMatch) return [exactMatch];
+    if (!serviceSearchTerm) {
+      // No search term - show paginated results
+      const startIndex = currentPage * SERVICES_PER_PAGE;
+      results = servicesList.slice(startIndex, startIndex + SERVICES_PER_PAGE);
+    } else {
+      const searchLower = serviceSearchTerm.toLowerCase();
+      
+      // Check if search term is a number (service ID)
+      if (/^\d+$/.test(serviceSearchTerm)) {
+        const serviceId = parseInt(serviceSearchTerm);
+        const exactMatch = servicesList.find((service: Service) => service.id === serviceId);
+        if (exactMatch) {
+          results = [exactMatch];
+        } else {
+          // If no exact match, look for services containing the ID
+          results = servicesList.filter((service: Service) => 
+            service.id.toString().includes(serviceSearchTerm)
+          ).slice(0, SERVICES_PER_PAGE);
+        }
+      } else {
+        // Text search
+        results = servicesList
+          .filter((service: Service) => 
+            service.name.toLowerCase().includes(searchLower) ||
+            service.platform.toLowerCase().includes(searchLower) ||
+            service.type?.toLowerCase().includes(searchLower) ||
+            service.id.toString().includes(serviceSearchTerm)
+          )
+          .slice(0, SERVICES_PER_PAGE);
+      }
     }
+    
+    return results;
+  }, [servicesList, serviceSearchTerm, currentPage, SERVICES_PER_PAGE]);
 
-    // Text search with limit for performance
-    return servicesList
-      .filter((service: Service) => 
-        service.name.toLowerCase().includes(searchLower) ||
-        service.platform.toLowerCase().includes(searchLower) ||
-        service.type?.toLowerCase().includes(searchLower) ||
-        service.id.toString().includes(serviceSearchTerm)
-      )
-      .slice(0, 100); // Limit to 100 results for performance
-  }, [servicesList, serviceSearchTerm]);
+  const totalPages = Math.ceil(servicesList.length / SERVICES_PER_PAGE);
+
+  // Reset page when search term changes
+  const handleSearchChange = (value: string) => {
+    setServiceSearchTerm(value);
+    setCurrentPage(0);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,7 +182,7 @@ export default function KeyCreationModal({
                       <Input
                         placeholder="Servis ara... (ID: 7205 veya isim: Instagram)"
                         value={serviceSearchTerm}
-                        onChange={(e) => setServiceSearchTerm(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                         className="bg-slate-700 border-slate-600 text-slate-50 pl-10"
                       />
                     </div>
@@ -185,9 +210,33 @@ export default function KeyCreationModal({
                             Arama için sonuç bulunamadı
                           </div>
                         )}
-                        {!serviceSearchTerm && servicesList.length > 50 && (
+                        {!serviceSearchTerm && (
                           <div className="text-slate-400 text-center py-2 text-sm border-t border-slate-600">
-                            İlk 50 servis gösteriliyor. Aramak için yazmaya başlayın.
+                            <div className="flex items-center justify-between px-2 py-1">
+                              <span>Sayfa {currentPage + 1} / {totalPages}</span>
+                              <div className="flex gap-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                                  disabled={currentPage === 0}
+                                  className="h-6 px-2 text-slate-400 hover:text-slate-200"
+                                >
+                                  ←
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                                  disabled={currentPage >= totalPages - 1}
+                                  className="h-6 px-2 text-slate-400 hover:text-slate-200"
+                                >
+                                  →
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </SelectContent>
