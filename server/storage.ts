@@ -49,6 +49,7 @@ export interface IStorage {
   createService(service: InsertService): Promise<Service>;
   updateService(id: number, updates: Partial<Service>): Promise<Service>;
   deleteService(id: number): Promise<void>;
+  bulkCreateServices(serviceList: InsertService[]): Promise<Service[]>;
 
   // Order operations
   getAllOrders(): Promise<Order[]>;
@@ -201,6 +202,31 @@ export class DatabaseStorage implements IStorage {
 
   async deleteService(id: number): Promise<void> {
     await db.delete(services).where(eq(services.id, id));
+  }
+
+  // Bulk operations for better performance with large datasets
+  async bulkCreateServices(serviceList: InsertService[]): Promise<Service[]> {
+    if (serviceList.length === 0) {
+      return [];
+    }
+
+    // Process in batches to avoid database limits
+    const batchSize = 1000;
+    const results: Service[] = [];
+
+    for (let i = 0; i < serviceList.length; i += batchSize) {
+      const batch = serviceList.slice(i, i + batchSize);
+      try {
+        const batchResults = await db.insert(services).values(batch).returning();
+        results.push(...batchResults);
+        console.log(`Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(serviceList.length / batchSize)}`);
+      } catch (error) {
+        console.error(`Error processing batch ${Math.floor(i / batchSize) + 1}:`, error);
+        // Continue with other batches even if one fails
+      }
+    }
+
+    return results;
   }
 
   // Order operations

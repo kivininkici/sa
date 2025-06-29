@@ -30,6 +30,9 @@ export default function ApiManagement() {
   const [fetchedServices, setFetchedServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50); // 50 servis per page for better performance
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -134,6 +137,17 @@ export default function ApiManagement() {
     importServicesMutation.mutate(servicesToImport);
   };
 
+  // Filter and paginate services
+  const filteredServices = fetchedServices.filter((service: any) =>
+    service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
   const toggleServiceSelection = (index: number) => {
     setSelectedServices(prev => 
       prev.includes(index) 
@@ -214,14 +228,16 @@ export default function ApiManagement() {
                     {fetchedServices.length > 0 && (
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-semibold">Bulunan Servisler</h3>
+                          <h3 className="text-lg font-semibold">
+                            Bulunan Servisler ({filteredServices.length}/{fetchedServices.length})
+                          </h3>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => setSelectedServices(fetchedServices.map((_, i) => i))}
                             >
-                              Tümünü Seç
+                              Tümünü Seç ({fetchedServices.length})
                             </Button>
                             <Button
                               variant="outline"
@@ -233,16 +249,35 @@ export default function ApiManagement() {
                           </div>
                         </div>
 
+                        {/* Search and pagination controls */}
+                        <div className="flex items-center justify-between gap-4">
+                          <Input
+                            placeholder="Servis ara..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                              setSearchTerm(e.target.value);
+                              setCurrentPage(1); // Reset to first page when searching
+                            }}
+                            className="max-w-xs"
+                          />
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            Sayfa {currentPage} / {totalPages} - 
+                            Seçilen: {selectedServices.length}
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                          {fetchedServices.map((service: any, index) => (
+                          {paginatedServices.map((service: any, index) => {
+                            const originalIndex = startIndex + index;
+                            return (
                             <Card 
-                              key={index} 
+                              key={originalIndex} 
                               className={`cursor-pointer transition-all ${
-                                selectedServices.includes(index) 
+                                selectedServices.includes(originalIndex) 
                                   ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
                                   : ''
                               }`}
-                              onClick={() => toggleServiceSelection(index)}
+                              onClick={() => toggleServiceSelection(originalIndex)}
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
@@ -252,14 +287,40 @@ export default function ApiManagement() {
                                       {service.platform} - {service.type}
                                     </p>
                                   </div>
-                                  {selectedServices.includes(index) && (
+                                  {selectedServices.includes(originalIndex) && (
                                     <CheckCircle className="w-5 h-5 text-blue-500" />
                                   )}
                                 </div>
                               </CardContent>
                             </Card>
-                          ))}
+                            );
+                          })}
                         </div>
+
+                        {/* Pagination controls */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              Önceki
+                            </Button>
+                            <span className="text-sm text-slate-500">
+                              {currentPage} / {totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                              disabled={currentPage === totalPages}
+                            >
+                              Sonraki
+                            </Button>
+                          </div>
+                        )}
 
                         <Button 
                           onClick={handleImportServices}

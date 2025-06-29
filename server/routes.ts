@@ -718,12 +718,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Services array is required" });
       }
 
-      const importedServices = [];
+      console.log(`Starting bulk import of ${services.length} services...`);
+      
+      // Validate and prepare services for bulk insert
+      const validatedServices = [];
+      const errors = [];
 
-      for (const service of services) {
+      for (let i = 0; i < services.length; i++) {
+        const service = services[i];
         try {
           const validatedData = insertServiceSchema.parse({
-            name: service.name,
+            name: service.name || `Service ${i + 1}`,
             platform: service.platform || "External API",
             type: service.type || "API Service",
             icon: service.icon || "Settings",
@@ -734,18 +739,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
             requestTemplate: service.requestTemplate || {},
           });
 
-          const createdService = await storage.createService(validatedData);
-          importedServices.push(createdService);
+          validatedServices.push(validatedData);
         } catch (error) {
-          console.error(`Error importing service ${service.name}:`, error);
+          errors.push(`Service ${i + 1} (${service.name || 'unnamed'}): ${error instanceof Error ? error.message : 'Validation error'}`);
         }
       }
 
-      res.json({ 
-        success: true, 
+      // Perform bulk insert using storage's bulk method
+      const importedServices = await storage.bulkCreateServices(validatedServices);
+
+      const result = {
+        success: true,
         imported: importedServices.length,
-        services: importedServices 
-      });
+        total: services.length,
+        errors: errors,
+        services: importedServices.slice(0, 10) // Return first 10 for preview
+      };
+
+      console.log(`Bulk import completed: ${importedServices.length}/${services.length} services imported`);
+      if (errors.length > 0) {
+        console.log(`Validation errors: ${errors.length}`);
+      }
+
+      res.json(result);
     } catch (error) {
       console.error("Error importing services:", error);
       res.status(500).json({ message: "Failed to import services" });
