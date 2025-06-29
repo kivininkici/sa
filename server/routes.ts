@@ -476,146 +476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin API Management routes
-  app.post("/api/admin/fetch-services", requireAdminAuth, async (req, res) => {
-    try {
-      const { apiUrl, apiKey } = req.body;
-
-      if (!apiUrl) {
-        return res.status(400).json({ message: "API URL is required" });
-      }
-
-      const headers: any = {
-        "Content-Type": "application/json",
-      };
-
-      if (apiKey) {
-        headers["Authorization"] = `Bearer ${apiKey}`;
-      }
-
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const services = await response.json();
-      res.json(services);
-    } catch (error) {
-      console.error("Error fetching services from API:", error);
-      res.status(500).json({ message: "Failed to fetch services from API" });
-    }
-  });
-
-  app.post("/api/admin/import-services", requireAdminAuth, async (req, res) => {
-    try {
-      const { services } = req.body;
-
-      if (!services || !Array.isArray(services)) {
-        return res.status(400).json({ message: "Services array is required" });
-      }
-
-      const importedServices = [];
-
-      for (const service of services) {
-        try {
-          const validatedData = insertServiceSchema.parse({
-            name: service.name,
-            platform: service.platform || "External API",
-            type: service.type || "API Service",
-            icon: service.icon || "Settings",
-            isActive: service.isActive !== false,
-            apiEndpoint: service.apiEndpoint,
-            apiMethod: service.apiMethod || "POST",
-            apiHeaders: service.apiHeaders || {},
-            requestTemplate: service.requestTemplate || {},
-          });
-
-          const createdService = await storage.createService(validatedData);
-          importedServices.push(createdService);
-        } catch (error) {
-          console.error(`Error importing service ${service.name}:`, error);
-        }
-      }
-
-      res.json({ 
-        success: true, 
-        imported: importedServices.length,
-        services: importedServices 
-      });
-    } catch (error) {
-      console.error("Error importing services:", error);
-      res.status(500).json({ message: "Failed to import services" });
-    }
-  });
-
-  // Admin API Settings routes
-  app.get("/api/admin/api-settings", requireAdminAuth, async (req, res) => {
-    try {
-      const apiSettings = await storage.getAllApiSettings();
-      res.json(apiSettings);
-    } catch (error) {
-      console.error("Error fetching API settings:", error);
-      res.status(500).json({ message: "Failed to fetch API settings" });
-    }
-  });
-
-  app.post("/api/admin/api-settings", requireAdminAuth, async (req, res) => {
-    try {
-      const validatedData = insertApiSettingsSchema.parse(req.body);
-      const apiSetting = await storage.createApiSettings(validatedData);
-      res.json(apiSetting);
-    } catch (error) {
-      console.error("Error creating API setting:", error);
-      res.status(500).json({ message: "Failed to create API setting" });
-    }
-  });
-
-  app.put("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      const apiSetting = await storage.updateApiSettings(id, updates);
-      res.json(apiSetting);
-    } catch (error) {
-      console.error("Error updating API setting:", error);
-      res.status(500).json({ message: "Failed to update API setting" });
-    }
-  });
-
-  app.delete("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      // First, get all services that use this API setting
-      const services = await storage.getAllServices();
-      const servicesToDelete = services.filter(service => 
-        (service as any).apiSettingsId === id
-      );
-      
-      // Delete all related services first
-      for (const service of servicesToDelete) {
-        await storage.deleteService(service.id);
-      }
-      
-      // Then delete the API setting
-      await storage.deleteApiSettings(id);
-      
-      res.json({ 
-        success: true, 
-        deletedServices: servicesToDelete.length,
-        message: `API silindi ve ${servicesToDelete.length} bağlı servis kaldırıldı`
-      });
-    } catch (error) {
-      console.error("Error deleting API setting:", error);
-      res.status(500).json({ message: "Failed to delete API setting" });
-    }
-  });
-
-  // Fetch services from external API
+  // Admin API Management routes - Fixed version
   app.post("/api/admin/fetch-services", requireAdminAuth, async (req, res) => {
     try {
       const { apiUrl, apiKey } = req.body;
@@ -728,6 +589,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  app.post("/api/admin/import-services", requireAdminAuth, async (req, res) => {
+    try {
+      const { services } = req.body;
+
+      if (!services || !Array.isArray(services)) {
+        return res.status(400).json({ message: "Services array is required" });
+      }
+
+      const importedServices = [];
+
+      for (const service of services) {
+        try {
+          const validatedData = insertServiceSchema.parse({
+            name: service.name,
+            platform: service.platform || "External API",
+            type: service.type || "API Service",
+            icon: service.icon || "Settings",
+            isActive: service.isActive !== false,
+            apiEndpoint: service.apiEndpoint,
+            apiMethod: service.apiMethod || "POST",
+            apiHeaders: service.apiHeaders || {},
+            requestTemplate: service.requestTemplate || {},
+          });
+
+          const createdService = await storage.createService(validatedData);
+          importedServices.push(createdService);
+        } catch (error) {
+          console.error(`Error importing service ${service.name}:`, error);
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        imported: importedServices.length,
+        services: importedServices 
+      });
+    } catch (error) {
+      console.error("Error importing services:", error);
+      res.status(500).json({ message: "Failed to import services" });
+    }
+  });
+
+  // Admin API Settings routes
+  app.get("/api/admin/api-settings", requireAdminAuth, async (req, res) => {
+    try {
+      const apiSettings = await storage.getAllApiSettings();
+      res.json(apiSettings);
+    } catch (error) {
+      console.error("Error fetching API settings:", error);
+      res.status(500).json({ message: "Failed to fetch API settings" });
+    }
+  });
+
+  app.post("/api/admin/api-settings", requireAdminAuth, async (req, res) => {
+    try {
+      const validatedData = insertApiSettingsSchema.parse(req.body);
+      const apiSetting = await storage.createApiSettings(validatedData);
+      res.json(apiSetting);
+    } catch (error) {
+      console.error("Error creating API setting:", error);
+      res.status(500).json({ message: "Failed to create API setting" });
+    }
+  });
+
+  app.put("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const apiSetting = await storage.updateApiSettings(id, updates);
+      res.json(apiSetting);
+    } catch (error) {
+      console.error("Error updating API setting:", error);
+      res.status(500).json({ message: "Failed to update API setting" });
+    }
+  });
+
+  app.delete("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // First, get all services that use this API setting
+      const services = await storage.getAllServices();
+      const servicesToDelete = services.filter(service => 
+        (service as any).apiSettingsId === id
+      );
+      
+      // Delete all related services first
+      for (const service of servicesToDelete) {
+        await storage.deleteService(service.id);
+      }
+      
+      // Then delete the API setting
+      await storage.deleteApiSettings(id);
+      
+      res.json({ 
+        success: true, 
+        deletedServices: servicesToDelete.length,
+        message: `API silindi ve ${servicesToDelete.length} bağlı servis kaldırıldı`
+      });
+    } catch (error) {
+      console.error("Error deleting API setting:", error);
+      res.status(500).json({ message: "Failed to delete API setting" });
+    }
+  });
+
+  
 
   // Helper function to format API responses
   function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
