@@ -78,13 +78,14 @@ export default function UserInterface() {
       return response.json();
     },
     onSuccess: (data: ValidatedKey) => {
+      console.log("Validated key data:", data);
       setValidatedKey(data);
       orderForm.setValue("keyValue", data.value);
-      orderForm.setValue("quantity", Math.min(data.remainingQuantity, 1));
+      orderForm.setValue("quantity", Math.min(data.remainingQuantity || 1, 1));
       setCurrentStep('order-form');
       toast({
         title: "Key Doğrulandı",
-        description: `${data.service.name} servisi için key başarıyla doğrulandı. Kalan limit: ${data.remainingQuantity}`,
+        description: "Sipariş verebilirsiniz",
       });
     },
     onError: (error: Error) => {
@@ -161,20 +162,11 @@ export default function UserInterface() {
     if (!validatedKey) return;
     
     // Check remaining quantity
-    if (data.quantity > validatedKey.remainingQuantity) {
+    const maxAllowed = validatedKey.remainingQuantity || validatedKey.maxQuantity;
+    if (data.quantity > maxAllowed) {
       toast({
         title: "Miktar Hatası",
-        description: `Bu key ${validatedKey.remainingQuantity} ile sınırlandırıldı. Kalan miktar: ${validatedKey.remainingQuantity}`,
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // Check max quantity
-    if (data.quantity > validatedKey.maxQuantity) {
-      toast({
-        title: "Miktar Hatası",
-        description: `Bu key ${validatedKey.maxQuantity} ile sınırlandırıldı`,
+        description: `Maksimum ${maxAllowed} sipariş verebilirsiniz`,
         variant: "destructive",
       });
       return;
@@ -349,17 +341,17 @@ export default function UserInterface() {
                 <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
                   <div>
                     <label className="text-slate-200 text-sm font-medium mb-2 block">
-                      Miktar (1-{validatedKey.remainingQuantity})
+                      Miktar (1-{validatedKey.remainingQuantity || validatedKey.maxQuantity})
                     </label>
                     <Input
                       type="number"
                       min="1"
-                      max={validatedKey.remainingQuantity}
+                      max={validatedKey.remainingQuantity || validatedKey.maxQuantity}
                       className="bg-slate-700 border-slate-600 text-slate-50"
                       {...orderForm.register("quantity", { 
                         valueAsNumber: true,
                         min: 1,
-                        max: validatedKey.remainingQuantity 
+                        max: validatedKey.remainingQuantity || validatedKey.maxQuantity 
                       })}
                     />
                     {orderForm.formState.errors.quantity && (
