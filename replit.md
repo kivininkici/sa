@@ -136,6 +136,9 @@ Changelog:
 - Admin kullanıcı bilgileri yeniden oluşturuldu: admin/admin123
 - Server kodundaki tip hataları düzeltildi
 - Sipariş oluşturma sistemi tamamen çalışır durumda
+- Orders tablosundaki eksik kolonlar (order_id, message) eklendi
+- 5122 servis başarıyla ResellerProvider'dan import edildi
+- Key oluşturma sistemi tam çalışır durumda
 
 ## User Preferences
 
