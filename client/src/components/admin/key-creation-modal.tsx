@@ -59,7 +59,7 @@ export default function KeyCreationModal({
     defaultValues: {
       name: "",
       type: "single-use",
-      maxQuantity: 250,
+      maxQuantity: 1000,
     },
   });
 
@@ -153,13 +153,12 @@ export default function KeyCreationModal({
               name="maxQuantity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-200">Maksimum Miktar (1-250)</FormLabel>
+                  <FormLabel className="text-slate-200">Maksimum Miktar</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min="1"
-                      max="250"
-                      placeholder="250"
+                      placeholder="1000"
                       className="bg-slate-700 border-slate-600 text-slate-50"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}

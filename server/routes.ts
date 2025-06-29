@@ -1348,9 +1348,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bu key daha önce kullanılmış" });
       }
 
-      if (quantity > (key.maxQuantity || 250)) {
+      if (quantity > (key.maxQuantity || 1000)) {
         return res.status(400).json({ 
-          message: `Miktar maksimum limiti aştı. Maksimum: ${key.maxQuantity || 250}` 
+          message: `Miktar maksimum limiti aştı. Maksimum: ${key.maxQuantity || 1000}` 
         });
       }
 

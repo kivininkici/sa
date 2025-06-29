@@ -369,8 +369,7 @@ export default function UserInterface() {
                   ) : (
                     <div className="text-center py-4">
                       <AlertCircle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                      <p className="text-slate-400">Sipariş durumu alınamadı</p>
-                    </div>
+                      <p className="text-slate-400">Sipariş durumu alınamadı</p                    </div>
                   )}
                 </div>
               </CardContent>

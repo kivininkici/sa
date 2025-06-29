@@ -121,6 +121,8 @@ export const apiSettings = pgTable("api_settings", {
 export const insertKeySchema = createInsertSchema(keys).omit({
   id: true,
   createdAt: true,
+}).extend({
+  maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
 });
 
 export const insertServiceSchema = createInsertSchema(services).omit({
