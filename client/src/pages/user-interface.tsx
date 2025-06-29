@@ -41,7 +41,7 @@ const orderSchema = z.object({
   keyValue: z.string().min(1, "Key gereklidir"),
   serviceId: z.number({ required_error: "Servis seçimi gereklidir" }),
   targetUrl: z.string().url("Geçerli bir URL girin"),
-  quantity: z.number({ required_error: "Miktar seçimi gereklidir" }),
+  quantity: z.number().min(1, "Miktar en az 1 olmalıdır"),
 });
 
 export default function UserInterface() {
@@ -333,25 +333,17 @@ export default function UserInterface() {
                     name="quantity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-slate-300">Miktar</FormLabel>
-                        <Select 
-                          onValueChange={(value) => field.onChange(parseInt(value))}
-                          value={field.value?.toString()}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-slate-900 border-slate-600 text-slate-50">
-                              <SelectValue placeholder="Miktar seçin" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-slate-900 border-slate-600">
-                            <SelectItem value="100">100</SelectItem>
-                            <SelectItem value="250">250</SelectItem>
-                            <SelectItem value="500">500</SelectItem>
-                            <SelectItem value="1000">1,000</SelectItem>
-                            <SelectItem value="2500">2,500</SelectItem>
-                            <SelectItem value="5000">5,000</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel className="text-slate-300">İstediğiniz Miktarı Yazın</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Örn: 1000"
+                            className="bg-slate-900 border-slate-600 text-slate-50"
+                            value={field.value || ""}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            min="1"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
