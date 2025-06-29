@@ -71,7 +71,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row justify-center gap-6 mb-20 slide-up">
               <Button 
                 size="lg"
-                onClick={() => window.location.href = '/admin-login'}
+                onClick={() => window.location.href = '/admin/login'}
                 className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white hover:scale-105 transition-all duration-500 px-10 py-5 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-blue-500/25"
               >
                 <Shield className="w-6 h-6 mr-3" />

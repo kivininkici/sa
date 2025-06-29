@@ -799,6 +799,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             apiMethod: service.apiMethod || "POST",
             apiHeaders: service.apiHeaders || {},
             requestTemplate: service.requestTemplate || {},
+            serviceId: service.serviceId || null,
           });
 
           validatedServices.push(validatedData);
@@ -894,7 +895,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           for (const serviceData of formattedServices) {
             try {
-              const validated = insertServiceSchema.parse(serviceData);
+              const validated = insertServiceSchema.parse({
+                ...serviceData,
+                serviceId: serviceData.serviceId || null
+              });
               validatedServices.push(validated);
             } catch (validationError) {
               errors.push({
@@ -1089,7 +1093,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const serviceData of formattedServices) {
         try {
-          const validated = insertServiceSchema.parse(serviceData);
+          const validated = insertServiceSchema.parse({
+            ...serviceData,
+            serviceId: serviceData.serviceId || null
+          });
           await storage.createService(validated);
           imported++;
         } catch (validationError) {

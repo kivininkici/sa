@@ -142,9 +142,12 @@ Changelog:
 - API silme işlemi bağlı servisleri de otomatik siler
 - Key oluşturmada servis arama özelliği eklendi
 - Canlı destek sistemi kaldırıldı
-- Site performansı optimize edildi: servis listesi 50 ile sınırlandırıldı
+- Site performansı optimize edildi: servis listesi 25'lik sayfalara bölündü
 - Servis ID ile hızlı arama özelliği eklendi (örn: 7205)
 - Memoized filtering ile performans artırıldı
+- Sayfalama sistemi ile büyük servis listelerinde kasma sorunu çözüldü
+- Ana sayfa tasarımı güncellendi ve rota düzeltmeleri yapıldı
+- Servis import işleminde serviceId alanı düzgün kaydediliyor
 
 ## User Preferences
 
