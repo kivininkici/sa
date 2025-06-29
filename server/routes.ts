@@ -66,6 +66,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/keys/stats", requireAdminAuth, async (req, res) => {
+    try {
+      const stats = await storage.getKeyStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching key stats:", error);
+      res.status(500).json({ message: "Failed to fetch key stats" });
+    }
+  });
+
   app.post("/api/admin/keys", requireAdminAuth, async (req: any, res) => {
     try {
       const validatedData = insertKeySchema.parse({
@@ -345,13 +355,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Database info error:", error);
       res.status(500).json({ 
         message: "Database connection error",
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
 
   // List all admin users (without passwords)
-  app.get("/api/admin/list", async (req, res) => {
+  app.get("/api/admin/list", requireAdminAuth, async (req, res) => {
     try {
       const admins = await storage.getAllAdmins();
       // Remove passwords from response for security
@@ -367,6 +377,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admins:", error);
       res.status(500).json({ message: "Failed to fetch admins" });
+    }
+  });
+
+  // List all regular users
+  app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
+    try {
+      // For now, we'll return empty array since we don't have regular users table yet
+      // In a real system, you would fetch from a users table
+      res.json([]);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
     }
   });
 
@@ -567,11 +589,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // First, get all services that use this API setting
+      const services = await storage.getAllServices();
+      const servicesToDelete = services.filter(service => 
+        (service as any).apiSettingsId === id
+      );
+      
+      // Delete all related services first
+      for (const service of servicesToDelete) {
+        await storage.deleteService(service.id);
+      }
+      
+      // Then delete the API setting
       await storage.deleteApiSettings(id);
-      res.json({ success: true });
+      
+      res.json({ 
+        success: true, 
+        deletedServices: servicesToDelete.length,
+        message: `API silindi ve ${servicesToDelete.length} bağlı servis kaldırıldı`
+      });
     } catch (error) {
       console.error("Error deleting API setting:", error);
       res.status(500).json({ message: "Failed to delete API setting" });
+    }
+  });
+
+  // Fetch services from external API
+  app.post("/api/admin/fetch-services", requireAdminAuth, async (req, res) => {
+    try {
+      const { apiUrl, apiKey } = req.body;
+      
+      if (!apiUrl) {
+        return res.status(400).json({ message: "API URL gereklidir" });
+      }
+
+      // Make request to external API
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API isteği başarısız: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Assume the API returns an array of services
+      // Format them to match our schema
+      const formattedServices = Array.isArray(data) ? data : data.services || [];
+      
+      res.json(formattedServices);
+    } catch (error) {
+      console.error("Error fetching services from API:", error);
+      res.status(500).json({ 
+        message: "API'den servis getirme başarısız", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Import services from external API
+  app.post("/api/admin/import-services", requireAdminAuth, async (req, res) => {
+    try {
+      const { services } = req.body;
+      
+      if (!Array.isArray(services) || services.length === 0) {
+        return res.status(400).json({ message: "Geçerli servis listesi gereklidir" });
+      }
+
+      let imported = 0;
+      const errors = [];
+
+      for (const service of services) {
+        try {
+          // Map external service format to our schema
+          const serviceData = {
+            name: service.name || service.title || 'Unknown Service',
+            description: service.description || '',
+            platform: service.platform || 'External',
+            type: service.type || 'general',
+            price: service.price || 0,
+            isActive: service.isActive !== false, // Default to true unless explicitly false
+            apiEndpoint: service.apiEndpoint || service.endpoint,
+            apiMethod: service.apiMethod || 'POST',
+            apiHeaders: service.apiHeaders || {},
+            requestTemplate: service.requestTemplate || {},
+            responseFormat: service.responseFormat || {},
+          };
+
+          await storage.createService(serviceData);
+          imported++;
+        } catch (serviceError) {
+          console.error(`Error importing service ${service.name}:`, serviceError);
+          errors.push(`${service.name}: ${serviceError instanceof Error ? serviceError.message : 'Unknown error'}`);
+        }
+      }
+
+      res.json({
+        imported,
+        total: services.length,
+        errors: errors.length > 0 ? errors : undefined,
+        message: `${imported} servis başarıyla içe aktarıldı`
+      });
+    } catch (error) {
+      console.error("Error importing services:", error);
+      res.status(500).json({ message: "Servis içe aktarma başarısız" });
     }
   });
 

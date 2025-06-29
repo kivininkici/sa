@@ -61,26 +61,26 @@ export default function Keys() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: keys, isLoading: keysLoading } = useQuery({
-    queryKey: ["/api/keys"],
+    queryKey: ["/api/admin/keys"],
     retry: false,
   });
 
   const { data: keyStats } = useQuery({
-    queryKey: ["/api/keys/stats"],
+    queryKey: ["/api/admin/keys/stats"],
     retry: false,
   });
 
   const deleteKeyMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/keys/${id}`);
+      await apiRequest("DELETE", `/api/admin/keys/${id}`);
     },
     onSuccess: () => {
       toast({
         title: "Başarılı",
         description: "Key başarıyla silindi",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/keys"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/keys/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys/stats"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -106,14 +106,14 @@ export default function Keys() {
     return <div>Loading...</div>;
   }
 
-  const filteredKeys = keys?.filter((key: KeyType) => {
+  const filteredKeys = Array.isArray(keys) ? keys.filter((key: KeyType) => {
     const matchesSearch = key.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          key.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || 
                          (statusFilter === "used" && key.isUsed) ||
                          (statusFilter === "unused" && !key.isUsed);
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -145,19 +145,19 @@ export default function Keys() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatsCard
                 title="Toplam Key"
-                value={keyStats?.total || 0}
+                value={(keyStats as any)?.total || 0}
                 icon={Key}
                 iconColor="bg-blue-600"
               />
               <StatsCard
                 title="Kullanılan"
-                value={keyStats?.used || 0}
+                value={(keyStats as any)?.used || 0}
                 icon={CheckCircle}
                 iconColor="bg-green-600"
               />
               <StatsCard
                 title="Kullanılmayan"
-                value={keyStats?.unused || 0}
+                value={(keyStats as any)?.unused || 0}
                 icon={Clock}
                 iconColor="bg-amber-600"
               />
