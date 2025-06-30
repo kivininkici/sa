@@ -132,5 +132,6 @@ declare module 'express-session' {
     adminUsername?: string;
     userId?: number;
     username?: string;
+    isAdmin?: boolean;
   }
 }

@@ -6,7 +6,7 @@ import type { User as UserType } from "@shared/schema";
 
 export default function Home() {
   const { user, isLoading } = useAuth();
-  const typedUser = user as UserType;
+  const typedUser = user as UserType & { isAdmin?: boolean };
 
   if (isLoading) {
     return (
@@ -78,7 +78,9 @@ export default function Home() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 rounded-full mb-8 backdrop-blur-sm">
             <Crown className="w-5 h-5 text-yellow-400 mr-2" />
-            <span className="text-sm font-medium text-white">Admin</span>
+            <span className="text-sm font-medium text-white">
+              {typedUser?.isAdmin ? 'Admin' : 'Premium Üye'}
+            </span>
           </div>
           
           <h2 className="text-5xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -98,15 +100,17 @@ export default function Home() {
               <KeyRound className="w-6 h-6 mr-3" />
               Key Kullan
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
-              onClick={() => window.location.href = '/admin/login'}
-            >
-              <Shield className="w-6 h-6 mr-3" />
-              Admin Panel
-            </Button>
+            {typedUser?.isAdmin && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
+                onClick={() => window.location.href = '/admin/login'}
+              >
+                <Shield className="w-6 h-6 mr-3" />
+                Admin Panel
+              </Button>
+            )}
           </div>
         </div>
 

@@ -70,44 +70,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin auth setup
   setupAdminAuth(app);
 
-  // Registration disabled - only admin users can access the system
+  // Normal user registration
   app.post('/api/register', async (req, res) => {
-    res.status(403).json({ message: 'Kayıt özelliği devre dışı. Sadece admin hesapları kullanılabilir.' });
+    try {
+      const { username, email, password } = userRegisterSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsernameOrEmail(username, email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Kullanıcı adı veya email zaten kullanımda' });
+      }
+
+      // Create user
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createNormalUser({
+        username,
+        email,
+        password: hashedPassword,
+      });
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.isAdmin = false;
+
+      res.status(201).json({ 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        isAdmin: false,
+        message: 'Kayıt başarılı' 
+      });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message || 'Kayıt sırasında hata oluştu' });
+    }
   });
 
   app.post('/api/login', async (req, res) => {
     try {
       const { username, password } = userLoginSchema.parse(req.body);
       
-      // Find admin user only
+      // First try to find admin user
       const adminUser = await storage.getAdminByUsername(username);
-      if (!adminUser) {
+      if (adminUser) {
+        // Check admin password
+        const isValidPassword = await comparePassword(password, adminUser.password);
+        if (isValidPassword && adminUser.isActive) {
+          // Update last login
+          await storage.updateAdminLastLogin(adminUser.id);
+
+          // Set session for admin
+          req.session.userId = adminUser.id;
+          req.session.username = adminUser.username;
+          req.session.isAdmin = true;
+
+          return res.json({ 
+            id: adminUser.id, 
+            username: adminUser.username, 
+            email: adminUser.email,
+            isAdmin: true,
+            message: 'Admin girişi başarılı' 
+          });
+        }
+      }
+
+      // If not admin, try normal user
+      const user = await storage.getNormalUserByUsername(username);
+      if (!user) {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
       // Check password
-      const isValidPassword = await comparePassword(password, adminUser.password);
+      const isValidPassword = await comparePassword(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
-      // Check if admin is active
-      if (!adminUser.isActive) {
-        return res.status(401).json({ message: 'Hesabınız askıya alınmış' });
-      }
-
-      // Update last login
-      await storage.updateAdminLastLogin(adminUser.id);
-
-      // Set session
-      req.session.userId = adminUser.id;
-      req.session.username = adminUser.username;
+      // Set session for normal user
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.isAdmin = false;
 
       res.json({ 
-        id: adminUser.id, 
-        username: adminUser.username, 
-        email: adminUser.email,
-        message: 'Admin girişi başarılı' 
+        id: user.id, 
+        username: user.username, 
+        email: user.email,
+        isAdmin: false,
+        message: 'Giriş başarılı' 
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message || 'Giriş sırasında hata oluştu' });
@@ -131,7 +180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({
       id: req.session.userId,
       username: req.session.username,
-      authenticated: true
+      authenticated: true,
+      isAdmin: req.session.isAdmin || false
     });
   });
 
