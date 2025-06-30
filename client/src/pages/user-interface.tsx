@@ -68,6 +68,8 @@ export default function UserInterface() {
   const orderForm = useForm<OrderData>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
+      keyValue: "",
+      serviceId: 1,
       quantity: 1,
       targetUrl: "",
     },
@@ -108,10 +110,13 @@ export default function UserInterface() {
   });
 
   // Order creation mutation
-  const createOrderMutation = useMutation({
+  const createOrderMutation = useMutation<{ orderId: string }, Error, OrderData>({
     mutationFn: async (data: OrderData) => {
+      console.log("Making order API request with data:", data);
       const response = await apiRequest("POST", "/api/orders", data);
-      return response.json();
+      const result = await response.json() as { orderId: string };
+      console.log("Order API response:", result);
+      return result;
     },
     onSuccess: (data: { orderId: string }) => {
       setOrderId(data.orderId);
@@ -165,6 +170,11 @@ export default function UserInterface() {
     
     if (!validatedKey) {
       console.log("No validated key found");
+      toast({
+        title: "Hata",
+        description: "Key doğrulaması yapılmamış",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -186,12 +196,15 @@ export default function UserInterface() {
     const serviceId = validatedKey.service?.id || 1; // Use default service ID if none available
     console.log("Creating order with serviceId:", serviceId);
     
-    createOrderMutation.mutate({
+    const orderData = {
       keyValue: validatedKey.value,
       serviceId: serviceId,
       quantity: data.quantity,
-      targetUrl: data.targetUrl
-    });
+      targetUrl: data.targetUrl || ""
+    };
+    
+    console.log("Final order data:", orderData);
+    createOrderMutation.mutate(orderData);
   };
 
   const resetForm = () => {
