@@ -1851,12 +1851,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             apiData
           );
 
-          // Update order with success
+          // Parse API response and handle order status properly
+          let orderStatus = 'processing';
+          let orderMessage = 'Sipariş API\'ye gönderildi, işleniyor...';
+          let apiOrderId: string | null = null;
+
+          // Check if API response contains order ID
+          if (apiResponse.order || apiResponse.order_id) {
+            apiOrderId = String(apiResponse.order || apiResponse.order_id);
+            orderMessage = `Sipariş başarıyla gönderildi. API Order ID: ${apiOrderId}`;
+            
+            // Start periodic status checking
+            setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId!), 30000);
+          } else if (apiResponse.error) {
+            orderStatus = 'failed';
+            orderMessage = `API Hatası: ${apiResponse.error}`;
+          }
+
+          // Update order with processing status first
           await storage.updateOrder(orderId, {
-            status: 'completed',
-            message: 'Sipariş başarıyla tamamlandı',
-            response: apiResponse,
-            completedAt: new Date()
+            status: orderStatus,
+            message: orderMessage,
+            response: apiResponse
           });
 
           // Create success notification
@@ -2130,13 +2146,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const titles = {
         'order_cancelled': 'Sipariş İptal Edildi',
         'order_completed': 'Sipariş Tamamlandı',
-        'order_failed': 'Sipariş Başarısız'
+        'order_failed': 'Sipariş Başarısız',
+        'order_sent': 'Sipariş Gönderildi'
       };
       
       const messages = {
         'order_cancelled': `Sipariş ${orderId} iptal edildi. Bakiye yetersizliği veya servis arızası nedeniyle.`,
         'order_completed': `Sipariş ${orderId} başarıyla tamamlandı.`,
-        'order_failed': `Sipariş ${orderId} başarısız oldu. Teknik bir sorun oluştu.`
+        'order_failed': `Sipariş ${orderId} başarısız oldu. Teknik bir sorun oluştu.`,
+        'order_sent': `Sipariş ${orderId} API'ye başarıyla gönderildi.`
       };
       
       await storage.createNotification({
@@ -2149,6 +2167,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Error creating notification:', error);
+    }
+  }
+
+  // Function to check order status from API
+  async function checkOrderStatusAsync(orderId: number, apiOrderId: string) {
+    if (!apiOrderId) return;
+
+    try {
+      console.log(`Checking status for order ${orderId}, API Order ID: ${apiOrderId}`);
+      
+      // Get active API settings
+      const apiSettings = await storage.getActiveApiSettings();
+      if (apiSettings.length === 0) {
+        console.log('No active API settings found for status check');
+        return;
+      }
+
+      const apiSetting = apiSettings[0];
+      
+      // Prepare status check request
+      const statusData = {
+        key: apiSetting.apiKey,
+        action: 'status',
+        order: apiOrderId
+      };
+
+      console.log('Checking order status with API:', { url: apiSetting.apiUrl, orderId: apiOrderId });
+
+      const response = await fetch(apiSetting.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(statusData)
+      });
+
+      if (response.ok) {
+        const statusResponse = await response.json();
+        console.log(`Order ${orderId} status response:`, statusResponse);
+
+        // Update order based on API status
+        if (statusResponse.status) {
+          let dbStatus = 'processing';
+          let message = 'Sipariş işleniyor...';
+          let shouldCompleteOrder = false;
+
+          const apiStatus = statusResponse.status.toLowerCase();
+          
+          if (apiStatus === 'completed' || apiStatus === 'complete') {
+            dbStatus = 'completed';
+            message = 'Sipariş başarıyla tamamlandı!';
+            shouldCompleteOrder = true;
+            
+          } else if (apiStatus === 'cancelled' || apiStatus === 'canceled') {
+            dbStatus = 'cancelled';
+            message = 'Sipariş iptal edildi.';
+            
+          } else if (apiStatus === 'partial') {
+            dbStatus = 'processing';
+            message = 'Sipariş kısmen tamamlandı, işleniyor...';
+            
+          } else if (apiStatus === 'in progress' || apiStatus === 'processing') {
+            dbStatus = 'processing';
+            message = 'Sipariş işleniyor...';
+            
+          } else if (apiStatus === 'pending') {
+            dbStatus = 'processing';
+            message = 'Sipariş beklemede...';
+          }
+
+          // Update order in database
+          const updateData: any = {
+            status: dbStatus,
+            message: message,
+            response: statusResponse
+          };
+
+          if (shouldCompleteOrder) {
+            updateData.completedAt = new Date().toISOString();
+          }
+
+          await storage.updateOrder(orderId, updateData);
+
+          // Create notification for status change
+          const order = await storage.getOrderById(orderId);
+          if (order) {
+            if (dbStatus === 'completed') {
+              await createOrderNotification('order_completed', order.orderId, {
+                apiOrderId: apiOrderId,
+                finalStatus: statusResponse.status
+              });
+            } else if (dbStatus === 'cancelled') {
+              await createOrderNotification('order_cancelled', order.orderId, {
+                apiOrderId: apiOrderId,
+                finalStatus: statusResponse.status
+              });
+            }
+          }
+
+          // Log the status change
+          await storage.createLog({
+            type: "order_status_update",
+            message: `Order ${orderId} status updated to: ${dbStatus}`,
+            orderId: orderId,
+            data: { 
+              apiOrderId: apiOrderId,
+              apiStatus: statusResponse.status,
+              dbStatus: dbStatus
+            },
+          });
+
+          // Continue checking if order is still processing
+          if (dbStatus === 'processing') {
+            setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 60000); // Check again in 1 minute
+          }
+        }
+      } else {
+        console.error(`Status check failed for order ${orderId}:`, response.status, response.statusText);
+        // Continue checking despite HTTP errors
+        setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 120000); // Check again in 2 minutes
+      }
+    } catch (error) {
+      console.error(`Status check failed for order ${orderId}:`, error);
+      // Continue checking despite errors
+      setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 120000); // Check again in 2 minutes
     }
   }
 
