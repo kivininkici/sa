@@ -34,7 +34,7 @@ function generateKey(): string {
   for (let i = 0; i < 12; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return result;
+  return `KIWIPAZARI-${result}`;
 }
 
 // Make API request to external service

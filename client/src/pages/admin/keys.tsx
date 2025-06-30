@@ -236,26 +236,57 @@ export default function Keys() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredKeys?.map((key: KeyType) => (
-                          <TableRow key={key.id} className="border-slate-700">
+                        paginatedKeys?.map((key: KeyType) => (
+                          <TableRow key={key.id} className="border-slate-700 hover:bg-slate-900/30">
                             <TableCell>
-                              <div>
-                                <code className="px-2 py-1 bg-slate-900 text-blue-400 text-sm rounded font-mono">
-                                  {key.value}
-                                </code>
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" className="rounded border-slate-600" />
+                                <div className="flex items-center gap-2">
+                                  <code className="px-3 py-2 bg-slate-800 text-blue-400 text-sm rounded-lg font-mono border border-slate-600">
+                                    {key.value}
+                                  </code>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-8 h-8 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                    onClick={() => copyToClipboard(key.value)}
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                </div>
                                 {key.name && (
                                   <div className="text-xs text-slate-400 mt-1">{key.name}</div>
                                 )}
                               </div>
                             </TableCell>
+                            <TableCell className="text-slate-300">
+                              {key.createdAt ? new Date(key.createdAt).toLocaleDateString("tr-TR", {
+                                day: "2-digit",
+                                month: "2-digit", 
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={key.isUsed ? "default" : "secondary"}
+                                className={key.isUsed 
+                                  ? "bg-red-900/20 text-red-400 border-red-800" 
+                                  : "bg-green-900/20 text-green-400 border-green-800"
+                                }
+                              >
+                                {key.isUsed ? "Kullanılmış" : "Kullanılmamış"}
+                              </Badge>
+                            </TableCell>
                             <TableCell>
                               <div className="space-y-1">
-                                <div className="text-slate-300">
+                                <div className="text-slate-300 text-sm">
                                   {key.usedQuantity || 0} / {key.maxQuantity || 0}
                                 </div>
-                                <div className="w-full bg-slate-700 rounded-full h-2">
+                                <div className="w-full bg-slate-700 rounded-full h-1.5">
                                   <div 
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                                     style={{ 
                                       width: `${key.maxQuantity ? ((key.usedQuantity || 0) / key.maxQuantity) * 100 : 0}%` 
                                     }}
@@ -264,32 +295,18 @@ export default function Keys() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge 
-                                variant={key.isUsed ? "default" : "secondary"}
-                                className={key.isUsed 
-                                  ? "bg-green-900 text-green-300" 
-                                  : "bg-amber-900 text-amber-300"
-                                }
-                              >
-                                {key.isUsed ? "Tamamlandı" : "Aktif"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-slate-300">
-                              {key.createdAt ? new Date(key.createdAt).toLocaleString("tr-TR") : "-"}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-blue-400 hover:text-blue-300"
+                                  className="w-8 h-8 p-0 text-slate-400 hover:text-blue-400"
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="text-red-400 hover:text-red-300"
+                                  className="w-8 h-8 p-0 text-slate-400 hover:text-red-400"
                                   onClick={() => deleteKeyMutation.mutate(key.id)}
                                   disabled={deleteKeyMutation.isPending}
                                 >
@@ -303,6 +320,39 @@ export default function Keys() {
                     </TableBody>
                   </Table>
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 p-4 border-t border-slate-700">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="flex items-center gap-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Önceki
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 px-4">
+                      <span className="text-sm text-slate-400">
+                        {currentPage} / {totalPages}
+                      </span>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="flex items-center gap-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+                    >
+                      Sonraki
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
