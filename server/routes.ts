@@ -1802,18 +1802,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simulate API call to external service
       if (service.apiEndpoint) {
         try {
-          // Use MedyaBayim API format with fixed service ID 2201
-          const apiResponse = await makeServiceRequest(
-            "https://medyabayim.com/api/v2",
-            "POST",
-            {},
-            {
-              key: "aa2957fd3a856ddc0e1e5d5ab02eb8e9",
-              action: "add",
-              service: "2201", // Fixed working service ID
-              link: targetUrl,
-              quantity: quantity.toString()
+          // Use the service's own API settings
+          const apiData: any = {
+            link: targetUrl,
+            quantity: quantity.toString()
+          };
+
+          // Add service-specific parameters
+          if (service.serviceId) {
+            apiData.service = service.serviceId.toString();
+          }
+
+          // Add API key and action for MedyaBayim format
+          if (service.apiEndpoint?.includes('medyabayim.com')) {
+            apiData.key = "aa2957fd3a856ddc0e1e5d5ab02eb8e9";
+            apiData.action = "add";
+          }
+
+          // Merge with request template if available
+          if (service.requestTemplate) {
+            Object.assign(apiData, service.requestTemplate);
+            // Override with our specific values
+            apiData.link = targetUrl;
+            apiData.quantity = quantity.toString();
+            if (service.serviceId) {
+              apiData.service = service.serviceId.toString();
             }
+          }
+
+          const apiResponse = await makeServiceRequest(
+            service.apiEndpoint,
+            service.apiMethod || "POST",
+            service.apiHeaders || {},
+            apiData
           );
 
           // Update order with success

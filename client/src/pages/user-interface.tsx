@@ -114,13 +114,13 @@ export default function UserInterface() {
     mutationFn: async (data: OrderData) => {
       console.log("Making order API request with data:", data);
       
-      // Use fixed service ID 2201 for all orders - this service works reliably
+      // Use the validated key's service ID (each key has its own service)
       const orderData = {
         ...data,
-        serviceId: 2201
+        serviceId: validatedKey?.service?.id || data.serviceId
       };
       
-      console.log("Sending order with fixed serviceId 2201:", orderData);
+      console.log("Sending order with service from key:", orderData);
       const response = await apiRequest("POST", "/api/orders", orderData);
       const result = await response.json() as { orderId: string };
       console.log("Order API response:", result);
