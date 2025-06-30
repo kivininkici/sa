@@ -1,12 +1,19 @@
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, Settings, Crown } from "lucide-react";
-import type { User as UserType } from "@shared/schema";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { user, isLoading } = useAuth();
-  const typedUser = user as UserType & { isAdmin?: boolean };
+  const { admin, isLoading } = useAdminAuth();
+
+  // Redirect to admin login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !admin) {
+      window.location.href = '/admin/login';
+      return;
+    }
+  }, [admin, isLoading]);
 
   if (isLoading) {
     return (
@@ -19,6 +26,10 @@ export default function Home() {
         </div>
       </div>
     );
+  }
+
+  if (!admin) {
+    return null; // Will redirect via useEffect
   }
 
   return (
@@ -35,31 +46,23 @@ export default function Home() {
                 <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   KeyPanel
                 </h1>
-                <p className="text-sm text-gray-400">Hoş geldin, {(user as any)?.username || 'Kullanıcı'}</p>
+                <p className="text-sm text-gray-400">Hoş geldin, {admin?.username || 'Kullanıcı'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                {(user as any)?.profileImageUrl ? (
-                  <img 
-                    src={(user as any).profileImageUrl} 
-                    alt="Profile" 
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <span className="text-white font-medium">{(user as any)?.username || 'Kullanıcı'}</span>
+                <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-white font-medium">{admin?.username || 'Kullanıcı'}</span>
               </div>
               <Button 
                 onClick={async () => {
                   try {
-                    await fetch('/api/logout', { method: 'POST' });
-                    window.location.href = '/';
+                    await fetch('/api/admin/logout', { method: 'POST' });
+                    window.location.href = '/admin/login';
                   } catch (error) {
-                    window.location.href = '/';
+                    window.location.href = '/admin/login';
                   }
                 }}
                 variant="outline"
@@ -79,7 +82,7 @@ export default function Home() {
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 rounded-full mb-8 backdrop-blur-sm">
             <Crown className="w-5 h-5 text-yellow-400 mr-2" />
             <span className="text-sm font-medium text-white">
-              {typedUser?.isAdmin ? 'Admin' : 'Premium Üye'}
+              Admin
             </span>
           </div>
           
@@ -100,17 +103,15 @@ export default function Home() {
               <KeyRound className="w-6 h-6 mr-3" />
               Key Kullan
             </Button>
-            {typedUser?.isAdmin && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
-                onClick={() => window.location.href = '/admin/login'}
-              >
-                <Shield className="w-6 h-6 mr-3" />
-                Admin Panel
-              </Button>
-            )}
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
+              onClick={() => window.location.href = '/admin/login'}
+            >
+              <Shield className="w-6 h-6 mr-3" />
+              Admin Panel
+            </Button>
           </div>
         </div>
 
