@@ -2,9 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAdminAuth, requireAdminAuth, hashPassword, comparePassword } from "./adminAuth";
+import { db } from "./db";
+import { desc } from "drizzle-orm";
 
 // Using admin session-based authentication only
 import { insertKeySchema, insertServiceSchema, insertOrderSchema, insertApiSettingsSchema } from "@shared/schema";
+import { normalUsers } from "@shared/schema";
 import { z } from "zod";
 
 // Normal user auth schemas
@@ -998,11 +1001,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // List all regular users
+  // List all regular users (both normal_users and Replit users)
   app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
-      res.json(users);
+      // Get normal users from normal_users table
+      const normalUsersList = await db.select().from(normalUsers).orderBy(desc(normalUsers.createdAt));
+      
+      // Get Replit users from users table  
+      const replitUsers = await storage.getAllUsers();
+      
+      // Combine and format all users
+      const allUsers = [
+        ...normalUsersList.map((user: any) => ({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: 'user', // Normal users start as 'user' role
+          createdAt: user.createdAt,
+          type: 'normal',
+          isActive: true
+        })),
+        ...replitUsers.map((user: any) => ({
+          id: user.id,
+          username: user.firstName || user.email || 'Unknown',
+          email: user.email,
+          role: user.role || 'user',
+          createdAt: user.createdAt,
+          type: 'replit',
+          isActive: true
+        }))
+      ];
+      
+      res.json(allUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
