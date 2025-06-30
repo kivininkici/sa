@@ -32,7 +32,10 @@ import {
   Clock, 
   Plus, 
   Eye, 
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Copy
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Key as KeyType } from "@shared/schema";
@@ -44,6 +47,8 @@ export default function Keys() {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50);
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -101,6 +106,20 @@ export default function Keys() {
     return matchesSearch && matchesStatus;
   }) : [];
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredKeys.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedKeys = filteredKeys.slice(startIndex, endIndex);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Kopyalandı",
+      description: "Key panoya kopyalandı",
+    });
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-950">
       <Sidebar />
@@ -116,7 +135,9 @@ export default function Keys() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-slate-50">Key Yönetimi</h2>
-                <p className="text-slate-400">Tek kullanımlık key'leri oluşturun ve yönetin</p>
+                <p className="text-slate-400">
+                  Toplam {filteredKeys.length} key • Sayfa {currentPage}/{totalPages}
+                </p>
               </div>
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
