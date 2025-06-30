@@ -69,7 +69,13 @@ export default function Auth() {
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
       const response = await apiRequest("POST", "/api/auth/login", data);
-      return response.json();
+      const responseText = await response.text();
+      try {
+        return JSON.parse(responseText);
+      } catch (error) {
+        console.error("JSON parse error:", error, "Response text:", responseText);
+        throw new Error("Server response format error");
+      }
     },
     onSuccess: (data: any) => {
       setIsLoginLoading(false);
@@ -97,7 +103,13 @@ export default function Auth() {
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
       const response = await apiRequest("POST", "/api/auth/register", data);
-      return response.json();
+      const responseText = await response.text();
+      try {
+        return JSON.parse(responseText);
+      } catch (error) {
+        console.error("JSON parse error:", error, "Response text:", responseText);
+        throw new Error("Server response format error");
+      }
     },
     onSuccess: () => {
       setIsRegisterLoading(false);
