@@ -47,7 +47,7 @@ export default function AdminLogin() {
       setIsSuccess(false);
       toast({
         title: "Giriş başarısız",
-        description: error.message,
+        description: error.message || "Kullanıcı adı veya şifre hatalı",
         variant: "destructive",
       });
     },

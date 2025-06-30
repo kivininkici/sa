@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Key,
@@ -37,9 +38,30 @@ const navigation = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { admin, logout } = useAdminAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <aside className="w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 flex flex-col relative">
+    <>
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 md:hidden bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 text-white hover:bg-slate-800"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`w-64 bg-slate-900/95 backdrop-blur-xl border-r border-slate-700/50 flex flex-col relative z-40 fixed md:relative inset-y-0 left-0 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-cyan-500/5"></div>
       
@@ -111,5 +133,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   );
 }

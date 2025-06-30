@@ -151,6 +151,13 @@ Changelog:
 - "Premium Üye" yerine "Admin" badge'i gösteriliyor
 - Auth sayfası sadece admin girişi için güncellendi
 - Login endpoint sadece admin kullanıcıları kabul ediyor
+- June 30, 2025: Site-wide optimizasyon ve responsive tasarım tamamlandı
+- Key İstatistikleri sayfası (/admin/key-stats) eklendi ve optimize edildi
+- Mobile responsive design tüm sayfalara uygulandı
+- Custom scrollbar, fade-in animasyonlar ve CSS iyileştirmeleri
+- Dashboard ve Key İstatistikleri sayfaları mobile uyumlu hale getirildi
+- Grafik bileşenleri mobile ekranlar için optimize edildi
+- Error handling ve loading state'leri iyileştirildi
 
 ## User Preferences
 

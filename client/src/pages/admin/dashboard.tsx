@@ -88,7 +88,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <Sidebar />
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-hidden relative md:ml-0 ml-0">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 pointer-events-none"></div>
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -99,24 +99,24 @@ export default function Dashboard() {
         />
         
         <div className="content-area relative z-10">
-          <div className="p-8 space-y-8">
+          <div className="p-4 md:p-8 space-y-6 md:space-y-8">
             {/* Welcome Section */}
-            <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-6 border border-blue-500/20">
-              <div>
-                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-[32px]">Hoş Geldiniz!</h2>
-                <p className="text-slate-400 mt-2">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-4 md:p-6 border border-blue-500/20 gap-4">
+              <div className="flex-1">
+                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-2xl md:text-[32px]">Hoş Geldiniz!</h2>
+                <p className="text-slate-400 mt-2 text-sm md:text-base">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
               </div>
               <Button 
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 w-full md:w-auto"
                 onClick={() => setShowKeyModal(true)}
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 Hızlı Key Oluştur
               </Button>
             </div>
 
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <StatsCard
                 title="Toplam Key"
                 value={dashboardStats?.totalKeys || 0}

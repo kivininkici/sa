@@ -64,13 +64,13 @@ export default function AdminKeyStats() {
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header title="Key İstatistikleri" description="Günlük key seçimleri ve kullanım analizi" />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BarChart3 className="h-8 w-8 text-primary" />
+              <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-primary" />
               <div>
-                <h1 className="text-3xl font-bold text-white">Key İstatistikleri</h1>
-                <p className="text-slate-400">Günlük key seçimleri ve kullanım analizi</p>
+                <h1 className="text-xl md:text-3xl font-bold text-white">Key İstatistikleri</h1>
+                <p className="text-slate-400 text-sm md:text-base">Günlük key seçimleri ve kullanım analizi</p>
               </div>
             </div>
           </div>
@@ -84,13 +84,13 @@ export default function AdminKeyStats() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
             {Object.entries(timeRangeLabels).map(([key, label]) => (
               <Button
                 key={key}
                 variant={selectedRange === key ? "default" : "outline"}
                 onClick={() => setSelectedRange(key as TimeRange)}
-                className="min-w-[120px]"
+                className="text-xs md:text-sm min-w-[100px] md:min-w-[120px]"
               >
                 {label}
               </Button>
@@ -101,7 +101,7 @@ export default function AdminKeyStats() {
 
       {/* Özet İstatistikler */}
       {statsData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Toplam Seçim</CardTitle>
@@ -173,13 +173,14 @@ export default function AdminKeyStats() {
               </div>
             </div>
           ) : statsData && statsData.data.length > 0 ? (
-            <div className="h-[400px] w-full">
+            <div className="h-[300px] md:h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={statsData.data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <LineChart data={statsData.data} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="date" 
-                    className="text-sm"
+                    className="text-xs md:text-sm"
+                    tick={{ fontSize: 12 }}
                     tickFormatter={(value) => {
                       const date = new Date(value);
                       if (selectedRange === "24h") {
@@ -191,7 +192,7 @@ export default function AdminKeyStats() {
                       }
                     }}
                   />
-                  <YAxis className="text-sm" />
+                  <YAxis className="text-xs md:text-sm" tick={{ fontSize: 12 }} />
                   <Tooltip 
                     labelFormatter={(value) => new Date(value).toLocaleString('tr-TR')}
                     formatter={(value: number, name: string) => [
