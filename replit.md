@@ -128,6 +128,11 @@ Changelog:
 
 ## Recent Changes
 - June 30, 2025: Replit Agent'dan Replit ortamına migration tamamlandı
+- June 30, 2025: API-Servis bağlantı sistemi tamamen düzeltildi - API ile servisler arasında doğru bağlantı kuruldu
+- API eklendiğinde hem API kaydediliyor hem servisler otomatik import ediliyor
+- Key oluştururken seçilen API'nin servislerine sipariş gerçek API'ye gönderiliyor
+- Frontend validation ve type hataları çözüldü
+- Backend variable ve data format sorunları düzeltildi
 - PostgreSQL veritabanı yapılandırıldı ve tüm tablolar oluşturuldu
 - Admin hesabı oluşturuldu (admin/admin123)
 - Sipariş oluşturma butonu düzeltildi ve authentication eklendi

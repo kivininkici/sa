@@ -32,7 +32,7 @@ export default function ApiManagement() {
   const [apiName, setApiName] = useState("");
   const [apiUrl, setApiUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [fetchedServices, setFetchedServices] = useState([]);
+  const [fetchedServices, setFetchedServices] = useState<any[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -138,11 +138,23 @@ export default function ApiManagement() {
       return response.json();
     },
     onSuccess: (data) => {
+      // API'den gelen veri object olabilir, array'e çevir
+      let servicesArray = [];
+      if (Array.isArray(data)) {
+        servicesArray = data;
+      } else if (data && typeof data === 'object') {
+        // Object'in value'larını kontrol et
+        const values = Object.values(data);
+        if (values.length > 0 && typeof values[0] === 'object') {
+          servicesArray = values;
+        }
+      }
+      
+      setFetchedServices(servicesArray);
       toast({
         title: "Başarılı",
-        description: `${data.length} servis bulundu ve içe aktarıldı`,
+        description: `${servicesArray.length} servis bulundu`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -329,8 +341,9 @@ export default function ApiManagement() {
     importServicesMutation.mutate(servicesToImport);
   };
 
-  // Filter and paginate services
-  const filteredServices = fetchedServices.filter((service: any) =>
+  // Filter and paginate services - ensure fetchedServices is always an array
+  const servicesArray = Array.isArray(fetchedServices) ? fetchedServices : [];
+  const filteredServices = servicesArray.filter((service: any) =>
     service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     service.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );

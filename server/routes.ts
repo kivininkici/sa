@@ -1167,11 +1167,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           for (const serviceData of formattedServices) {
             try {
               const validated = insertServiceSchema.parse({
-                ...serviceData,
-                serviceId: serviceData.serviceId || null
+                name: serviceData.name || `Service ${serviceData.serviceId || 'Unknown'}`,
+                description: serviceData.description || serviceData.name || '',
+                platform: serviceData.platform || 'External API',
+                type: serviceData.type || 'social_media',
+                icon: serviceData.icon || 'Settings',
+                price: serviceData.price || '0',
+                isActive: serviceData.isActive !== false,
+                apiEndpoint: serviceData.apiEndpoint || apiSetting.apiUrl,
+                apiMethod: serviceData.apiMethod || 'POST',
+                apiHeaders: serviceData.apiHeaders || {},
+                requestTemplate: serviceData.requestTemplate || {},
+                responseFormat: serviceData.responseFormat || {},
+                serviceId: serviceData.serviceId?.toString() || null,
+                apiSettingsId: apiSetting.id,
+                category: serviceData.category || 'general',
+                minQuantity: serviceData.minQuantity || 1,
+                maxQuantity: serviceData.maxQuantity || 10000
               });
               validatedServices.push(validated);
             } catch (validationError) {
+              console.error(`Validation error for service ${serviceData.name}:`, validationError);
               errors.push({
                 service: serviceData.name || 'Unknown',
                 error: validationError instanceof Error ? validationError.message : 'Validation failed'
