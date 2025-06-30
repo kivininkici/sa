@@ -43,6 +43,11 @@ function Router() {
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin-login" component={AdminLogin} />
       
+      {/* Admin main route - redirect to dashboard */}
+      <Route path="/admin">
+        {isAdminAuthenticated ? <Dashboard /> : <AdminLogin />}
+      </Route>
+      
       {/* Protected admin routes */}
       <Route path="/admin/dashboard">
         {isAdminAuthenticated ? <Dashboard /> : <AdminLogin />}

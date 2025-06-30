@@ -103,15 +103,17 @@ export default function Home() {
               <KeyRound className="w-6 h-6 mr-3" />
               Key Kullan
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
-              onClick={() => window.location.href = '/admin/login'}
-            >
-              <Shield className="w-6 h-6 mr-3" />
-              Admin Panel
-            </Button>
+            {admin && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
+                onClick={() => window.location.href = '/admin'}
+              >
+                <Shield className="w-6 h-6 mr-3" />
+                Admin Panel
+              </Button>
+            )}
           </div>
         </div>
 
