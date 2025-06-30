@@ -70,65 +70,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin auth setup
   setupAdminAuth(app);
 
-  // Normal user auth routes
+  // Registration disabled - only admin users can access the system
   app.post('/api/register', async (req, res) => {
-    try {
-      const { username, email, password } = userRegisterSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsernameOrEmail(username, email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Kullanıcı adı veya email zaten kullanımda' });
-      }
-
-      // Create user
-      const hashedPassword = await hashPassword(password);
-      const user = await storage.createNormalUser({
-        username,
-        email,
-        password: hashedPassword,
-      });
-
-      // Set session
-      req.session.userId = user.id;
-      req.session.username = user.username;
-
-      res.status(201).json({ 
-        id: user.id, 
-        username: user.username, 
-        email: user.email,
-        message: 'Kayıt başarılı' 
-      });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message || 'Kayıt sırasında hata oluştu' });
-    }
+    res.status(403).json({ message: 'Kayıt özelliği devre dışı. Sadece admin hesapları kullanılabilir.' });
   });
 
   app.post('/api/login', async (req, res) => {
     try {
       const { username, password } = userLoginSchema.parse(req.body);
       
-      // Find user
-      const user = await storage.getNormalUserByUsername(username);
-      if (!user) {
+      // Find admin user only
+      const adminUser = await storage.getAdminByUsername(username);
+      if (!adminUser) {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
       // Check password
-      const isValidPassword = await comparePassword(password, user.password);
+      const isValidPassword = await comparePassword(password, adminUser.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
+      // Check if admin is active
+      if (!adminUser.isActive) {
+        return res.status(401).json({ message: 'Hesabınız askıya alınmış' });
+      }
+
+      // Update last login
+      await storage.updateAdminLastLogin(adminUser.id);
+
       // Set session
-      req.session.userId = user.id;
-      req.session.username = user.username;
+      req.session.userId = adminUser.id;
+      req.session.username = adminUser.username;
 
       res.json({ 
-        id: user.id, 
-        username: user.username, 
-        email: user.email,
-        message: 'Giriş başarılı' 
+        id: adminUser.id, 
+        username: adminUser.username, 
+        email: adminUser.email,
+        message: 'Admin girişi başarılı' 
       });
     } catch (error: any) {
       res.status(400).json({ message: error.message || 'Giriş sırasında hata oluştu' });

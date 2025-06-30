@@ -78,7 +78,7 @@ export default function Home() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 rounded-full mb-8 backdrop-blur-sm">
             <Crown className="w-5 h-5 text-yellow-400 mr-2" />
-            <span className="text-sm font-medium text-white">Premium Üye</span>
+            <span className="text-sm font-medium text-white">Admin</span>
           </div>
           
           <h2 className="text-5xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">

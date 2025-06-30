@@ -146,6 +146,11 @@ Changelog:
 - Public API endpoint eklendi: GET /api/orders/search/:orderId
 - Bildirim butonu header'dan kaldırıldı
 - Sipariş sorgulama sistemi gerçek API durumlarını yansıtacak şekilde ayarlandı
+- June 30, 2025: Sadece admin kullanıcılar için sistem güncellendi
+- Kayıt sistemi devre dışı bırakıldı - sadece admin hesapları ile giriş
+- "Premium Üye" yerine "Admin" badge'i gösteriliyor
+- Auth sayfası sadece admin girişi için güncellendi
+- Login endpoint sadece admin kullanıcıları kabul ediyor
 
 ## User Preferences
 
