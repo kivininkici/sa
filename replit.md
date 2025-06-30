@@ -165,7 +165,11 @@ Changelog:
 - Son güncelleme zamanı ve canlı takip durumu eklendi
 - Sipariş detayları genişletildi: servis, miktar, hedef URL, anahtar bilgileri
 - PostgreSQL database kuruldu ve tüm tablolar başarıyla oluşturuldu
-- Sistem production seviyesinde güvenilir çalışıyor
+- API optimizasyonu: MedyaBayim API v2 dokümanına uygun direkt entegrasyon
+- Cache sistemi: 15 saniye cache ile API çağrıları optimize edildi
+- Verimlilik: Otomatik yenileme 10 saniyeye çıkarıldı, gereksiz API çağrıları azaltıldı
+- Status mapping: Tüm API durumları (Pending, In progress, Completed, Partial, Canceled) destekleniyor
+- Sistem production seviyesinde güvenilir ve optimize edilmiş şekilde çalışıyor
 
 ## User Preferences
 

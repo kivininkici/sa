@@ -29,7 +29,49 @@ const requireUserAuth = (req: any, res: any, next: any) => {
 
 // Simple cache for API status calls
 const apiStatusCache = new Map<string, { status: any; timestamp: number; }>();
-const CACHE_DURATION = 10000; // 10 seconds cache
+const CACHE_DURATION = 15000; // 15 seconds cache for efficiency
+
+// Optimized API status check function
+async function getOrderStatusFromAPI(apiKey: string, apiUrl: string, orderId: string): Promise<any> {
+  const cacheKey = `${orderId}_${apiKey}`;
+  const now = Date.now();
+  const cached = apiStatusCache.get(cacheKey);
+  
+  // Return cached result if fresh
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return cached.status;
+  }
+  
+  try {
+    // Use MedyaBayim API v2 format exactly as documented
+    const formData = new URLSearchParams();
+    formData.append('key', apiKey);
+    formData.append('action', 'status');
+    formData.append('order', orderId);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString()
+    });
+
+    if (response.ok) {
+      const statusData = await response.json();
+      
+      // Cache successful result
+      apiStatusCache.set(cacheKey, { status: statusData, timestamp: now });
+      
+      return statusData;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('API status check failed:', error);
+    return null;
+  }
+}
 
 // Generate random key
 function generateKey(): string {
@@ -734,38 +776,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (externalOrderId) {
           try {
-            const cacheKey = `${externalOrderId}_${service.apiSettingsId}`;
-            const now = Date.now();
-            const cached = apiStatusCache.get(cacheKey);
+            // Get API settings for this service
+            const apiSettings = await storage.getActiveApiSettings();
+            const serviceApiSettings = apiSettings.find(api => api.id === service.apiSettingsId);
             
-            // Use cached status if it's fresh
-            if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-              const statusData = cached.status;
+            if (serviceApiSettings?.apiKey && serviceApiSettings?.apiUrl) {
+              // Use optimized API status check
+              const statusData = await getOrderStatusFromAPI(
+                serviceApiSettings.apiKey,
+                serviceApiSettings.apiUrl,
+                externalOrderId.toString()
+              );
               
-              if (statusData.status) {
-                // Map API status to our internal status
+              if (statusData?.status) {
+                // Map MedyaBayim API status to internal status
                 let mappedStatus = statusData.status.toLowerCase();
-                if (mappedStatus === 'canceled') mappedStatus = 'cancelled';
-                if (mappedStatus === 'inprogress' || mappedStatus === 'in progress') mappedStatus = 'in_progress';
-                if (mappedStatus === 'partial') mappedStatus = 'partial';
-                if (mappedStatus === 'completed') mappedStatus = 'completed';
-                if (mappedStatus === 'processing') mappedStatus = 'processing';
                 
-                // Update order status if it's different
+                // Handle all possible API status values
+                switch (mappedStatus) {
+                  case 'pending':
+                    mappedStatus = 'pending';
+                    break;
+                  case 'in progress':
+                    mappedStatus = 'in_progress';
+                    break;
+                  case 'processing':
+                    mappedStatus = 'processing';
+                    break;
+                  case 'completed':
+                    mappedStatus = 'completed';
+                    break;
+                  case 'partial':
+                    mappedStatus = 'partial';
+                    break;
+                  case 'canceled':
+                  case 'cancelled':
+                    mappedStatus = 'cancelled';
+                    break;
+                  default:
+                    // Keep original status if unknown
+                    break;
+                }
+                
+                // Update order if status changed
                 if (mappedStatus !== order.status) {
                   const updateData: any = { 
                     status: mappedStatus as any,
                     message: statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status 
                   };
                   
-                  // If order is completed, set completedAt
-                  if (mappedStatus === 'completed') {
+                  // Set completion time for final statuses
+                  if (['completed', 'cancelled', 'partial'].includes(mappedStatus)) {
                     updateData.completedAt = new Date().toISOString();
                   }
                   
                   await storage.updateOrder(order.id, updateData);
                   
-                  // Update the order object for response
+                  // Update response object
                   order.status = mappedStatus as any;
                   order.message = updateData.message;
                   if (updateData.completedAt) {
@@ -773,68 +840,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 }
               }
-            } else {
-              // Make fresh API call and cache result
-              const apiSettings = await storage.getActiveApiSettings();
-              const serviceApiSettings = apiSettings.find(api => api.id === service.apiSettingsId);
-              
-              if (serviceApiSettings) {
-                const formData = new URLSearchParams();
-                formData.append('key', serviceApiSettings.apiKey || '');
-                formData.append('action', 'status');
-                formData.append('order', externalOrderId.toString());
-
-                const statusResponse = await fetch(serviceApiSettings.apiUrl, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                  },
-                  body: formData.toString()
-                });
-
-                if (statusResponse.ok) {
-                  const statusData = await statusResponse.json();
-                  
-                  // Cache the result
-                  apiStatusCache.set(cacheKey, { status: statusData, timestamp: now });
-                  
-                  if (statusData.status) {
-                    // Map API status to our internal status
-                    let mappedStatus = statusData.status.toLowerCase();
-                    if (mappedStatus === 'canceled') mappedStatus = 'cancelled';
-                    if (mappedStatus === 'inprogress' || mappedStatus === 'in progress') mappedStatus = 'in_progress';
-                    if (mappedStatus === 'partial') mappedStatus = 'partial';
-                    if (mappedStatus === 'completed') mappedStatus = 'completed';
-                    if (mappedStatus === 'processing') mappedStatus = 'processing';
-                    
-                    // Update order status if it's different
-                    if (mappedStatus !== order.status) {
-                      const updateData: any = { 
-                        status: mappedStatus as any,
-                        message: statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status 
-                      };
-                      
-                      // If order is completed, set completedAt
-                      if (mappedStatus === 'completed') {
-                        updateData.completedAt = new Date().toISOString();
-                      }
-                      
-                      await storage.updateOrder(order.id, updateData);
-                      
-                      // Update the order object for response
-                      order.status = mappedStatus as any;
-                      order.message = updateData.message;
-                      if (updateData.completedAt) {
-                        order.completedAt = updateData.completedAt;
-                      }
-                    }
-                  }
-                }
-              }
             }
           } catch (error) {
-            console.error('Error checking real API status:', error);
-            // Continue with cached status if API check fails
+            console.error('Error checking API status:', error);
           }
         }
       }
