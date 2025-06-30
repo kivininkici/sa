@@ -422,7 +422,7 @@ export default function UserInterface() {
                     <div className="bg-slate-700/50 rounded-lg p-4 space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-slate-300">Key:</span>
-                        <Badge variant="outline" className="font-mono">{validatedKey.value}</Badge>
+                        <Badge variant="outline" className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono text-[#f8fafc]">{validatedKey.value}</Badge>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-300">Kalan Miktar:</span>
