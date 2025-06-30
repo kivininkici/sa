@@ -657,6 +657,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Sipariş detayları eksik" });
       }
 
+      // If order has API response with order ID and is not completed, try to update status
+      if (order.response?.order && !['completed', 'failed', 'cancelled'].includes(order.status)) {
+        // Trigger async status check without waiting for result
+        checkOrderStatusAsync(order.id, order.response.order.toString());
+        
+        // Return current status immediately, updates will come from the background check
+      }
+
       // Return detailed order information
       res.json({
         ...order,

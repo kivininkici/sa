@@ -155,6 +155,15 @@ export default function UserInterface() {
       toast({
         title: "Sipariş Başarıyla Oluşturuldu",
         description: `Sipariş numaranız: ${data.orderId}`,
+        action: (
+          <Button
+            size="sm"
+            onClick={() => window.open(`/order-search?orderId=${data.orderId}`, '_blank')}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Sipariş Sorgula
+          </Button>
+        ),
       });
     },
     onError: (error: any, variables, context) => {
