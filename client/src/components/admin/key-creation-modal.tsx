@@ -46,6 +46,19 @@ interface KeyCreationModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const platformCategories = [
+  { id: "youtube", name: "YouTube", icon: "📺", keywords: ["youtube", "yt"] },
+  { id: "instagram", name: "Instagram", icon: "📷", keywords: ["instagram", "ig", "insta"] },
+  { id: "twitter", name: "Twitter", icon: "🐦", keywords: ["twitter", "tweet", "x.com"] },
+  { id: "tiktok", name: "TikTok", icon: "🎵", keywords: ["tiktok", "tik tok"] },
+  { id: "kick", name: "Kick", icon: "🦵", keywords: ["kick"] },
+  { id: "twitch", name: "Twitch", icon: "🎮", keywords: ["twitch"] },
+  { id: "facebook", name: "Facebook", icon: "👥", keywords: ["facebook", "fb"] },
+  { id: "telegram", name: "Telegram", icon: "✈️", keywords: ["telegram"] },
+  { id: "spotify", name: "Spotify", icon: "🎶", keywords: ["spotify"] },
+  { id: "other", name: "Diğer", icon: "🔧", keywords: [] }
+];
+
 export default function KeyCreationModal({
   open,
   onOpenChange,
@@ -53,6 +66,7 @@ export default function KeyCreationModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(0);
   const SERVICES_PER_PAGE = 25;
 
@@ -135,42 +149,63 @@ export default function KeyCreationModal({
 
   // Memoized filtering for better performance
   const filteredServices = useMemo(() => {
-    let results: Service[] = [];
+    let results: Service[] = servicesList;
     
-    if (!serviceSearchTerm) {
-      // No search term - show paginated results
-      const startIndex = currentPage * SERVICES_PER_PAGE;
-      results = servicesList.slice(startIndex, startIndex + SERVICES_PER_PAGE);
-    } else {
+    // First filter by category
+    if (selectedCategory !== "all") {
+      const category = platformCategories.find(cat => cat.id === selectedCategory);
+      if (category && category.keywords.length > 0) {
+        results = results.filter((service: Service) => {
+          const serviceName = service.name.toLowerCase();
+          return category.keywords.some(keyword => serviceName.includes(keyword.toLowerCase()));
+        });
+      } else if (selectedCategory === "other") {
+        // Show services that don't match any specific category
+        const allKeywords = platformCategories.flatMap(cat => cat.keywords).map(k => k.toLowerCase());
+        results = results.filter((service: Service) => {
+          const serviceName = service.name.toLowerCase();
+          return !allKeywords.some(keyword => serviceName.includes(keyword));
+        });
+      }
+    }
+    
+    // Then filter by search term
+    if (serviceSearchTerm) {
       const searchLower = serviceSearchTerm.toLowerCase();
       
       // Check if search term is a number (service ID)
       if (/^\d+$/.test(serviceSearchTerm)) {
         const serviceId = parseInt(serviceSearchTerm);
-        const exactMatch = servicesList.find((service: Service) => service.id === serviceId);
+        const exactMatch = results.find((service: Service) => service.id === serviceId);
         if (exactMatch) {
           results = [exactMatch];
         } else {
           // If no exact match, look for services containing the ID
-          results = servicesList.filter((service: Service) => 
+          results = results.filter((service: Service) => 
             service.id.toString().includes(serviceSearchTerm)
-          ).slice(0, SERVICES_PER_PAGE);
+          );
         }
       } else {
         // Text search
-        results = servicesList
-          .filter((service: Service) => 
-            service.name.toLowerCase().includes(searchLower) ||
-            service.platform.toLowerCase().includes(searchLower) ||
-            service.type?.toLowerCase().includes(searchLower) ||
-            service.id.toString().includes(serviceSearchTerm)
-          )
-          .slice(0, SERVICES_PER_PAGE);
+        results = results.filter((service: Service) => 
+          service.name.toLowerCase().includes(searchLower) ||
+          service.platform.toLowerCase().includes(searchLower) ||
+          service.type?.toLowerCase().includes(searchLower) ||
+          service.id.toString().includes(serviceSearchTerm)
+        );
       }
     }
     
+    // Finally apply pagination if no search term
+    if (!serviceSearchTerm) {
+      const startIndex = currentPage * SERVICES_PER_PAGE;
+      results = results.slice(startIndex, startIndex + SERVICES_PER_PAGE);
+    } else {
+      results = results.slice(0, SERVICES_PER_PAGE);
+    }
+    
     return results;
-  }, [servicesList, serviceSearchTerm, currentPage, SERVICES_PER_PAGE]);
+  }, [servicesList, serviceSearchTerm, selectedCategory, currentPage, SERVICES_PER_PAGE]);
 
   const totalPages = Math.ceil(servicesList.length / SERVICES_PER_PAGE);
 
@@ -208,6 +243,48 @@ export default function KeyCreationModal({
                 </FormItem>
               )}
             />
+
+            {/* Kategori Seçimi */}
+            <div className="space-y-2">
+              <label className="text-slate-200 text-sm font-medium">Kategori</label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant={selectedCategory === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setCurrentPage(0);
+                  }}
+                  className={`text-xs ${
+                    selectedCategory === "all" 
+                      ? "bg-blue-600 text-white" 
+                      : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                  }`}
+                >
+                  🔧 Tümü
+                </Button>
+                {platformCategories.map((category) => (
+                  <Button
+                    key={category.id}
+                    type="button"
+                    variant={selectedCategory === category.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      setCurrentPage(0);
+                    }}
+                    className={`text-xs ${
+                      selectedCategory === category.id 
+                        ? "bg-blue-600 text-white" 
+                        : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                    }`}
+                  >
+                    {category.icon} {category.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
 
             <FormField
               control={form.control}

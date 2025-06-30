@@ -201,6 +201,36 @@ export default function Keys() {
     }
   };
 
+  const toggleSelectedKeysVisibility = () => {
+    if (selectedKeys.size === 0) return;
+    
+    setHiddenKeys(prev => {
+      const newSet = new Set(prev);
+      const allSelectedHidden = Array.from(selectedKeys).every(id => newSet.has(id));
+      
+      if (allSelectedHidden) {
+        // If all selected keys are hidden, show them
+        Array.from(selectedKeys).forEach(id => newSet.delete(id));
+        toast({
+          title: "Başarılı",
+          description: `${selectedKeys.size} key gösterildi`,
+        });
+      } else {
+        // Hide all selected keys
+        Array.from(selectedKeys).forEach(id => newSet.add(id));
+        toast({
+          title: "Başarılı",
+          description: `${selectedKeys.size} key gizlendi`,
+        });
+      }
+      
+      return newSet;
+    });
+    
+    setSelectedKeys(new Set());
+    setSelectAll(false);
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-950">
       <Sidebar />
@@ -293,14 +323,26 @@ export default function Keys() {
                             />
                             <span>Key</span>
                             {selectedKeys.size > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="w-6 h-6 p-0 text-red-400 hover:text-red-300 ml-2"
-                                onClick={deleteSelectedKeys}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center gap-1 ml-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-6 h-6 p-0 text-blue-400 hover:text-blue-300"
+                                  onClick={toggleSelectedKeysVisibility}
+                                  title="Seçili key'leri gizle/göster"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-6 h-6 p-0 text-red-400 hover:text-red-300"
+                                  onClick={deleteSelectedKeys}
+                                  title="Seçili key'leri sil"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </TableHead>
