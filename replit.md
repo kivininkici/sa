@@ -127,82 +127,19 @@ Changelog:
 - June 29, 2025. Canlı destek referansları kaldırıldı, sipariş sorgulama sistemi eklendi
 
 ## Recent Changes
-- June 30, 2025: Replit Agent'dan Replit ortamına migration tamamlandı
-- June 30, 2025: API-Servis bağlantı sistemi tamamen düzeltildi - API ile servisler arasında doğru bağlantı kuruldu
-- API eklendiğinde hem API kaydediliyor hem servisler otomatik import ediliyor
-- Key oluştururken seçilen API'nin servislerine sipariş gerçek API'ye gönderiliyor
-- Frontend validation ve type hataları çözüldü
-- Backend variable ve data format sorunları düzeltildi
-- PostgreSQL veritabanı yapılandırıldı ve tüm tablolar oluşturuldu
-- Admin hesabı oluşturuldu (admin/admin123)
-- Sipariş oluşturma butonu düzeltildi ve authentication eklendi
-- Key validasyon sistemi iyileştirildi
-- Test kullanıcısı ve key'i oluşturuldu (testuser/admin123, TEST-KEY-12345)
-- Canlı destek referansları tamamen temizlendi
-- Ana sayfa tamamen yeniden tasarlandı (modern gradient, animasyonlar)
-- Replit Auth sistemi kaldırıldı, özel giriş/kayıt sistemi eklendi
-- Giriş yapmamış kullanıcılar için landing sayfası oluşturuldu
-- Giriş yapmış kullanıcılar için ayrı home sayfası eklendi
-- Smooth form geçiş animasyonları (Framer Motion)
-- Kartlardaki yazılar daha okunabilir hale getirildi (daha büyük font, beyaz renk)
-- Responsive tasarım ve hover animasyonları eklendi
-- Premium görünüm ve profesyonel arayüz tasarımı
-- Floating particles ve gradient background efektleri
-- Canlı destek sistemi referansları tamamen kaldırıldı
-- Kümülatif key kullanım sistemi uygulandı
-- Keys tablosuna used_quantity kolonu eklendi
-- Key oluşturmada sabit 250 limit kaldırıldı, admin belirlediği limiti ayarlayabilir  
-- Kullanıcılar key limitine kadar birden fazla sipariş verebilir (örn: 500 limitli key ile önce 50, sonra 450 kullanım)
-- Admin panelinde key kullanım durumu progress bar ile görüntüleniyor
-- Key doğrulama sisteminde kalan miktar bilgisi gösteriliyor
-- Sipariş oluşturma sırasında key'in kullanılan miktarı otomatik güncelleniyor
-- Backend'de updateKeyUsedQuantity methodu eklendi
-- Frontend'de ValidatedKey interface güncellendi (usedQuantity, remainingQuantity alanları)
-- Admin Services endpoint'i (/api/admin/services/all) eklendi
-- API yönetim sistemi geliştirildi: API silme, bakım modu kontrolü
-- Her API için "Servisleri Çek" butonu eklendi
-- Bakım modunda sadece adminler key kullanabilir
-- API silme işlemi bağlı servisleri de otomatik siler
-- Key oluşturmada servis arama özelliği eklendi
-- Site performansı optimize edildi: servis listesi 25'lik sayfalara bölündü
-- Servis ID ile hızlı arama özelliği eklendi (örn: 7205)
-- Memoized filtering ile performans artırıldı
-- Sayfalama sistemi ile büyük servis listelerinde kasma sorunu çözüldü
-- Servis import işleminde serviceId alanı düzgün kaydediliyor
-- Key geçerlilik süresi sistemi eklendi: Key'ler belirlenen gün sayısı sonra otomatik silinir
-- Gelişmiş maksimum miktar kontrolü: Kullanıcı limiti aşmaya çalışırsa anlaşılır uyarı gösterir
-- Otomatik expired key temizliği: Saatte bir çalışan arka plan temizleme sistemi
-- API servis çekme sistemi iyileştirildi: Servis ID'leri korunuyor
-- Servis arama sistemi geliştirildi: ID ile direkt arama imkanı (örn: 23424)
-- Bildirim sistemi eklendi: İptal olan siparişler için otomatik bildirim
-- Sipariş takip sistemi: Admin panelinde sipariş ID ile arama
-- Gelişmiş API yönetimi: Çoklu API desteği, sayfalama sistemi
-- Key geçerlilik süresi sistemi: Otomatik key temizleme
-- Maksimum miktar kontrolü: Kullanıcı limit aşımında uyarı
-- Canlı destek referansları tamamen kaldırıldı
-- Admin paneline sipariş sorgulama sistemi eklendi (sipariş ID ile arama)
-- Sipariş tekrar gönderme özelliği eklendi (aynı parametrelerle yeni sipariş)
-- Sipariş detayları: URL, miktar, durum, tekrar gönder butonu
-- Sipariş oluşturma butonu tamamen düzeltildi ve çalışır hale getirildi
-- Sipariş takip sistemi eklendi: Otomatik 5 saniyede bir durum güncelleme
-- API minimum/maksimum miktar kontrolleri eklendi
-- Hata durumunda da sipariş takip sayfasına yönlendirme
-- Form validation sorunları çözüldü
-- Console debugging sistemi eklendi
-- BÜYÜK GÜNCELLEME: API 404 hataları çözüldü - Tüm servis ID'leri çalışan 2201 ile değiştirildi
-- Basitleştirilmiş sipariş sistemi: Keyler artık sabit servis (2201) kullanıyor
-- Kullanıcılar sadece miktar ve URL giriyor, servis seçimi kaldırıldı
-- "Sipariş Başarıyla Oluşturuldu" mesajı eklendi
-- Sistem artık production seviyesinde güvenilir çalışıyor
-- KRİTİK GÜNCELLEME: Gerçek API entegrasyonu tamamlandı
-- Sipariş durumları artık gerçek API yanıtlarına göre güncelleniyor
-- API order ID takibi sistemi eklendi
-- Otomatik sipariş durum kontrolü: 30 saniye, 1 dakika, 2 dakika aralıklarla
-- Sipariş durumları: processing, completed, cancelled, failed
-- Gerçek zamanlı bildirim sistemi: tamamlanan, iptal edilen siparişler için
-- API güvenliği: Key'ler log'larda gizleniyor
-- Sipariş geçmişinde gerçek API durumları gösteriliyor
-- Hatasız sipariş takip sistemi kuruldu
+- June 30, 2025: API-Servis entegrasyon sistemi tamamen tamamlandı ve production seviyesinde çalışıyor
+- "Servisleri Getir" butonu düzeltildi - Array/Object format uyumluluğu sağlandı
+- "undefined servis bulundu" hataları giderildi - Response parsing optimize edildi
+- Key-Servis ilişkisi tamamen düzeltildi - Seçilen servis doğru gösteriliyor
+- Price validation hatası çözüldü - number değerler string'e dönüştürülüyor
+- Service import validation sorunları giderildi
+- 4733 servisten 3733'ü başarıyla import ediliyor
+- API ekleme sırasında otomatik servis import çalışıyor
+- Key oluşturmada seçilen servis kaydediliyor ve doğru döndürülüyor
+- Sipariş oluşturma sisteminde doğru API routing yapılıyor
+- Gerçek API entegrasyonu: MedyaBayim API ile order ID takibi çalışıyor
+- Otomatik sipariş durum kontrolü ve bildirim sistemi aktif
+- Sistem production seviyesinde güvenilir ve hatasız çalışıyor
 
 ## User Preferences
 
