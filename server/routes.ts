@@ -2359,35 +2359,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
       
-      // Prepare status check request
-      const statusData = {
-        key: apiSetting.apiKey,
-        action: 'status',
-        order: apiOrderId
-      };
+      // Prepare status check request - try form-data format first
+      const formData = new URLSearchParams();
+      formData.append('key', apiSetting.apiKey);
+      formData.append('action', 'status');
+      formData.append('order', apiOrderId);
 
       console.log('Checking order status with API:', { url: apiSetting.apiUrl, orderId: apiOrderId });
 
       const response = await fetch(apiSetting.apiUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify(statusData)
+        body: formData.toString()
       });
 
       if (response.ok) {
-        const statusResponse = await response.json();
+        const responseText = await response.text();
+        const statusResponse = JSON.parse(responseText);
         console.log(`Order ${orderId} status response:`, statusResponse);
 
-        // Update order based on API status
+        // Update order based on API status - preserve original API status
         if (statusResponse.status) {
-          let dbStatus = 'processing';
-          let message = 'Sipariş işleniyor...';
+          let dbStatus = statusResponse.status.toLowerCase();
+          let message = 'Sipariş durumu güncellendi.';
           let shouldCompleteOrder = false;
 
           const apiStatus = statusResponse.status.toLowerCase();
           
+          // Map API statuses to our internal status while preserving original meaning
           if (apiStatus === 'completed' || apiStatus === 'complete') {
             dbStatus = 'completed';
             message = 'Sipariş başarıyla tamamlandı!';
@@ -2398,16 +2399,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message = 'Sipariş iptal edildi.';
             
           } else if (apiStatus === 'partial') {
-            dbStatus = 'processing';
-            message = 'Sipariş kısmen tamamlandı, işleniyor...';
+            dbStatus = 'partial';
+            message = 'Sipariş kısmen tamamlandı.';
             
-          } else if (apiStatus === 'in progress' || apiStatus === 'processing') {
+          } else if (apiStatus === 'in progress' || apiStatus === 'inprogress') {
+            dbStatus = 'in_progress';
+            message = 'Sipariş devam ediyor...';
+            
+          } else if (apiStatus === 'processing') {
             dbStatus = 'processing';
             message = 'Sipariş işleniyor...';
             
           } else if (apiStatus === 'pending') {
-            dbStatus = 'processing';
+            dbStatus = 'pending';
             message = 'Sipariş beklemede...';
+            
+          } else {
+            // Keep original status if unknown
+            dbStatus = apiStatus;
+            message = `Sipariş durumu: ${statusResponse.status}`;
           }
 
           // Update order in database
@@ -2424,15 +2434,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await storage.updateOrder(orderId, updateData);
 
           // Create notification for status change
-          const order = await storage.getOrderById(orderId);
-          if (order) {
+          const updatedOrder = await storage.getOrderById(orderId);
+          if (updatedOrder) {
             if (dbStatus === 'completed') {
-              await createOrderNotification('order_completed', order.orderId, {
+              await createOrderNotification('order_completed', updatedOrder.orderId, {
                 apiOrderId: apiOrderId,
                 finalStatus: statusResponse.status
               });
             } else if (dbStatus === 'cancelled') {
-              await createOrderNotification('order_cancelled', order.orderId, {
+              await createOrderNotification('order_cancelled', updatedOrder.orderId, {
                 apiOrderId: apiOrderId,
                 finalStatus: statusResponse.status
               });
@@ -2442,29 +2452,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Log the status change
           await storage.createLog({
             type: "order_status_update",
-            message: `Order ${orderId} status updated to: ${dbStatus}`,
+            message: `Order ${orderId} status updated from API: ${statusResponse.status} (mapped to: ${dbStatus})`,
             orderId: orderId,
             data: { 
               apiOrderId: apiOrderId,
               apiStatus: statusResponse.status,
-              dbStatus: dbStatus
+              dbStatus: dbStatus,
+              originalResponse: statusResponse
             },
           });
 
           // Continue checking if order is still processing
-          if (dbStatus === 'processing') {
-            setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 60000); // Check again in 1 minute
+          if (dbStatus === 'processing' || dbStatus === 'pending' || dbStatus === 'in_progress') {
+            setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 30000); // Check again in 30 seconds
           }
         }
       } else {
         console.error(`Status check failed for order ${orderId}:`, response.status, response.statusText);
-        // Continue checking despite HTTP errors
-        setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 120000); // Check again in 2 minutes
+        // Continue checking despite HTTP errors for active orders
+        const currentOrder = await storage.getOrderById(orderId);
+        if (currentOrder && (currentOrder.status === 'processing' || currentOrder.status === 'pending' || currentOrder.status === 'in_progress')) {
+          setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 60000); // Check again in 1 minute
+        }
       }
     } catch (error) {
       console.error(`Status check failed for order ${orderId}:`, error);
-      // Continue checking despite errors
-      setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 120000); // Check again in 2 minutes
+      // Continue checking despite errors for active orders
+      try {
+        const currentOrder = await storage.getOrderById(orderId);
+        if (currentOrder && (currentOrder.status === 'processing' || currentOrder.status === 'pending' || currentOrder.status === 'in_progress')) {
+          setTimeout(() => checkOrderStatusAsync(orderId, apiOrderId), 120000); // Check again in 2 minutes
+        }
+      } catch (storageError) {
+        console.error(`Error accessing storage for order ${orderId}:`, storageError);
+      }
     }
   }
 
