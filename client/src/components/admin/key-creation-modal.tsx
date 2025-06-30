@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -37,6 +38,7 @@ const keySchema = z.object({
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
   maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
   validityDays: z.number().min(1, "Geçerlilik süresi en az 1 gün olmalı").max(365, "Geçerlilik süresi en fazla 365 gün olabilir").default(7),
+  keyCount: z.number().min(1, "En az 1 key oluşturulmalı").max(500, "En fazla 500 key oluşturulabilir").default(1),
 });
 
 interface KeyCreationModalProps {
@@ -71,6 +73,7 @@ export default function KeyCreationModal({
       type: "single-use",
       maxQuantity: 1000,
       validityDays: 7,
+      keyCount: 1,
     },
   });
 
@@ -96,15 +99,18 @@ export default function KeyCreationModal({
         throw new Error(`${selectedService.platform} API'si bulunamadı`);
       }
 
-      await apiRequest("POST", "/api/admin/keys", {
+      const response = await apiRequest("POST", "/api/admin/keys", {
         ...data,
         apiSettingsId
       });
+      
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      const isMultiple = result.count > 1;
       toast({
         title: "Başarılı",
-        description: "Key başarıyla oluşturuldu",
+        description: isMultiple ? result.message : "Key başarıyla oluşturuldu",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/keys"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/keys/stats"] });
@@ -179,6 +185,9 @@ export default function KeyCreationModal({
       <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-slate-50">Yeni Key Oluştur</DialogTitle>
+          <DialogDescription className="text-slate-400">
+            Tek kullanımlık key'ler oluşturun ve servis seçimi yapın
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -279,6 +288,51 @@ export default function KeyCreationModal({
 
             <FormField
               control={form.control}
+              name="keyCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-200">Oluşturulacak Key Miktarı</FormLabel>
+                  <div className="space-y-3">
+                    {/* Hızlı Seçim Butonları */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {[1, 5, 10, 25, 50, 100, 250, 500].map((count) => (
+                        <Button
+                          key={count}
+                          type="button"
+                          variant={field.value === count ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => field.onChange(count)}
+                          className={`text-xs ${
+                            field.value === count 
+                              ? "bg-blue-600 text-white" 
+                              : "border-slate-600 text-slate-300 hover:bg-slate-700"
+                          }`}
+                        >
+                          {count}
+                        </Button>
+                      ))}
+                    </div>
+                    {/* Özel Miktar Girişi */}
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-400">Özel Miktar (1-500)</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="500"
+                        placeholder="Özel miktar girin..."
+                        className="bg-slate-700 border-slate-600 text-slate-50"
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      />
+                    </div>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="maxQuantity"
               render={({ field }) => (
                 <FormItem>
@@ -344,7 +398,10 @@ export default function KeyCreationModal({
                 disabled={createKeyMutation.isPending}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {createKeyMutation.isPending ? "Oluşturuluyor..." : "Key Oluştur"}
+                {createKeyMutation.isPending 
+                  ? `${form.watch("keyCount") || 1} Key Oluşturuluyor...` 
+                  : `${form.watch("keyCount") || 1} Key Oluştur`
+                }
               </Button>
             </div>
           </form>

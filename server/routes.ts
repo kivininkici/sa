@@ -221,31 +221,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Key creation request:", req.body);
       
-      const validatedData = insertKeySchema.parse({
-        ...req.body,
-        value: generateKey(),
-        createdBy: req.session.adminUsername || 'admin',
-      });
+      const { keyCount = 1, ...keyData } = req.body;
+      const createdKeys = [];
 
-      console.log("Validated key data:", validatedData);
+      // Create multiple keys if keyCount > 1
+      for (let i = 0; i < keyCount; i++) {
+        const validatedData = insertKeySchema.parse({
+          ...keyData,
+          name: keyCount > 1 ? `${keyData.name} #${i + 1}` : keyData.name,
+          value: generateKey(),
+          createdBy: req.session.adminUsername || 'admin',
+        });
 
-      const key = await storage.createKey(validatedData);
+        console.log(`Validated key data ${i + 1}/${keyCount}:`, validatedData);
 
-      console.log("Created key:", key);
+        const key = await storage.createKey(validatedData);
+        createdKeys.push(key);
 
-      // Log key creation
-      await storage.createLog({
-        type: "key_created",
-        message: `Key ${key.value} created with service ID ${key.serviceId}, API ID ${key.apiSettingsId} and max quantity ${key.maxQuantity}`,
-        userId: req.session.adminUsername || 'admin',
-        keyId: key.id,
-        data: { keyName: key.name, keyType: key.type, serviceId: key.serviceId, apiSettingsId: key.apiSettingsId, maxQuantity: key.maxQuantity },
-      });
+        console.log(`Created key ${i + 1}/${keyCount}:`, key);
 
-      res.json(key);
+        // Log key creation
+        await storage.createLog({
+          type: "key_created",
+          message: `Key ${key.value} created (${i + 1}/${keyCount}) with service ID ${key.serviceId}, API ID ${key.apiSettingsId} and max quantity ${key.maxQuantity}`,
+          userId: req.session.adminUsername || 'admin',
+          keyId: key.id,
+          data: { 
+            keyName: key.name, 
+            keyType: key.type, 
+            serviceId: key.serviceId, 
+            apiSettingsId: key.apiSettingsId, 
+            maxQuantity: key.maxQuantity,
+            batchCount: keyCount,
+            batchIndex: i + 1
+          },
+        });
+      }
+
+      // Return all created keys or single key
+      if (keyCount === 1) {
+        res.json(createdKeys[0]);
+      } else {
+        res.json({
+          message: `${keyCount} key başarıyla oluşturuldu`,
+          keys: createdKeys,
+          count: createdKeys.length
+        });
+      }
     } catch (error) {
-      console.error("Error creating key:", error);
-      res.status(500).json({ message: (error as Error).message || "Failed to create key" });
+      console.error("Error creating keys:", error);
+      res.status(500).json({ message: (error as Error).message || "Failed to create keys" });
     }
   });
 
