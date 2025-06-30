@@ -38,6 +38,8 @@ export default function ApiManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50); // 50 servis per page for better performance
+  const [servicesCurrentPage, setServicesCurrentPage] = useState(1);
+  const [servicesItemsPerPage] = useState(50); // 50 services per page
 
   // API creation mutation with auto-import
   const createApiMutation = useMutation({
@@ -354,6 +356,12 @@ export default function ApiManagement() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedServices = filteredServices.slice(startIndex, endIndex);
+
+  // Pagination for main services list
+  const servicesTotalPages = Math.ceil(servicesList.length / servicesItemsPerPage);
+  const servicesStartIndex = (servicesCurrentPage - 1) * servicesItemsPerPage;
+  const servicesEndIndex = servicesStartIndex + servicesItemsPerPage;
+  const paginatedServicesList = servicesList.slice(servicesStartIndex, servicesEndIndex);
 
   const toggleServiceSelection = (index: number) => {
     setSelectedServices(prev => 
@@ -685,12 +693,19 @@ export default function ApiManagement() {
             {/* Current Services */}
             <Card className="dashboard-card">
               <CardHeader className="border-b border-slate-700">
-                <CardTitle className="text-lg font-semibold text-slate-50">
-                  Mevcut Servisler
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold text-slate-50">
+                    Mevcut Servisler
+                  </CardTitle>
+                  {servicesTotalPages > 1 && (
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      Sayfa {servicesCurrentPage} / {servicesTotalPages}
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   {servicesLoading ? (
                     <div className="col-span-full text-center text-slate-400">
                       Yükleniyor...
@@ -700,7 +715,7 @@ export default function ApiManagement() {
                       Henüz servis eklenmemiş
                     </div>
                   ) : (
-                    servicesList.map((service: any) => (
+                    paginatedServicesList.map((service: any) => (
                       <Card key={service.id} className="dashboard-card">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
@@ -731,6 +746,39 @@ export default function ApiManagement() {
                     ))
                   )}
                 </div>
+                
+                {/* Pagination Controls */}
+                {servicesTotalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-slate-700">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setServicesCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={servicesCurrentPage === 1}
+                      className="flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Önceki
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 px-4">
+                      <span className="text-sm text-slate-400">
+                        {servicesCurrentPage} / {servicesTotalPages}
+                      </span>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setServicesCurrentPage(prev => Math.min(prev + 1, servicesTotalPages))}
+                      disabled={servicesCurrentPage === servicesTotalPages}
+                      className="flex items-center gap-1"
+                    >
+                      Sonraki
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
