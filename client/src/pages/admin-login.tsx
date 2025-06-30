@@ -153,14 +153,7 @@ export default function AdminLogin() {
                 </Button>
               </form>
 
-              {/* Demo Credentials */}
-              <div className="mt-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/30">
-                <p className="text-xs text-slate-400 text-center mb-2">Demo Hesap:</p>
-                <div className="text-center space-y-1">
-                  <p className="text-sm text-slate-300">Kullanıcı: <span className="font-mono text-blue-400">admin</span></p>
-                  <p className="text-sm text-slate-300">Şifre: <span className="font-mono text-blue-400">admin123</span></p>
-                </div>
-              </div>
+
             </CardContent>
           </Card>
 
