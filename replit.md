@@ -182,6 +182,11 @@ Changelog:
 - Kullanıcı arayüzünde key kategorisi gösteriliyor
 - Servis filtresi UI'dan kaldırıldı, sadece direkt arama sistemi bırakıldı
 - Key creation modal temizlendi ve kullanıcı deneyimi iyileştirildi
+- June 30, 2025: Kategori-bazlı servis filtreleme sistemi eklendi
+- Key kategorisi seçildiğinde (Instagram, YouTube, vb.) sadece o kategoriye ait servisler listeleniyor
+- Kategori değiştiğinde servis seçimi otomatik sıfırlanıyor
+- Akıllı filtreleme: servis adında kategoriye ait anahtar kelimeler aranıyor
+- Kullanıcı deneyimi optimize edildi: kategori seçiminde anında filtreleme
 
 ## User Preferences
 

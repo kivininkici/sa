@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -148,9 +148,33 @@ export default function KeyCreationModal({
 
   const servicesList = Array.isArray(services) ? services : [];
 
+  // Reset service selection when category changes
+  const selectedCategory = form.watch("category");
+  useEffect(() => {
+    form.setValue("serviceId", 0); // Reset to empty value
+    setServiceSearchTerm(""); // Clear search
+    setCurrentPage(0); // Reset pagination
+  }, [selectedCategory, form]);
+
   // Memoized filtering for better performance
   const filteredServices = useMemo(() => {
     let results: Service[] = servicesList;
+    
+    // Get current category from form
+    const selectedCategory = form.watch("category");
+    
+    // Filter by category first
+    if (selectedCategory && selectedCategory !== "other") {
+      const categoryData = platformCategories.find(cat => cat.name === selectedCategory);
+      if (categoryData && categoryData.keywords.length > 0) {
+        results = results.filter((service: Service) => {
+          const serviceName = service.name.toLowerCase();
+          return categoryData.keywords.some(keyword => 
+            serviceName.includes(keyword.toLowerCase())
+          );
+        });
+      }
+    }
     
     // Filter by search term
     if (serviceSearchTerm) {
@@ -188,7 +212,7 @@ export default function KeyCreationModal({
     }
     
     return results;
-  }, [servicesList, serviceSearchTerm, currentPage, SERVICES_PER_PAGE]);
+  }, [servicesList, serviceSearchTerm, currentPage, SERVICES_PER_PAGE, form.watch("category")]);
 
   const totalPages = Math.ceil(servicesList.length / SERVICES_PER_PAGE);
 
