@@ -1813,43 +1813,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Sipariş işleniyor...'
       });
 
-      // Simulate API call to external service
-      if (service.apiEndpoint) {
-        try {
-          // Use the service's own API settings
-          const apiData: any = {
-            link: targetUrl,
-            quantity: quantity.toString()
-          };
+      // Get order details to find the key's API settings
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        throw new Error('Sipariş bulunamadı');
+      }
 
-          // Add service-specific parameters
-          if (service.serviceId) {
-            apiData.service = service.serviceId.toString();
-          }
+      // Get the key data to find its API settings
+      const keyData = await storage.getKeyById(order.keyId);
+      if (!keyData) {
+        throw new Error('Key bilgisi bulunamadı');
+      }
+      if (!keyData?.apiSettingsId) {
+        throw new Error('Key API ayarları bulunamadı');
+      }
 
-          // Add API key and action for MedyaBayim format
-          if (service.apiEndpoint?.includes('medyabayim.com')) {
-            apiData.key = "aa2957fd3a856ddc0e1e5d5ab02eb8e9";
-            apiData.action = "add";
-          }
+      // Get API settings for this key
+      const apiSettings = await storage.getAllApiSettings();
+      const keyApiSetting = apiSettings.find(api => api.id === keyData.apiSettingsId);
+      
+      if (!keyApiSetting || !keyApiSetting.isActive) {
+        throw new Error('Key için API ayarları aktif değil');
+      }
 
-          // Merge with request template if available
-          if (service.requestTemplate) {
-            Object.assign(apiData, service.requestTemplate);
-            // Override with our specific values
-            apiData.link = targetUrl;
-            apiData.quantity = quantity.toString();
-            if (service.serviceId) {
-              apiData.service = service.serviceId.toString();
-            }
-          }
+      // Make API call using key's specific API settings
+      try {
+        console.log(`Using API: ${keyApiSetting.name} (${keyApiSetting.apiUrl}) for key: ${keyData.value}`);
 
-          const apiResponse = await makeServiceRequest(
-            service.apiEndpoint,
-            service.apiMethod || "POST",
-            service.apiHeaders || {},
-            apiData
-          );
+        // Prepare API request data using key's API settings
+        const apiData: any = {
+          key: keyApiSetting.apiKey,
+          action: "add",
+          service: service.serviceId || service.id,
+          link: targetUrl,
+          quantity: quantity.toString()
+        };
+
+        console.log('Making API request:', { 
+          url: keyApiSetting.apiUrl, 
+          api: keyApiSetting.name,
+          data: { ...apiData, key: '[HIDDEN]' } 
+        });
+
+        const apiResponse = await makeServiceRequest(
+          keyApiSetting.apiUrl,
+          "POST",
+          { 'Content-Type': 'application/json' },
+          apiData
+        );
 
           // Parse API response and handle order status properly
           let orderStatus = 'processing';
@@ -1922,14 +1933,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             data: { error: apiError instanceof Error ? apiError.message : 'Unknown error' },
           });
         }
-      } else {
-        // No API endpoint, mark as failed
-        await storage.updateOrder(orderId, {
-          status: 'failed',
-          message: 'Servis yapılandırması eksik'
-        });
-      }
-
     } catch (error) {
       console.error("Error in async order processing:", error);
       
@@ -2177,14 +2180,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`Checking status for order ${orderId}, API Order ID: ${apiOrderId}`);
       
-      // Get active API settings
-      const apiSettings = await storage.getActiveApiSettings();
-      if (apiSettings.length === 0) {
-        console.log('No active API settings found for status check');
+      // Get order details to find the key's API settings
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        console.log(`Order ${orderId} not found for status check`);
         return;
       }
 
-      const apiSetting = apiSettings[0];
+      // Get the key data to find its API settings
+      const keyData = await storage.getKeyById(order.keyId);
+      if (!keyData?.apiSettingsId) {
+        console.log(`Key API settings not found for order ${orderId}`);
+        return;
+      }
+
+      // Get the specific API settings for this key
+      const apiSettings = await storage.getAllApiSettings();
+      const apiSetting = apiSettings.find(api => api.id === keyData.apiSettingsId && api.isActive);
+      
+      if (!apiSetting) {
+        console.log(`Active API settings not found for key ${keyData.value}`);
+        return;
+      }
       
       // Prepare status check request
       const statusData = {

@@ -38,6 +38,7 @@ export interface IStorage {
   // Key operations
   getAllKeys(): Promise<Key[]>;
   getKeyByValue(value: string): Promise<Key | undefined>;
+  getKeyById(id: number): Promise<Key | undefined>;
   createKey(key: InsertKey): Promise<Key>;
   updateKey(id: number, updates: Partial<Key>): Promise<Key>;
   deleteKey(id: number): Promise<void>;
@@ -140,6 +141,19 @@ export class DatabaseStorage implements IStorage {
 
   async getKeyByValue(value: string): Promise<Key | undefined> {
     const [key] = await db.select().from(keys).where(eq(keys.value, value));
+    
+    // Eğer key bulundu ve expired ise null döndür
+    if (key && key.expiresAt && key.expiresAt < new Date()) {
+      // Expired key'i otomatik sil
+      await this.deleteKey(key.id);
+      return undefined;
+    }
+    
+    return key;
+  }
+
+  async getKeyById(id: number): Promise<Key | undefined> {
+    const [key] = await db.select().from(keys).where(eq(keys.id, id));
     
     // Eğer key bulundu ve expired ise null döndür
     if (key && key.expiresAt && key.expiresAt < new Date()) {

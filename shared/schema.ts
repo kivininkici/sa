@@ -65,6 +65,7 @@ export const keys = pgTable("keys", {
   name: varchar("name", { length: 255 }),
   type: varchar("type", { length: 50 }).notNull().default("single-use"),
   serviceId: integer("service_id"),
+  apiSettingsId: integer("api_settings_id"), // Hangi API'ye ait olduğunu belirler
   maxQuantity: integer("max_quantity"),
   usedQuantity: integer("used_quantity").notNull().default(0),
   isUsed: boolean("is_used").notNull().default(false),

@@ -35,6 +35,7 @@ const keySchema = z.object({
   name: z.string().min(1, "Key adı gerekli"),
   type: z.string().default("single-use"),
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
+  apiSettingsId: z.number().min(1, "API seçimi gerekli"),
   maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
   validityDays: z.number().min(1, "Geçerlilik süresi en az 1 gün olmalı").max(365, "Geçerlilik süresi en fazla 365 gün olabilir").default(7),
 });
