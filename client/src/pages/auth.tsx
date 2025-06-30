@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,7 +46,20 @@ export default function Auth() {
   const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [isLoginSuccess, setIsLoginSuccess] = useState(false);
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const { toast } = useToast();
+
+  // Tab indicator animation
+  useEffect(() => {
+    const indicator = document.querySelector('.tabs-indicator') as HTMLElement;
+    if (indicator) {
+      if (activeTab === "register") {
+        indicator.style.transform = "translateX(100%)";
+      } else {
+        indicator.style.transform = "translateX(0%)";
+      }
+    }
+  }, [activeTab]);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -191,38 +204,58 @@ export default function Auth() {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-700">
-                  <TabsTrigger value="login" data-value="login">Giriş Yap</TabsTrigger>
-                  <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+              <Tabs defaultValue="login" className="w-full" onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2 bg-slate-700 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-md transition-all duration-300 ease-in-out transform translate-x-0 w-1/2 tabs-indicator"></div>
+                  <TabsTrigger 
+                    value="login" 
+                    data-value="login"
+                    className="relative z-10 transition-all duration-300 ease-in-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white"
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Giriş Yap
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="register"
+                    className="relative z-10 transition-all duration-300 ease-in-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Kayıt Ol
+                  </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="login">
-                  <AnimatePresence mode="wait">
-                    {isLoginSuccess ? (
-                      <motion.div
-                        key="login-success"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-8 space-y-4"
-                      >
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                          <CheckCircle className="w-8 h-8 text-white" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-green-400">
-                          Giriş Başarılı!
-                        </h3>
-                        <p className="text-slate-400">Yönlendiriliyor...</p>
-                      </motion.div>
-                    ) : (
-                      <motion.form
-                        key="login-form"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                        className="space-y-4 mt-6"
-                      >
+                <TabsContent value="login" className="mt-0">
+                  <motion.div
+                    initial={{ opacity: 0, x: activeTab === "login" ? -30 : 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {isLoginSuccess ? (
+                        <motion.div
+                          key="login-success"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="text-center py-8 space-y-4"
+                        >
+                          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                            <CheckCircle className="w-8 h-8 text-white" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-green-400">
+                            Giriş Başarılı!
+                          </h3>
+                          <p className="text-slate-400">Yönlendiriliyor...</p>
+                        </motion.div>
+                      ) : (
+                        <motion.form
+                          key="login-form"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                          onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                          className="space-y-4 mt-6"
+                        >
                         <div className="space-y-2">
                           <Label htmlFor="login-username" className="text-slate-300">
                             Kullanıcı Adı
@@ -232,7 +265,7 @@ export default function Auth() {
                             <Input
                               id="login-username"
                               placeholder="Kullanıcı adınız"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...loginForm.register("username")}
                             />
                           </div>
@@ -253,7 +286,7 @@ export default function Auth() {
                               id="login-password"
                               type="password"
                               placeholder="Şifreniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...loginForm.register("password")}
                             />
                           </div>
@@ -267,7 +300,7 @@ export default function Auth() {
                         <Button
                           type="submit"
                           disabled={isLoginLoading || loginMutation.isPending}
-                          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white h-12 font-medium"
+                          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white h-12 font-medium btn-pulse transform hover:scale-105 transition-all duration-200"
                         >
                           {isLoginLoading || loginMutation.isPending ? (
                             <>
@@ -284,11 +317,17 @@ export default function Auth() {
                       </motion.form>
                     )}
                   </AnimatePresence>
+                  </motion.div>
                 </TabsContent>
 
-                <TabsContent value="register">
-                  <AnimatePresence mode="wait">
-                    {isRegisterSuccess ? (
+                <TabsContent value="register" className="mt-0">
+                  <motion.div
+                    initial={{ opacity: 0, x: activeTab === "register" ? 30 : -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {isRegisterSuccess ? (
                       <motion.div
                         key="register-success"
                         initial={{ opacity: 0, scale: 0.8 }}
@@ -306,9 +345,10 @@ export default function Auth() {
                     ) : (
                       <motion.form
                         key="register-form"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
                         onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                         className="space-y-4 mt-6"
                       >
@@ -321,7 +361,7 @@ export default function Auth() {
                             <Input
                               id="register-username"
                               placeholder="Kullanıcı adınız"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...registerForm.register("username")}
                             />
                           </div>
@@ -342,7 +382,7 @@ export default function Auth() {
                               id="register-email"
                               type="email"
                               placeholder="E-posta adresiniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...registerForm.register("email")}
                             />
                           </div>
@@ -363,7 +403,7 @@ export default function Auth() {
                               id="register-password"
                               type="password"
                               placeholder="Şifreniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...registerForm.register("password")}
                             />
                           </div>
@@ -398,7 +438,7 @@ export default function Auth() {
                         <Button
                           type="submit"
                           disabled={isRegisterLoading || registerMutation.isPending}
-                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white h-12 font-medium"
+                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white h-12 font-medium btn-pulse transform hover:scale-105 transition-all duration-200"
                         >
                           {isRegisterLoading || registerMutation.isPending ? (
                             <>
@@ -415,6 +455,7 @@ export default function Auth() {
                       </motion.form>
                     )}
                   </AnimatePresence>
+                  </motion.div>
                 </TabsContent>
               </Tabs>
             </CardContent>
