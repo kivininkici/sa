@@ -175,6 +175,13 @@ Changelog:
 - Hızlı API ekleme: Popüler API'ler için tek tıkla ekleme butonları
 - Universal format: Her iki API de aynı v2 formatını kullandığı için tek sistem yeterli
 - Sistem production seviyesinde güvenilir ve optimize edilmiş şekilde çalışıyor
+- June 30, 2025: Key kategori sistemi tamamlandı ve UI iyileştirmeleri yapıldı
+- Database schema'ya category field eklendi ve API endpoint'leri güncellendi
+- Key oluşturma modal'ına kategori seçimi eklendi (Instagram, YouTube, Twitter, vb.)
+- Public key validation endpoint'leri kategori bilgisini döndürüyor
+- Kullanıcı arayüzünde key kategorisi gösteriliyor
+- Servis filtresi UI'dan kaldırıldı, sadece direkt arama sistemi bırakıldı
+- Key creation modal temizlendi ve kullanıcı deneyimi iyileştirildi
 
 ## User Preferences
 

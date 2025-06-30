@@ -67,7 +67,6 @@ export default function KeyCreationModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(0);
   const SERVICES_PER_PAGE = 25;
 
@@ -153,25 +152,7 @@ export default function KeyCreationModal({
   const filteredServices = useMemo(() => {
     let results: Service[] = servicesList;
     
-    // First filter by category
-    if (selectedCategory !== "all") {
-      const category = platformCategories.find(cat => cat.id === selectedCategory);
-      if (category && category.keywords.length > 0) {
-        results = results.filter((service: Service) => {
-          const serviceName = service.name.toLowerCase();
-          return category.keywords.some(keyword => serviceName.includes(keyword.toLowerCase()));
-        });
-      } else if (selectedCategory === "other") {
-        // Show services that don't match any specific category
-        const allKeywords = platformCategories.flatMap(cat => cat.keywords).map(k => k.toLowerCase());
-        results = results.filter((service: Service) => {
-          const serviceName = service.name.toLowerCase();
-          return !allKeywords.some(keyword => serviceName.includes(keyword));
-        });
-      }
-    }
-    
-    // Then filter by search term
+    // Filter by search term
     if (serviceSearchTerm) {
       const searchLower = serviceSearchTerm.toLowerCase();
       
@@ -198,7 +179,7 @@ export default function KeyCreationModal({
       }
     }
     
-    // Finally apply pagination if no search term
+    // Apply pagination if no search term
     if (!serviceSearchTerm) {
       const startIndex = currentPage * SERVICES_PER_PAGE;
       results = results.slice(startIndex, startIndex + SERVICES_PER_PAGE);
@@ -207,7 +188,7 @@ export default function KeyCreationModal({
     }
     
     return results;
-  }, [servicesList, serviceSearchTerm, selectedCategory, currentPage, SERVICES_PER_PAGE]);
+  }, [servicesList, serviceSearchTerm, currentPage, SERVICES_PER_PAGE]);
 
   const totalPages = Math.ceil(servicesList.length / SERVICES_PER_PAGE);
 
@@ -276,47 +257,7 @@ export default function KeyCreationModal({
               )}
             />
 
-            {/* Servis Kategori Filtresi */}
-            <div className="space-y-2">
-              <label className="text-slate-200 text-sm font-medium">Servis Filtresi</label>
-              <div className="grid grid-cols-3 gap-2">
-                <Button
-                  type="button"
-                  variant={selectedCategory === "all" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedCategory("all");
-                    setCurrentPage(0);
-                  }}
-                  className={`text-xs ${
-                    selectedCategory === "all" 
-                      ? "bg-blue-600 text-white" 
-                      : "border-slate-600 text-slate-300 hover:bg-slate-700"
-                  }`}
-                >
-                  🔧 Tümü
-                </Button>
-                {platformCategories.map((category) => (
-                  <Button
-                    key={category.id}
-                    type="button"
-                    variant={selectedCategory === category.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      setCurrentPage(0);
-                    }}
-                    className={`text-xs ${
-                      selectedCategory === category.id 
-                        ? "bg-blue-600 text-white" 
-                        : "border-slate-600 text-slate-300 hover:bg-slate-700"
-                    }`}
-                  >
-                    {category.icon} {category.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
+
 
             <FormField
               control={form.control}
