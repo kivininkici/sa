@@ -35,7 +35,7 @@ export default function Home() {
                 <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   KeyPanel
                 </h1>
-                <p className="text-sm text-gray-400">Hoş geldin, {(user as any)?.firstName || 'Kullanıcı'}</p>
+                <p className="text-sm text-gray-400">Hoş geldin, {(user as any)?.id || 'Kullanıcı'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -51,7 +51,7 @@ export default function Home() {
                     <User className="w-4 h-4 text-white" />
                   </div>
                 )}
-                <span className="text-white font-medium">{(user as any)?.firstName || 'Kullanıcı'}</span>
+                <span className="text-white font-medium">{(user as any)?.id || 'Kullanıcı'}</span>
               </div>
               <Button 
                 onClick={async () => {
