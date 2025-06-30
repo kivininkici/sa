@@ -46,8 +46,8 @@ export default function Home() {
                 <span className="text-white font-medium">{user?.username || 'Kullanıcı'}</span>
               </div>
               
-              {/* Admin Panel Button - Only for admins */}
-              {admin && (
+              {/* Admin Panel Button - Only for users who are admins */}
+              {user?.isAdmin && (
                 <Button 
                   variant="outline"
                   className="border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300"
@@ -55,6 +55,18 @@ export default function Home() {
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Admin Panel
+                </Button>
+              )}
+              
+              {/* Admin Login Button - For non-admin users */}
+              {!user?.isAdmin && (
+                <Button 
+                  variant="outline"
+                  className="border-yellow-400/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300"
+                  onClick={() => window.location.href = '/admin/login'}
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin Girişi
                 </Button>
               )}
               

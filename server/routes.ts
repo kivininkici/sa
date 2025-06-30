@@ -157,23 +157,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { username, password } = userLoginSchema.parse(req.body);
       
       // First try to find admin user
-      const adminUser = await storage.getAdminByUsername(username);
-      if (adminUser) {
+      const foundAdminUser = await storage.getAdminByUsername(username);
+      if (foundAdminUser) {
         // Check admin password
-        const isValidPassword = await comparePassword(password, adminUser.password);
-        if (isValidPassword && adminUser.isActive) {
+        const isValidPassword = await comparePassword(password, foundAdminUser.password);
+        if (isValidPassword && foundAdminUser.isActive) {
           // Update last login
-          await storage.updateAdminLastLogin(adminUser.id);
+          await storage.updateAdminLastLogin(foundAdminUser.id);
 
           // Set session for admin
-          req.session.userId = adminUser.id;
-          req.session.username = adminUser.username;
+          req.session.userId = foundAdminUser.id;
+          req.session.username = foundAdminUser.username;
           req.session.isAdmin = true;
 
           return res.json({ 
-            id: adminUser.id, 
-            username: adminUser.username, 
-            email: adminUser.email,
+            id: foundAdminUser.id, 
+            username: foundAdminUser.username, 
+            email: foundAdminUser.email,
             isAdmin: true,
             message: 'Admin girişi başarılı' 
           });
@@ -192,16 +192,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'Geçersiz kullanıcı adı veya şifre' });
       }
 
+      // Check if this user is also an admin (by username)
+      const relatedAdminUser = await storage.getAdminByUsername(username);
+      const isUserAdmin = relatedAdminUser && relatedAdminUser.isActive;
+
       // Set session for normal user
       req.session.userId = user.id;
       req.session.username = user.username;
-      req.session.isAdmin = false;
+      req.session.isAdmin = isUserAdmin || false;
 
       res.json({ 
         id: user.id, 
         username: user.username, 
         email: user.email,
-        isAdmin: false,
+        isAdmin: isUserAdmin || false,
         message: 'Giriş başarılı' 
       });
     } catch (error: any) {
