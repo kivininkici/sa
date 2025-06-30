@@ -35,7 +35,6 @@ const keySchema = z.object({
   name: z.string().min(1, "Key adı gerekli"),
   type: z.string().default("single-use"),
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
-  apiSettingsId: z.number().min(1, "API seçimi gerekli"),
   maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
   validityDays: z.number().min(1, "Geçerlilik süresi en az 1 gün olmalı").max(365, "Geçerlilik süresi en fazla 365 gün olabilir").default(7),
 });
@@ -60,6 +59,11 @@ export default function KeyCreationModal({
     retry: false,
   });
 
+  const { data: apiSettings } = useQuery({
+    queryKey: ["/api/admin/api-settings"],
+    retry: false,
+  });
+
   const form = useForm<z.infer<typeof keySchema>>({
     resolver: zodResolver(keySchema),
     defaultValues: {
@@ -72,7 +76,30 @@ export default function KeyCreationModal({
 
   const createKeyMutation = useMutation({
     mutationFn: async (data: z.infer<typeof keySchema>) => {
-      await apiRequest("POST", "/api/admin/keys", data);
+      // Find the selected service to determine which API to use
+      const selectedService = servicesList.find(s => s.id === data.serviceId);
+      if (!selectedService) {
+        throw new Error("Servis bulunamadı");
+      }
+
+      // Determine API based on service platform
+      let apiSettingsId;
+      if (selectedService.platform === "MedyaBayim") {
+        const medyaApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "Medya") : null;
+        apiSettingsId = medyaApi?.id;
+      } else if (selectedService.platform === "Resellers") {
+        const resellersApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "Resellers") : null;
+        apiSettingsId = resellersApi?.id;
+      }
+
+      if (!apiSettingsId) {
+        throw new Error(`${selectedService.platform} API'si bulunamadı`);
+      }
+
+      await apiRequest("POST", "/api/admin/keys", {
+        ...data,
+        apiSettingsId
+      });
     },
     onSuccess: () => {
       toast({

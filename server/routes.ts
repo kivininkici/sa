@@ -190,27 +190,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/keys", requireAdminAuth, async (req: any, res) => {
     try {
+      console.log("Key creation request:", req.body);
+      
       const validatedData = insertKeySchema.parse({
         ...req.body,
         value: generateKey(),
         createdBy: req.session.adminUsername || 'admin',
       });
 
+      console.log("Validated key data:", validatedData);
+
       const key = await storage.createKey(validatedData);
+
+      console.log("Created key:", key);
 
       // Log key creation
       await storage.createLog({
         type: "key_created",
-        message: `Key ${key.value} created with service ID ${key.serviceId} and max quantity ${key.maxQuantity}`,
+        message: `Key ${key.value} created with service ID ${key.serviceId}, API ID ${key.apiSettingsId} and max quantity ${key.maxQuantity}`,
         userId: req.session.adminUsername || 'admin',
         keyId: key.id,
-        data: { keyName: key.name, keyType: key.type, serviceId: key.serviceId, maxQuantity: key.maxQuantity },
+        data: { keyName: key.name, keyType: key.type, serviceId: key.serviceId, apiSettingsId: key.apiSettingsId, maxQuantity: key.maxQuantity },
       });
 
       res.json(key);
     } catch (error) {
       console.error("Error creating key:", error);
-      res.status(500).json({ message: "Failed to create key" });
+      res.status(500).json({ message: error.message || "Failed to create key" });
     }
   });
 
