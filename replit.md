@@ -130,6 +130,10 @@ Changelog:
 - June 30, 2025: Replit Agent'dan Replit ortamına migration tamamlandı
 - PostgreSQL veritabanı yapılandırıldı ve tüm tablolar oluşturuldu
 - Admin hesabı oluşturuldu (admin/admin123)
+- Sipariş oluşturma butonu düzeltildi ve authentication eklendi
+- Key validasyon sistemi iyileştirildi
+- Test kullanıcısı ve key'i oluşturuldu (testuser/admin123, TEST-KEY-12345)
+- Canlı destek referansları tamamen temizlendi
 - Ana sayfa tamamen yeniden tasarlandı (modern gradient, animasyonlar)
 - Replit Auth sistemi kaldırıldı, özel giriş/kayıt sistemi eklendi
 - Giriş yapmamış kullanıcılar için landing sayfası oluşturuldu

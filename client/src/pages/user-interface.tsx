@@ -174,9 +174,10 @@ export default function UserInterface() {
     }
     
     // Send order with serviceId from validated key
+    const serviceId = validatedKey.service?.id || 1; // Use default service ID if none available
     createOrderMutation.mutate({
       keyValue: validatedKey.value,
-      serviceId: validatedKey.service.id,
+      serviceId: serviceId,
       quantity: data.quantity,
       targetUrl: data.targetUrl
     });

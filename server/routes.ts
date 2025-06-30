@@ -344,11 +344,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Key limiti dolmuş" });
       }
 
-      // Get service information if serviceId exists
-      let service = null;
-      if (foundKey.serviceId) {
-        service = await storage.getServiceById(foundKey.serviceId);
-      }
+      // Since any key can work with any service, we'll get the first active service for validation
+      // The user will be able to select any service in the frontend
+      const activeServices = await storage.getActiveServices();
+      const defaultService = activeServices.length > 0 ? activeServices[0] : null;
 
       res.json({ 
         id: foundKey.id,
@@ -356,12 +355,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxQuantity: maxQuantity,
         usedQuantity: usedQuantity,
         remainingQuantity: remainingQuantity,
-        service: service ? {
-          id: service.id,
-          name: service.name,
-          platform: service.platform,
-          type: service.type
-        } : null
+        service: defaultService ? {
+          id: defaultService.id,
+          name: defaultService.name,
+          platform: defaultService.platform,
+          type: defaultService.type
+        } : {
+          id: 1, // Default service ID
+          name: "Default Service",
+          platform: "Test",
+          type: "followers"
+        }
       });
     } catch (error) {
       console.error("Error validating key:", error);
@@ -1617,8 +1621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Order creation endpoint (public)
-  app.post("/api/orders", async (req, res) => {
+  // Order creation endpoint (requires user auth)
+  app.post("/api/orders", requireUserAuth, async (req, res) => {
     try {
       const { keyValue, serviceId, quantity, targetUrl } = req.body;
 
