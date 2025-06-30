@@ -1801,8 +1801,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let priceValue = service.rate || service.price || service.cost || service.amount || 
                       service.price_per_1000 || service.rate_per_1000 || 0;
       
-      // Convert to number first, then to string to ensure valid format
-      const price = isNaN(parseFloat(priceValue)) ? "0" : parseFloat(priceValue).toString();
+      // Convert to number first, then validate and cap at maximum value for numeric(10,2)
+      const numericPrice = parseFloat(priceValue);
+      const maxPrice = 99999999.99; // Maximum value for numeric(10,2)
+      let finalPrice = 0;
+      
+      if (!isNaN(numericPrice)) {
+        finalPrice = Math.min(Math.max(0, numericPrice), maxPrice);
+      }
+      
+      const price = finalPrice.toString();
       
       // Detect request format based on successful method
       let apiHeaders = { 'Content-Type': 'application/json' };
