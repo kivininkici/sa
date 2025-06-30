@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,7 +35,8 @@ import {
   Calendar,
   UserPlus,
   Ban,
-  CheckCircle
+  CheckCircle,
+  Crown
 } from "lucide-react";
 
 // Admin oluşturma formu için schema
@@ -114,6 +116,28 @@ export default function UsersPage() {
       toast({
         title: "Hata!",
         description: error.message || "İşlem sırasında bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update user role mutation
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      const response = await apiRequest("PUT", `/api/admin/users/${id}/role`, { role });
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı!",
+        description: "Kullanıcı rolü güncellendi.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata!",
+        description: error.message || "Rol güncellenemedi.",
         variant: "destructive",
       });
     },
@@ -375,20 +399,43 @@ export default function UsersPage() {
                       <TableHead>ID</TableHead>
                       <TableHead>İsim</TableHead>
                       <TableHead>E-posta</TableHead>
+                      <TableHead>Rol</TableHead>
                       <TableHead>Kayıt Tarihi</TableHead>
+                      <TableHead>İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user: any) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.id}</TableCell>
-                        <TableCell>{user.name || "Belirtilmemiş"}</TableCell>
+                        <TableCell>{user.firstName || user.name || "Belirtilmemiş"}</TableCell>
                         <TableCell>{user.email || "Belirtilmemiş"}</TableCell>
+                        <TableCell>
+                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="flex items-center gap-1 w-fit">
+                            {user.role === 'admin' ? <Crown className="h-3 w-3" /> : <Users className="h-3 w-3" />}
+                            {user.role === 'admin' ? 'Admin' : 'Normal Üye'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           {user.createdAt 
                             ? new Date(user.createdAt).toLocaleDateString('tr-TR')
                             : "Bilinmiyor"
                           }
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={user.role || 'user'}
+                            onValueChange={(role) => updateUserRoleMutation.mutate({ id: user.id, role })}
+                            disabled={updateUserRoleMutation.isPending}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">Normal Üye</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                       </TableRow>
                     ))}

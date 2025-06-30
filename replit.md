@@ -187,6 +187,13 @@ Changelog:
 - Kategori değiştiğinde servis seçimi otomatik sıfırlanıyor
 - Akıllı filtreleme: servis adında kategoriye ait anahtar kelimeler aranıyor
 - Kullanıcı deneyimi optimize edildi: kategori seçiminde anında filtreleme
+- June 30, 2025: Rol-bazlı erişim sistemi tamamen uygulandı
+- Users tablosuna role field eklendi (user/admin)
+- Navbar sadece admin kullanıcılar için admin panel gösteriyor
+- Kullanıcı yönetimi sayfasında rol değiştirme seçeneği eklendi
+- Auth sayfası sadece admin girişi için güncellendi, kayıt sistemi devre dışı
+- User API endpoint role bilgisini doğru döndürüyor
+- Migration Replit Agent'tan Replit ortamına başarıyla tamamlandı
 
 ## User Preferences
 

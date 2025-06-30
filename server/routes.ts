@@ -222,17 +222,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get('/api/user', (req, res) => {
+  app.get('/api/user', async (req, res) => {
     if (!req.session?.userId) {
       return res.status(401).json({ message: 'Giriş yapılmamış' });
     }
     
-    res.json({
-      id: req.session.userId,
-      username: req.session.username,
-      authenticated: true,
-      isAdmin: req.session.isAdmin || false
-    });
+    try {
+      // For Replit Auth users, check if they exist in our users table
+      if (req.user && req.isAuthenticated()) {
+        const replitUser = req.user as any;
+        const dbUser = await storage.getUser(replitUser.id);
+        
+        if (dbUser) {
+          return res.json({
+            id: dbUser.id,
+            username: dbUser.firstName || 'User',
+            email: dbUser.email,
+            authenticated: true,
+            isAdmin: dbUser.role === 'admin'
+          });
+        }
+      }
+      
+      // For custom auth users
+      res.json({
+        id: req.session.userId,
+        username: req.session.username,
+        authenticated: true,
+        isAdmin: req.session.isAdmin || false
+      });
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.json({
+        id: req.session.userId,
+        username: req.session.username,
+        authenticated: true,
+        isAdmin: req.session.isAdmin || false
+      });
+    }
   });
 
   // Admin Dashboard routes
@@ -973,12 +1000,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // List all regular users
   app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
     try {
-      // For now, we'll return empty array since we don't have regular users table yet
-      // In a real system, you would fetch from a users table
-      res.json([]);
+      const users = await storage.getAllUsers();
+      res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Update user role
+  app.put("/api/admin/users/:id/role", requireAdminAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { role } = req.body;
+
+      if (!["user", "admin"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      const updatedUser = await storage.updateUserRole(id, role);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ message: "Failed to update user role" });
     }
   });
 
