@@ -126,7 +126,26 @@ export default function UserInterface() {
         description: `Sipariş ID: ${data.orderId}`,
       });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables, context) => {
+      console.log("Order creation error:", error);
+      
+      // Try to extract orderId from error if available
+      let errorOrderId = null;
+      try {
+        const errorMatch = error.message.match(/"orderId":"([^"]+)"/);
+        if (errorMatch) {
+          errorOrderId = errorMatch[1];
+        }
+      } catch (e) {
+        console.log("Could not extract orderId from error");
+      }
+
+      // If we have an orderId, still show tracking
+      if (errorOrderId) {
+        setOrderId(errorOrderId);
+        setCurrentStep('order-tracking');
+      }
+
       // Check if it's maintenance mode error
       if (error.message.includes("bakım modunda")) {
         toast({
@@ -155,7 +174,7 @@ export default function UserInterface() {
 
   // Order status query
   const { data: orderStatus, isLoading: orderStatusLoading } = useQuery<OrderStatus>({
-    queryKey: ["/api/orders/status", orderId],
+    queryKey: [`/api/orders/status/${orderId}`],
     enabled: !!orderId && currentStep === 'order-tracking',
     refetchInterval: 5000, // Poll every 5 seconds
   });

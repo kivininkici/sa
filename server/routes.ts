@@ -446,11 +446,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       try {
         // Make API request to external service
-        const requestData = {
-          ...(service.requestTemplate as any),
-          link: targetUrl,
-          quantity,
-        };
+        let requestData;
+        if (service.requestTemplate) {
+          requestData = JSON.parse(JSON.stringify(service.requestTemplate));
+          // Replace placeholders with actual values
+          requestData.link = targetUrl;
+          requestData.quantity = quantity.toString();
+          // Use the actual service_id from the database
+          if (service.serviceId) {
+            requestData.service = service.serviceId.toString();
+          }
+        } else {
+          requestData = {
+            link: targetUrl,
+            quantity: quantity.toString(),
+            service: service.serviceId?.toString() || "1"
+          };
+        }
 
         const response = await makeServiceRequest(
           service.apiEndpoint!,
@@ -478,6 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({
           success: true,
           message: "Order completed successfully",
+          orderId: updatedOrder.orderId,
           order: updatedOrder,
         });
       } catch (apiError) {
@@ -499,12 +512,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({
           success: false,
           message: "Failed to process order",
+          orderId: order.orderId,
           error: (apiError as Error).message,
         });
       }
     } catch (error) {
       console.error("Error creating order:", error);
       res.status(500).json({ message: "Failed to create order" });
+    }
+  });
+
+  // Order status tracking endpoint
+  app.get("/api/orders/status/:orderId", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      const order = await storage.getOrderByOrderId(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      res.json({
+        orderId: order.orderId,
+        status: order.status,
+        message: order.message,
+        createdAt: order.createdAt,
+        completedAt: order.completedAt,
+        quantity: order.quantity,
+        targetUrl: order.targetUrl
+      });
+    } catch (error) {
+      console.error("Error fetching order status:", error);
+      res.status(500).json({ message: "Failed to fetch order status" });
     }
   });
 
