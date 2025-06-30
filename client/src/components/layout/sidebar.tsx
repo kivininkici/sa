@@ -13,7 +13,8 @@ import {
   ShoppingCart,
   FileText,
   Cog,
-  Download
+  Download,
+  Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ const navigation = [
   { name: "Siparişler", href: "/admin/orders", icon: ShoppingCart },
   { name: "Kullanıcılar", href: "/admin/users", icon: Users },
   { name: "Loglar", href: "/admin/logs", icon: FileText },
+  { name: "Sipariş Sorgula", href: "/admin/order-search", icon: Search },
   { name: "Ayarlar", href: "/admin/settings", icon: Cog },
 ];
 

@@ -80,7 +80,6 @@ export default function UserInterface() {
       return response.json();
     },
     onSuccess: (data: ValidatedKey) => {
-      console.log("Validated key data:", data);
       setValidatedKey(data);
       orderForm.setValue("keyValue", data.value);
       orderForm.setValue("quantity", Math.min(data.remainingQuantity || 1, 1));
@@ -161,13 +160,7 @@ export default function UserInterface() {
   };
 
   const onOrderSubmit = (data: OrderData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Form errors:", orderForm.formState.errors);
-    
-    if (!validatedKey) {
-      console.log("No validated key");
-      return;
-    }
+    if (!validatedKey) return;
     
     // Check remaining quantity
     const maxAllowed = validatedKey.remainingQuantity || validatedKey.maxQuantity;
@@ -180,7 +173,6 @@ export default function UserInterface() {
       return;
     }
     
-    console.log("Sending order mutation...");
     // Send order with serviceId from validated key
     createOrderMutation.mutate({
       keyValue: validatedKey.value,
@@ -391,7 +383,6 @@ export default function UserInterface() {
                     type="submit"
                     disabled={createOrderMutation.isPending}
                     className="w-full bg-green-600 hover:bg-green-700 h-12"
-                    onClick={() => console.log("Button clicked!")}
                   >
                     {createOrderMutation.isPending ? "Sipariş Oluşturuluyor..." : "Siparişi Oluştur"}
                   </Button>

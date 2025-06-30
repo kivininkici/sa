@@ -1784,7 +1784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update order with failure
           await storage.updateOrder(orderId, {
             status: 'failed',
-            message: 'Sipariş işlenirken hata oluştu. Lütfen destek ekibiyle iletişime geçin.',
+            message: 'Sipariş işlenirken hata oluştu.',
             response: { error: apiError instanceof Error ? apiError.message : 'Unknown error' }
           });
 
@@ -1887,25 +1887,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Sipariş detaylarını key ve servis bilgileriyle birlikte getir
-      const key = await storage.getKeyByValue(order.keyId.toString());
+      const keys = await storage.getAllKeys();
+      const key = keys.find(k => k.id === order.keyId);
       const service = await storage.getServiceById(order.serviceId);
+
+      if (!key || !service) {
+        return res.status(404).json({ message: "Sipariş detayları eksik" });
+      }
 
       res.json({
         ...order,
-        keyDetails: key ? {
-          name: key.name,
+        key: {
+          id: key.id,
           value: key.value,
-          maxQuantity: key.maxQuantity
-        } : null,
-        serviceDetails: service ? {
+          name: key.name
+        },
+        service: {
+          id: service.id,
           name: service.name,
           platform: service.platform,
           type: service.type
-        } : null
+        }
       });
     } catch (error) {
       console.error("Error searching order:", error);
       res.status(500).json({ message: "Sipariş arama hatası" });
+    }
+  });
+
+  // Sipariş tekrar gönderme endpoint'i
+  app.post("/api/admin/orders/resend", requireAdminAuth, async (req, res) => {
+    try {
+      const { orderId, serviceId, quantity, targetUrl } = req.body;
+
+      if (!orderId || !serviceId || !quantity) {
+        return res.status(400).json({ message: "Sipariş ID, servis ID ve miktar gerekli" });
+      }
+
+      // Mevcut siparişi kontrol et
+      const existingOrder = await storage.getOrderByOrderId(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({ message: "Orijinal sipariş bulunamadı" });
+      }
+
+      // Servis bilgisini al
+      const service = await storage.getServiceById(serviceId);
+      if (!service || !service.isActive) {
+        return res.status(400).json({ message: "Servis aktif değil" });
+      }
+
+      // Yeni sipariş ID oluştur
+      const newOrderId = generateOrderId();
+
+      // Yeni sipariş oluştur
+      const newOrder = await storage.createOrder({
+        orderId: newOrderId,
+        keyId: existingOrder.keyId,
+        serviceId: serviceId,
+        quantity: quantity,
+        targetUrl: targetUrl || '',
+        status: 'pending',
+        message: 'Tekrar gönderilen sipariş - işleme alınıyor...'
+      });
+
+      // Log oluştur
+      await storage.createLog({
+        type: "order_resent",
+        message: `Order ${newOrderId} resent from original order ${orderId}`,
+        userId: `admin_resend`,
+        keyId: existingOrder.keyId,
+        orderId: newOrder.id,
+        data: { 
+          originalOrderId: orderId,
+          newOrderId,
+          service: service.name, 
+          quantity, 
+          targetUrl 
+        },
+      });
+
+      // Asenkron işleme başlat
+      processOrderAsync(newOrder.id, service, quantity, targetUrl);
+
+      res.json({ 
+        orderId: newOrderId,
+        message: "Sipariş tekrar gönderildi",
+        status: "pending"
+      });
+
+    } catch (error) {
+      console.error("Error resending order:", error);
+      res.status(500).json({ message: "Sipariş tekrar gönderilemedi" });
     }
   });
 

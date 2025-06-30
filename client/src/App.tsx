@@ -16,6 +16,7 @@ import Users from "@/pages/admin/users";
 import Logs from "@/pages/admin/logs";
 import Settings from "@/pages/admin/settings";
 import AdminOrders from "@/pages/admin/orders";
+import AdminOrderSearch from "@/pages/admin-order-search";
 import ApiManagement from "@/pages/admin/api-management";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -63,6 +64,9 @@ function Router() {
       </Route>
       <Route path="/admin/orders">
         {isAdminAuthenticated ? <AdminOrders /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/order-search">
+        {isAdminAuthenticated ? <AdminOrderSearch /> : <AdminLogin />}
       </Route>
       
       {/* 404 fallback */}

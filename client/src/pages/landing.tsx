@@ -194,7 +194,7 @@ export default function Landing() {
                 </CardHeader>
                 <CardContent className="p-8 pt-0">
                   <p className="text-lg font-medium leading-relaxed text-[#3c445c]">
-                    Instagram, YouTube, TikTok ve 100+ platform için kapsamlı destek.
+                    Instagram, YouTube, TikTok ve 100+ platform için kapsamlı hizmet.
                   </p>
                 </CardContent>
               </Card>
