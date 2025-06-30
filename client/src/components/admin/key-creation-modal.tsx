@@ -182,7 +182,7 @@ export default function KeyCreationModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-slate-800 border-slate-700">
+      <DialogContent className="sm:max-w-lg bg-slate-800 border-slate-700">
         <DialogHeader>
           <DialogTitle className="text-slate-50">Yeni Key Oluştur</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -227,20 +227,38 @@ export default function KeyCreationModal({
                     </div>
                     <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                       <FormControl>
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
-                          <SelectValue placeholder="Servis seçin" />
+                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50 h-auto min-h-[40px]">
+                          {field.value ? (() => {
+                            const selectedService = servicesList.find(s => s.id === field.value);
+                            if (selectedService) {
+                              const displayName = selectedService.name.length > 40 
+                                ? selectedService.name.substring(0, 40) + '...' 
+                                : selectedService.name;
+                              return (
+                                <div className="flex flex-col text-left py-1">
+                                  <span className="text-sm font-medium truncate">#{selectedService.id} - {displayName}</span>
+                                  <span className="text-xs text-slate-400">{selectedService.platform}</span>
+                                </div>
+                              );
+                            }
+                            return <SelectValue placeholder="Servis seçin" />;
+                          })() : <SelectValue placeholder="Servis seçin" />}
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-slate-700 border-slate-600 max-h-60 overflow-y-auto">
+                      <SelectContent className="bg-slate-700 border-slate-600 max-h-60 overflow-y-auto w-full max-w-md">
                         {filteredServices.map((service: Service) => (
                           <SelectItem 
                             key={service.id} 
                             value={service.id.toString()}
-                            className="text-slate-50 focus:bg-slate-600"
+                            className="text-slate-50 focus:bg-slate-600 w-full"
                           >
-                            <div className="flex flex-col">
-                              <span>#{service.id} - {service.name}</span>
-                              <span className="text-xs text-slate-400">{service.platform} - {service.type}</span>
+                            <div className="flex flex-col w-full min-w-0">
+                              <span className="truncate text-sm font-medium" title={`#${service.id} - ${service.name}`}>
+                                #{service.id} - {service.name.length > 45 ? service.name.substring(0, 45) + '...' : service.name}
+                              </span>
+                              <span className="text-xs text-slate-400 truncate" title={`${service.platform} - ${service.type}`}>
+                                {service.platform} - {service.type}
+                              </span>
                             </div>
                           </SelectItem>
                         ))}
