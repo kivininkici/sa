@@ -85,7 +85,7 @@ export default function OrderSearch() {
       setIsAutoRefreshing(true);
       const interval = setInterval(() => {
         searchOrderMutation.mutate({ orderId: searchedOrder.orderId });
-      }, 5000); // 5 saniyede bir güncelle
+      }, 10000); // 10 saniyede bir güncelle
 
       return () => {
         clearInterval(interval);
@@ -331,7 +331,7 @@ export default function OrderSearch() {
                     {isAutoRefreshing && (
                       <div className="flex items-center justify-center space-x-2 text-sm text-blue-600">
                         <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Canlı takip aktif - 5 saniyede bir güncelleniyor</span>
+                        <span>Canlı takip aktif - 10 saniyede bir güncelleniyor</span>
                       </div>
                     )}
                   </div>
