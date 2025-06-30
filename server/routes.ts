@@ -431,6 +431,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Service not available" });
       }
 
+      // Get the API settings from the key to determine which API to use
+      const apiSettings = await storage.getApiSettingsById(key.apiSettingsId);
+      if (!apiSettings || !apiSettings.isActive) {
+        return res.status(400).json({ message: "API ayarları bulunamadı veya aktif değil" });
+      }
+
       // Check service minimum/maximum quantity limits
       if (service.minQuantity && quantity < service.minQuantity) {
         return res.status(400).json({ 
@@ -470,29 +476,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       try {
-        // Make API request to external service
+        // Make API request to the correct API based on key's API settings
         let requestData;
         if (service.requestTemplate) {
           requestData = JSON.parse(JSON.stringify(service.requestTemplate));
           // Replace placeholders with actual values
           requestData.link = targetUrl;
           requestData.quantity = quantity.toString();
-          // Use the actual service_id from the database
-          if (service.serviceId) {
-            requestData.service = service.serviceId.toString();
-          }
+          requestData.service = service.serviceId?.toString() || "1";
+          requestData.key = apiSettings.apiKey; // Use the correct API key
         } else {
           requestData = {
+            key: apiSettings.apiKey, // Use the correct API key from the key's API settings
+            action: "add",
+            service: service.serviceId?.toString() || "1",
             link: targetUrl,
-            quantity: quantity.toString(),
-            service: service.serviceId?.toString() || "1"
+            quantity: quantity.toString()
           };
         }
 
+        console.log(`Making API request to: ${apiSettings.apiUrl}`);
+        console.log(`Using API key: ${apiSettings.apiKey?.substring(0, 8)}...`);
+        console.log(`Service ID: ${service.serviceId}`);
+        console.log(`Request data:`, { ...requestData, key: requestData.key?.substring(0, 8) + '...' });
+
         const response = await makeServiceRequest(
-          service.apiEndpoint!,
-          service.apiMethod!,
-          service.apiHeaders,
+          apiSettings.apiUrl, // Use the correct API URL from key's API settings
+          "POST",
+          {},
           requestData
         );
 

@@ -78,6 +78,7 @@ export interface IStorage {
   createApiSettings(data: InsertApiSettings): Promise<ApiSettings>;
   getAllApiSettings(): Promise<ApiSettings[]>;
   getActiveApiSettings(): Promise<ApiSettings[]>;
+  getApiSettingsById(id: number): Promise<ApiSettings | undefined>;
   updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings>;
   deleteApiSettings(id: number): Promise<void>;
 
@@ -429,6 +430,11 @@ export class DatabaseStorage implements IStorage {
 
   async getActiveApiSettings(): Promise<ApiSettings[]> {
     return await db.select().from(apiSettings).where(eq(apiSettings.isActive, true));
+  }
+
+  async getApiSettingsById(id: number): Promise<ApiSettings | undefined> {
+    const [apiSetting] = await db.select().from(apiSettings).where(eq(apiSettings.id, id));
+    return apiSetting;
   }
 
   async updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings> {
