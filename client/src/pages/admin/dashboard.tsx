@@ -103,9 +103,7 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-6 border border-blue-500/20">
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  Hoş Geldiniz 👋
-                </h2>
+                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-[32px]">Hoş Geldiniz!</h2>
                 <p className="text-slate-400 mt-2">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
               </div>
               <Button 
@@ -346,7 +344,6 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-
       <KeyCreationModal 
         open={showKeyModal} 
         onOpenChange={setShowKeyModal} 
