@@ -87,84 +87,103 @@ export default function UserInterface() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'create-order' | 'order-history'>('create-order');
 
-  // Form configurations
   const keyForm = useForm<KeyValidationData>({
     resolver: zodResolver(keyValidationSchema),
+    defaultValues: {
+      keyValue: "",
+    },
   });
 
   const orderForm = useForm<OrderData>({
     resolver: zodResolver(orderSchema),
+    defaultValues: {
+      keyValue: "",
+      serviceId: 1,
+      quantity: 1,
+      targetUrl: "",
+    },
   });
 
   // Key validation mutation
   const validateKeyMutation = useMutation({
     mutationFn: async (data: KeyValidationData) => {
-      const response = await fetch(`/api/validate-key`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: data.keyValue }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Key doğrulama hatası');
-      }
-      
+      const response = await apiRequest("POST", "/api/validate-key", { key: data.keyValue });
       return response.json();
     },
     onSuccess: (data: ValidatedKey) => {
       setValidatedKey(data);
+      orderForm.setValue("keyValue", data.value);
+      orderForm.setValue("quantity", Math.min(data.remainingQuantity || 1, 1));
       setCurrentStep('order-form');
-      orderForm.setValue('keyValue', data.value);
-      orderForm.setValue('serviceId', data.service.id);
-      
       toast({
         title: "Key Doğrulandı",
-        description: `Key geçerli. Kalan miktar: ${data.remainingQuantity}`,
+        description: "Sipariş verebilirsiniz",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Key Doğrulama Hatası",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Check if it's maintenance mode error
+      if (error.message.includes("bakım modunda")) {
+        toast({
+          title: "Bakım Modu",
+          description: "Sistem şu anda bakım modunda. Lütfen daha sonra tekrar deneyin.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Key Doğrulama Hatası",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 
   // Order creation mutation
-  const createOrderMutation = useMutation({
+  const createOrderMutation = useMutation<{ orderId: string }, Error, OrderData>({
     mutationFn: async (data: OrderData) => {
-      const response = await fetch(`/api/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      console.log("Making order API request with data:", data);
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Sipariş oluşturma hatası');
-      }
+      // Use the validated key's service ID (each key has its own service)
+      const orderData = {
+        ...data,
+        serviceId: validatedKey?.service?.id || data.serviceId
+      };
       
-      return response.json();
+      console.log("Sending order with service from key:", orderData);
+      const response = await apiRequest("POST", "/api/orders", orderData);
+      const result = await response.json() as { orderId: string };
+      console.log("Order API response:", result);
+      return result;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: { orderId: string }) => {
       setOrderId(data.orderId);
       setCurrentStep('order-tracking');
-      
       toast({
         title: "Sipariş Başarıyla Oluşturuldu",
-        description: `Sipariş numaranız: ${data.orderId}`,
+        description: `Sipariş başarıyla gönderildi. ID: ${data.orderId}`,
       });
     },
-    onError: (error: any, variables, context) => {
-      const errorOrderId = error.message?.match(/Sipariş numaranız: ([A-Z0-9-]+)/)?.[1];
+    onError: (error: Error, variables, context) => {
+      console.log("Order creation error:", error);
+      
+      // Try to extract orderId from error if available
+      let errorOrderId = null;
+      try {
+        const errorMatch = error.message.match(/"orderId":"([^"]+)"/);
+        if (errorMatch) {
+          errorOrderId = errorMatch[1];
+        }
+      } catch (e) {
+        console.log("Could not extract orderId from error");
+      }
 
+      // If we have an orderId, still show tracking
       if (errorOrderId) {
         setOrderId(errorOrderId);
         setCurrentStep('order-tracking');
       }
 
+      // Check if it's maintenance mode error
       if (error.message.includes("bakım modunda")) {
         toast({
           title: "Bakım Modu",
@@ -321,7 +340,7 @@ export default function UserInterface() {
                 <p className="text-slate-400">Sosyal Medya Servis Platformu</p>
               </div>
             </div>
-            {currentStep !== 'key-entry' && activeTab === 'create-order' && (
+            {currentStep !== 'key-entry' && (
               <Button
                 variant="outline"
                 onClick={resetForm}
@@ -375,166 +394,156 @@ export default function UserInterface() {
                 </div>
               </div>
 
-              {/* Step 1: Key Entry */}
-              {currentStep === 'key-entry' && (
-                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-slate-50 flex items-center justify-center space-x-2">
-                      <Search className="w-5 h-5" />
-                      <span>Key Doğrulama</span>
-                    </CardTitle>
-                    <p className="text-slate-400">Servis key'inizi girin</p>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={keyForm.handleSubmit(onKeySubmit)} className="space-y-4">
-                      <div>
-                        <Input
-                          placeholder="Key değerini giriniz..."
-                          className="bg-slate-700 border-slate-600 text-slate-50 text-center text-lg h-12"
-                          {...keyForm.register("keyValue")}
-                        />
-                        {keyForm.formState.errors.keyValue && (
-                          <p className="text-red-400 text-sm mt-1 text-center">
-                            {keyForm.formState.errors.keyValue.message}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={validateKeyMutation.isPending}
-                        className="w-full bg-blue-600 hover:bg-blue-700 h-12"
-                      >
-                        {validateKeyMutation.isPending ? "Doğrulanıyor..." : "Key Doğrula"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
+          {/* Step 1: Key Entry */}
+          {currentStep === 'key-entry' && (
+            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
+              <CardHeader className="text-center">
+                <CardTitle className="text-slate-50 flex items-center justify-center space-x-2">
+                  <Search className="w-5 h-5" />
+                  <span>Key Doğrulama</span>
+                </CardTitle>
+                <p className="text-slate-400">Servis key'inizi girin</p>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={keyForm.handleSubmit(onKeySubmit)} className="space-y-4">
+                  <div>
+                    <Input
+                      placeholder="Key değerini giriniz..."
+                      className="bg-slate-700 border-slate-600 text-slate-50 text-center text-lg h-12"
+                      {...keyForm.register("keyValue")}
+                    />
+                    {keyForm.formState.errors.keyValue && (
+                      <p className="text-red-400 text-sm mt-1 text-center">
+                        {keyForm.formState.errors.keyValue.message}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={validateKeyMutation.isPending}
+                    className="w-full bg-blue-600 hover:bg-blue-700 h-12"
+                  >
+                    {validateKeyMutation.isPending ? "Doğrulanıyor..." : "Key Doğrula"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
 
-              {/* Step 2: Order Form */}
-              {currentStep === 'order-form' && validatedKey && (
-                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-slate-50 flex items-center space-x-2">
-                      <Package className="w-5 h-5" />
-                      <span>Sipariş Detayları</span>
-                    </CardTitle>
-                    <div className="bg-slate-700/50 rounded-lg p-4 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-300">Key:</span>
-                        <Badge variant="outline" className="font-mono">{validatedKey.value}</Badge>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-300">Kalan Miktar:</span>
-                        <span className="text-slate-50 font-medium">{validatedKey.remainingQuantity}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-300">Servis:</span>
-                        <span className="text-slate-50">{validatedKey.service.name}</span>
-                      </div>
+          {/* Step 2: Order Form */}
+          {currentStep === 'order-form' && validatedKey && (
+            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-slate-50 flex items-center space-x-2">
+                  <Package className="w-5 h-5" />
+                  <span>Sipariş Detayları</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
+                  <div>
+                    <label className="text-slate-200 text-sm font-medium mb-2 block">
+                      Miktar (1-{validatedKey.remainingQuantity || validatedKey.maxQuantity})
+                    </label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max={validatedKey.remainingQuantity || validatedKey.maxQuantity}
+                      className="bg-slate-700 border-slate-600 text-slate-50"
+                      {...orderForm.register("quantity", { 
+                        valueAsNumber: true,
+                        min: 1,
+                        max: validatedKey.remainingQuantity || validatedKey.maxQuantity 
+                      })}
+                    />
+                    {orderForm.formState.errors.quantity && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {orderForm.formState.errors.quantity.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-slate-200 text-sm font-medium mb-2 block">
+                      Hedef URL (isteğe bağlı)
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://..."
+                      className="bg-slate-700 border-slate-600 text-slate-50"
+                      {...orderForm.register("targetUrl")}
+                    />
+                    {orderForm.formState.errors.targetUrl && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {orderForm.formState.errors.targetUrl.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={createOrderMutation.isPending}
+                    className="w-full bg-green-600 hover:bg-green-700 h-12"
+                  >
+                    {createOrderMutation.isPending ? "Sipariş Oluşturuluyor..." : "Siparişi Oluştur"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 3: Order Tracking */}
+          {currentStep === 'order-tracking' && orderId && (
+            <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-slate-50 flex items-center space-x-2">
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Sipariş Takibi</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <div className="text-2xl font-mono text-blue-400 mb-2">
+                    #{orderId}
+                  </div>
+                  <p className="text-slate-400">Sipariş Numarası</p>
+                </div>
+
+                <Separator className="bg-slate-600" />
+
+                <div className="space-y-3">
+                  {orderStatusLoading ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-slate-400">Sipariş durumu kontrol ediliyor...</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Miktar *
-                        </label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max={validatedKey.remainingQuantity}
-                          placeholder="Sipariş miktarını giriniz"
-                          className="bg-slate-700 border-slate-600 text-slate-50"
-                          {...orderForm.register("quantity", { valueAsNumber: true })}
-                        />
-                        {orderForm.formState.errors.quantity && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {orderForm.formState.errors.quantity.message}
-                          </p>
-                        )}
+                  ) : orderStatus ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-300">Durum:</span>
+                        <Badge variant={orderStatus.status === 'completed' ? 'default' : 'secondary'}>
+                          {orderStatus.status === 'pending' && 'Beklemede'}
+                          {orderStatus.status === 'processing' && 'İşleniyor'}
+                          {orderStatus.status === 'completed' && 'Tamamlandı'}
+                          {orderStatus.status === 'failed' && 'Başarısız'}
+                        </Badge>
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                          Hedef URL
-                        </label>
-                        <Input
-                          placeholder="https://instagram.com/username/post/..."
-                          className="bg-slate-700 border-slate-600 text-slate-50"
-                          {...orderForm.register("targetUrl")}
-                        />
-                        {orderForm.formState.errors.targetUrl && (
-                          <p className="text-red-400 text-sm mt-1">
-                            {orderForm.formState.errors.targetUrl.message}
-                          </p>
-                        )}
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={createOrderMutation.isPending}
-                        className="w-full bg-green-600 hover:bg-green-700 h-12"
-                      >
-                        {createOrderMutation.isPending ? "Sipariş Oluşturuluyor..." : "Sipariş Oluştur"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Step 3: Order Tracking */}
-              {currentStep === 'order-tracking' && orderId && (
-                <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-slate-50 flex items-center justify-center space-x-2">
-                      <ShoppingCart className="w-5 h-5" />
-                      <span>Sipariş Takibi</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-mono text-blue-400 mb-2">
-                        #{orderId}
-                      </div>
-                      <p className="text-slate-400">Sipariş Numarası</p>
-                    </div>
-
-                    <Separator className="bg-slate-600" />
-
-                    <div className="space-y-3">
-                      {orderStatusLoading ? (
-                        <div className="text-center py-4">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                          <p className="text-slate-400">Sipariş durumu kontrol ediliyor...</p>
-                        </div>
-                      ) : orderStatus ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-300">Durum:</span>
-                            <Badge variant={orderStatus.status === 'completed' ? 'default' : 'secondary'}>
-                              {orderStatus.status === 'pending' && 'Beklemede'}
-                              {orderStatus.status === 'processing' && 'İşleniyor'}
-                              {orderStatus.status === 'completed' && 'Tamamlandı'}
-                              {orderStatus.status === 'failed' && 'Başarısız'}
-                            </Badge>
-                          </div>
-                          {orderStatus.message && (
-                            <div className="bg-slate-700/50 rounded p-3">
-                              <p className="text-slate-300 text-sm">{orderStatus.message}</p>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <AlertCircle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                          <p className="text-slate-400">Sipariş durumu alınamadı</p>
+                      {orderStatus.message && (
+                        <div className="bg-slate-700/50 rounded p-3">
+                          <p className="text-slate-300 text-sm">{orderStatus.message}</p>
                         </div>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <div className="text-center py-4">
+                      <AlertCircle className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                      <p className="text-slate-400">Sipariş durumu alınamadı</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
             </TabsContent>
 
             <TabsContent value="order-history" className="mt-6">

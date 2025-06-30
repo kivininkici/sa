@@ -566,6 +566,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User orders - kullanıcının kendi siparişlerini görmesi için
+  app.get("/api/user/orders", requireUserAuth, async (req: any, res) => {
+    try {
+      // Kullanıcının kullandığı key'lere ait siparişleri getir
+      const userId = req.session.userId;
+      const userOrders = await storage.getUserOrders(userId);
+      
+      res.json(userOrders);
+    } catch (error) {
+      console.error("Error fetching user orders:", error); 
+      res.status(500).json({ message: "Siparişler getirilemedi" });
+    }
+  });
+
   // Admin Orders routes
   app.get("/api/admin/orders", requireAdminAuth, async (req, res) => {
     try {

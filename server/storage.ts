@@ -65,6 +65,7 @@ export interface IStorage {
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: number, updates: Partial<Order>): Promise<Order>;
   getOrdersByStatus(status: string): Promise<Order[]>;
+  getUserOrders(userId: number): Promise<Order[]>;
 
   // Log operations
   getAllLogs(): Promise<Log[]>;
@@ -340,6 +341,40 @@ export class DatabaseStorage implements IStorage {
       .from(orders)
       .where(eq(orders.status, status))
       .orderBy(desc(orders.createdAt));
+  }
+
+  async getUserOrders(userId: number): Promise<Order[]> {
+    // Şimdilik tüm siparişleri döndürüyoruz - gelecekte userId ile filtreleme eklenebilir
+    return await db
+      .select({
+        id: orders.id,
+        orderId: orders.orderId,
+        keyId: orders.keyId,
+        serviceId: orders.serviceId,
+        quantity: orders.quantity,
+        targetUrl: orders.targetUrl,
+        status: orders.status,
+        message: orders.message,
+        response: orders.response,
+        createdAt: orders.createdAt,
+        completedAt: orders.completedAt,
+        service: {
+          id: services.id,
+          name: services.name,
+          platform: services.platform,
+          type: services.type
+        },
+        key: {
+          id: keys.id,
+          value: keys.value,
+          name: keys.name
+        }
+      })
+      .from(orders)
+      .leftJoin(services, eq(orders.serviceId, services.id))
+      .leftJoin(keys, eq(orders.keyId, keys.id))
+      .orderBy(desc(orders.createdAt))
+      .limit(10); // Son 10 siparişi göster
   }
 
   // Log operations
