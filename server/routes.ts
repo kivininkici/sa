@@ -31,7 +31,7 @@ const requireUserAuth = (req: any, res: any, next: any) => {
 const apiStatusCache = new Map<string, { status: any; timestamp: number; }>();
 const CACHE_DURATION = 15000; // 15 seconds cache for efficiency
 
-// Optimized API status check function
+// Optimized API status check function supporting multiple providers
 async function getOrderStatusFromAPI(apiKey: string, apiUrl: string, orderId: string): Promise<any> {
   const cacheKey = `${orderId}_${apiKey}`;
   const now = Date.now();
@@ -43,7 +43,7 @@ async function getOrderStatusFromAPI(apiKey: string, apiUrl: string, orderId: st
   }
   
   try {
-    // Use MedyaBayim API v2 format exactly as documented
+    // Both MedyaBayim and ResellerProvider use the same API v2 format
     const formData = new URLSearchParams();
     formData.append('key', apiKey);
     formData.append('action', 'status');

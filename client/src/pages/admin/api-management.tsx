@@ -412,6 +412,41 @@ export default function ApiManagement() {
                   </DialogHeader>
 
                   <div className="space-y-4">
+                    {/* Quick Add Popular APIs */}
+                    <div className="border rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
+                      <Label className="text-sm font-semibold mb-3 block">Popüler API'ler - Hızlı Ekle</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Button
+                          variant="outline"
+                          className="h-auto p-4 text-left"
+                          onClick={() => {
+                            setApiName("MedyaBayim");
+                            setApiUrl("https://medyabayim.com/api/v2");
+                            setApiKey("");
+                          }}
+                        >
+                          <div>
+                            <div className="font-semibold">MedyaBayim</div>
+                            <div className="text-xs text-muted-foreground">medyabayim.com/api/v2</div>
+                          </div>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="h-auto p-4 text-left"
+                          onClick={() => {
+                            setApiName("ResellerProvider");
+                            setApiUrl("https://resellerprovider.ru/api/v2");
+                            setApiKey("");
+                          }}
+                        >
+                          <div>
+                            <div className="font-semibold">ResellerProvider</div>
+                            <div className="text-xs text-muted-foreground">resellerprovider.ru/api/v2</div>
+                          </div>
+                        </Button>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="apiName">API Adı</Label>

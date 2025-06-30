@@ -169,6 +169,9 @@ Changelog:
 - Cache sistemi: 15 saniye cache ile API çağrıları optimize edildi
 - Verimlilik: Otomatik yenileme 10 saniyeye çıkarıldı, gereksiz API çağrıları azaltıldı
 - Status mapping: Tüm API durumları (Pending, In progress, Completed, Partial, Canceled) destekleniyor
+- Multi-API desteği: MedyaBayim ve ResellerProvider API'leri entegre edildi
+- Hızlı API ekleme: Popüler API'ler için tek tıkla ekleme butonları
+- Universal format: Her iki API de aynı v2 formatını kullandığı için tek sistem yeterli
 - Sistem production seviyesinde güvenilir ve optimize edilmiş şekilde çalışıyor
 
 ## User Preferences
