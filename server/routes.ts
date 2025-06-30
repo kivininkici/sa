@@ -419,6 +419,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Service not available" });
       }
 
+      // Check service minimum/maximum quantity limits
+      if (service.minQuantity && quantity < service.minQuantity) {
+        return res.status(400).json({ 
+          message: `Bu servis için minimum ${service.minQuantity} adet sipariş verilmelidir` 
+        });
+      }
+
+      if (service.maxQuantity && quantity > service.maxQuantity) {
+        return res.status(400).json({ 
+          message: `Bu servis için maksimum ${service.maxQuantity} adet sipariş verilebilir` 
+        });
+      }
+
       // Generate unique order ID
       const orderId = generateOrderId();
 

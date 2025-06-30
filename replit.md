@@ -178,6 +178,12 @@ Changelog:
 - Admin paneline sipariş sorgulama sistemi eklendi (sipariş ID ile arama)
 - Sipariş tekrar gönderme özelliği eklendi (aynı parametrelerle yeni sipariş)
 - Sipariş detayları: URL, miktar, durum, tekrar gönder butonu
+- Sipariş oluşturma butonu tamamen düzeltildi ve çalışır hale getirildi
+- Sipariş takip sistemi eklendi: Otomatik 5 saniyede bir durum güncelleme
+- API minimum/maksimum miktar kontrolleri eklendi
+- Hata durumunda da sipariş takip sayfasına yönlendirme
+- Form validation sorunları çözüldü
+- Console debugging sistemi eklendi
 
 ## User Preferences
 
