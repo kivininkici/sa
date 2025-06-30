@@ -23,7 +23,7 @@ export default function Services() {
   const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const SERVICES_PER_PAGE = 50;
+  const [itemsPerPage] = useState(50);
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -73,23 +73,10 @@ export default function Services() {
   const servicesList = Array.isArray(services) ? services : [];
   
   // Pagination calculations
-  const totalServices = servicesList.length;
-  const totalPages = Math.ceil(totalServices / SERVICES_PER_PAGE);
-  const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
-  const endIndex = startIndex + SERVICES_PER_PAGE;
+  const totalPages = Math.ceil(servicesList.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   const paginatedServices = servicesList.slice(startIndex, endIndex);
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -106,12 +93,9 @@ export default function Services() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-slate-50">Servis Yönetimi</h2>
-                <p className="text-slate-400">Sosyal Medya Servislerini Yapılandırın</p>
-                {totalServices > 0 && (
-                  <p className="text-sm text-slate-500 mt-1">
-                    Toplam {totalServices} servis • Sayfa {currentPage} / {totalPages}
-                  </p>
-                )}
+                <p className="text-slate-400">
+                  Toplam {servicesList.length} servis • Sayfa {currentPage}/{totalPages}
+                </p>
               </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
@@ -182,34 +166,34 @@ export default function Services() {
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && !servicesLoading && (
-              <div className="flex items-center justify-center space-x-4 mt-8">
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6 pt-4 border-t border-slate-700">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={goToPreviousPage}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 border-slate-600 text-slate-300 hover:bg-slate-700"
                 >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  <ChevronLeft className="w-4 h-4" />
                   Önceki
                 </Button>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2 px-4">
                   <span className="text-sm text-slate-400">
-                    Sayfa {currentPage} / {totalPages}
+                    {currentPage} / {totalPages}
                   </span>
                 </div>
                 
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={goToNextPage}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 border-slate-600 text-slate-300 hover:bg-slate-700"
                 >
                   Sonraki
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             )}

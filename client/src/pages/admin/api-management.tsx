@@ -19,7 +19,9 @@ import {
   Edit2,
   Power,
   PowerOff,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -357,12 +359,6 @@ export default function ApiManagement() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedServices = filteredServices.slice(startIndex, endIndex);
 
-  // Pagination for main services list
-  const servicesTotalPages = Math.ceil(servicesList.length / servicesItemsPerPage);
-  const servicesStartIndex = (servicesCurrentPage - 1) * servicesItemsPerPage;
-  const servicesEndIndex = servicesStartIndex + servicesItemsPerPage;
-  const paginatedServicesList = servicesList.slice(servicesStartIndex, servicesEndIndex);
-
   const toggleServiceSelection = (index: number) => {
     setSelectedServices(prev => 
       prev.includes(index) 
@@ -376,6 +372,12 @@ export default function ApiManagement() {
   }
 
   const servicesList = Array.isArray(services) ? services : [];
+  
+  // Pagination for main services list
+  const servicesTotalPages = Math.ceil(servicesList.length / servicesItemsPerPage);
+  const servicesStartIndex = (servicesCurrentPage - 1) * servicesItemsPerPage;
+  const servicesEndIndex = servicesStartIndex + servicesItemsPerPage;
+  const paginatedServicesList = servicesList.slice(servicesStartIndex, servicesEndIndex);
   const apiSettingsList = Array.isArray(apiSettings) ? apiSettings : [];
   const maintenanceModeStatus = maintenanceMode as { maintenanceMode: boolean } | undefined;
 
