@@ -314,7 +314,7 @@ export default function KeyCreationModal({
                     </div>
                     {/* Özel Miktar Girişi */}
                     <div className="space-y-1">
-                      <label className="text-xs text-slate-400">Özel Miktar (1-500)</label>
+                      <label className="text-xs font-medium text-[#ffffff]">Özel Miktar (1-500)</label>
                       <Input
                         type="number"
                         min="1"
