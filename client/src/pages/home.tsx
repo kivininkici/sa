@@ -1,21 +1,14 @@
-import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, Settings, Crown } from "lucide-react";
-import { useEffect } from "react";
+import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, ExternalLink, Search } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 export default function Home() {
-  const { admin, isLoading } = useAdminAuth();
+  const { user, isLoading: userLoading } = useAuth();
+  const { admin } = useAdminAuth();
 
-  // Redirect to admin login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !admin) {
-      window.location.href = '/admin/login';
-      return;
-    }
-  }, [admin, isLoading]);
-
-  if (isLoading) {
+  if (userLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -26,10 +19,6 @@ export default function Home() {
         </div>
       </div>
     );
-  }
-
-  if (!admin) {
-    return null; // Will redirect via useEffect
   }
 
   return (
@@ -43,30 +32,44 @@ export default function Home() {
                 <KeyRound className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  KeyPanel
-                </h1>
-                <p className="text-sm text-gray-400">Hoş geldin, {admin?.username || 'Kullanıcı'}</p>
+                <h1 className="text-2xl font-bold">KeyPanel</h1>
+                <p className="text-blue-200 text-sm">Sosyal Medya Hizmetleri</p>
               </div>
             </div>
+
+            {/* User Info & Actions */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full flex items-center justify-center">
+              <div className="flex items-center space-x-3 px-4 py-2 bg-white/10 rounded-full backdrop-blur-sm">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-white font-medium">{admin?.username || 'Kullanıcı'}</span>
+                <span className="text-white font-medium">{user?.username || 'Kullanıcı'}</span>
               </div>
+              
+              {/* Admin Panel Button - Only for admins */}
+              {admin && (
+                <Button 
+                  variant="outline"
+                  className="border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300"
+                  onClick={() => window.location.href = '/admin'}
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin Panel
+                </Button>
+              )}
+              
               <Button 
                 onClick={async () => {
                   try {
-                    await fetch('/api/admin/logout', { method: 'POST' });
-                    window.location.href = '/admin/login';
+                    await fetch('/api/logout', { method: 'POST' });
+                    window.location.href = '/auth';
                   } catch (error) {
-                    window.location.href = '/admin/login';
+                    window.location.href = '/auth';
                   }
                 }}
                 variant="outline"
-                className="border-white/20 bg-white/10 hover:bg-red-500/20 text-white hover:border-red-400/50"
+                size="sm"
+                className="border-red-400/50 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300"
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 Çıkış
@@ -76,169 +79,104 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-12">
-        {/* Welcome Section */}
+      {/* Hero Section */}
+      <main className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-400/30 rounded-full mb-8 backdrop-blur-sm">
-            <Crown className="w-5 h-5 text-yellow-400 mr-2" />
-            <span className="text-sm font-medium text-white">
-              Admin
-            </span>
-          </div>
-          
-          <h2 className="text-5xl font-black mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Hoş Geldin!
+          <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Sosyal Medya Hizmetleriniz
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
-            KeyPanel premium özelliklerini keşfet ve sosyal medya büyümeni hızlandır
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Key kodunuzu kullanarak sosyal medya hizmetlerinden yararlanın ve siparişlerinizi takip edin
           </p>
-
-          {/* Quick Actions */}
-          <div className="flex flex-col sm:flex-row justify-center gap-6 mb-16">
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Button 
-              size="lg"
+              size="lg" 
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold px-12 py-6 text-xl rounded-2xl shadow-2xl hover:scale-105 transition-all duration-300"
               onClick={() => window.location.href = '/user'}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-12 py-6 text-xl rounded-2xl shadow-2xl hover:shadow-blue-500/25 hover:scale-105 transition-all duration-300"
             >
               <KeyRound className="w-6 h-6 mr-3" />
               Key Kullan
             </Button>
-            {admin && (
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-2 border-emerald-400/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
-                onClick={() => window.location.href = '/admin'}
-              >
-                <Shield className="w-6 h-6 mr-3" />
-                Admin Panel
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Service Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <Card className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border-blue-400/30 hover:border-blue-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-bold text-white">5.847</CardTitle>
-                  <p className="text-blue-400 font-medium">Aktif Servis</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 border-emerald-400/30 hover:border-emerald-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-bold text-white">%99.8</CardTitle>
-                  <p className="text-emerald-400 font-medium">Başarı Oranı</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/30 hover:border-purple-300/50 transition-all duration-500 hover:scale-105 backdrop-blur-sm">
-            <CardHeader className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl font-bold text-white">2-30s</CardTitle>
-                  <p className="text-purple-400 font-medium">Teslimat Süresi</p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <Card className="bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-purple-400/50 hover:border-purple-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg group">
-            <CardHeader className="p-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <Shield className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-black text-white mb-3">Güvenli Key Sistemi</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <p className="text-lg text-white/90 font-medium leading-relaxed">
-                Tek kullanımlık anahtarlar ile maksimum güvenlik ve tam kontrol
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 border-emerald-400/50 hover:border-emerald-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg group">
-            <CardHeader className="p-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <Zap className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-black text-white mb-3">Anlık Teslimat</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <p className="text-lg text-white/90 font-medium leading-relaxed">
-                2-30 saniye içinde işlem tamamlama garantisi
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-500/30 to-cyan-500/30 border-blue-400/50 hover:border-blue-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg group">
-            <CardHeader className="p-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <Users className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-black text-white mb-3">Çoklu Platform</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <p className="text-lg text-white/90 font-medium leading-relaxed">
-                100+ sosyal medya platformu kapsamlı hizmeti
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-amber-500/30 to-orange-500/30 border-amber-400/50 hover:border-amber-300/70 transition-all duration-500 hover:scale-105 backdrop-blur-sm shadow-lg group">
-            <CardHeader className="p-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <Star className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-black text-white mb-3">Premium Kalite</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <p className="text-lg text-white/90 font-medium leading-relaxed">
-                Yüksek kaliteli servis ve güvenilir hizmet garantisi
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-16">
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/30 rounded-2xl p-8 backdrop-blur-sm">
-            <h3 className="text-3xl font-bold text-white mb-4">Hemen Başlayın!</h3>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              KeyPanel'in gücünü keşfedin ve sosyal medya hesaplarınızı bir üst seviyeye taşıyın
-            </p>
+            
             <Button 
-              size="lg"
-              onClick={() => window.location.href = '/user'}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold px-8 py-4 text-lg rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
+              size="lg" 
+              variant="outline"
+              className="border-2 border-cyan-400/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 font-bold px-12 py-6 text-xl rounded-2xl backdrop-blur-sm hover:scale-105 transition-all duration-300"
+              onClick={() => window.location.href = '/order-search'}
             >
-              <KeyRound className="w-5 h-5 mr-2" />
-              Servisleri Keşfet
+              <Search className="w-6 h-6 mr-3" />
+              Sipariş Sorgula
             </Button>
           </div>
         </div>
-      </div>
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center text-blue-400">
+                <Zap className="w-6 h-6 mr-2" />
+                Hızlı İşlem
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-300">
+                Key kodunuzu girin ve hemen sosyal medya hizmetlerinize başlayın. Anında işlem garantisi.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center text-purple-400">
+                <Users className="w-6 h-6 mr-2" />
+                Güvenilir Hizmet
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-300">
+                Instagram, YouTube, Twitter ve daha fazla platform için güvenli ve kaliteli hizmetler.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center text-emerald-400">
+                <Activity className="w-6 h-6 mr-2" />
+                Canlı Takip
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-300">
+                Siparişlerinizi gerçek zamanlı olarak takip edin ve durumunu anında öğrenin.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Service Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="text-center p-6 bg-white/5 rounded-2xl backdrop-blur-sm">
+            <div className="text-3xl font-bold text-blue-400 mb-2">100+</div>
+            <div className="text-gray-300">Aktif Servis</div>
+          </div>
+          <div className="text-center p-6 bg-white/5 rounded-2xl backdrop-blur-sm">
+            <div className="text-3xl font-bold text-purple-400 mb-2">50K+</div>
+            <div className="text-gray-300">Tamamlanan Sipariş</div>
+          </div>
+          <div className="text-center p-6 bg-white/5 rounded-2xl backdrop-blur-sm">
+            <div className="text-3xl font-bold text-emerald-400 mb-2">24/7</div>
+            <div className="text-gray-300">Destek</div>
+          </div>
+          <div className="text-center p-6 bg-white/5 rounded-2xl backdrop-blur-sm">
+            <div className="text-3xl font-bold text-yellow-400 mb-2">⭐ 4.9</div>
+            <div className="text-gray-300">Müşteri Memnuniyeti</div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
