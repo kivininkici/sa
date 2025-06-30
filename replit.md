@@ -194,6 +194,14 @@ Changelog:
 - Auth sayfası sadece admin girişi için güncellendi, kayıt sistemi devre dışı
 - User API endpoint role bilgisini doğru döndürüyor
 - Migration Replit Agent'tan Replit ortamına başarıyla tamamlandı
+- June 30, 2025: Normal kullanıcı kayıt/giriş sistemi eklendi
+- Auth sayfası login/register tab sistemi ile güncellendi
+- Normal kullanıcılar kayıt olabilir, admin panelinde görünür
+- Admin tarafından kullanıcılara admin rolü verilebilir
+- Normal kullanıcılarda navbar'da admin paneli gözükmez
+- Admin rolü verilen kullanıcılarda admin panel erişimi aktifleşir
+- İki ayrı auth sistemi: /api/auth/* (normal user) ve /api/admin/* (admin)
+- Session bazlı authentication her iki sistem için destekleniyor
 
 ## User Preferences
 

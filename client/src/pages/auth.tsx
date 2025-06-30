@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   KeyRound,
   User,
@@ -15,6 +16,8 @@ import {
   LogIn,
   CheckCircle,
   Loader2,
+  UserPlus,
+  Mail,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,11 +28,24 @@ const loginSchema = z.object({
   password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
 });
 
+const registerSchema = z.object({
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı"),
+  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalı"),
+  confirmPassword: z.string().min(6, "Şifre tekrarı gereklidir"),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Şifreler eşleşmiyor",
+  path: ["confirmPassword"],
+});
+
 type LoginData = z.infer<typeof loginSchema>;
+type RegisterData = z.infer<typeof registerSchema>;
 
 export default function Auth() {
   const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
   const [isLoginSuccess, setIsLoginSuccess] = useState(false);
+  const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
   const { toast } = useToast();
 
   const loginForm = useForm<LoginData>({
@@ -40,9 +56,19 @@ export default function Auth() {
     },
   });
 
+  const registerForm = useForm<RegisterData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await apiRequest("POST", "/api/login", data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
     onSuccess: (data: any) => {
@@ -68,9 +94,44 @@ export default function Auth() {
     },
   });
 
+  const registerMutation = useMutation({
+    mutationFn: async (data: RegisterData) => {
+      const response = await apiRequest("POST", "/api/auth/register", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsRegisterLoading(false);
+      setIsRegisterSuccess(true);
+      toast({
+        title: "Kayıt Başarılı",
+        description: "Hesabınız oluşturuldu! Giriş yapabilirsiniz.",
+      });
+      setTimeout(() => {
+        setIsRegisterSuccess(false);
+        // Switch to login tab
+        const loginTab = document.querySelector('[data-value="login"]') as HTMLElement;
+        if (loginTab) loginTab.click();
+      }, 2000);
+    },
+    onError: (error: Error) => {
+      setIsRegisterLoading(false);
+      setIsRegisterSuccess(false);
+      toast({
+        title: "Kayıt Hatası",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onLoginSubmit = (data: LoginData) => {
     setIsLoginLoading(true);
     loginMutation.mutate(data);
+  };
+
+  const onRegisterSubmit = (data: RegisterData) => {
+    setIsRegisterLoading(true);
+    registerMutation.mutate(data);
   };
 
   return (
@@ -110,100 +171,240 @@ export default function Auth() {
                 <KeyRound className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-2xl text-white mb-2">
-                Admin Girişi
+                KeyPanel
               </CardTitle>
               <p className="text-slate-400 text-sm">
-                Sadece yönetici hesapları ile giriş yapabilirsiniz
+                Hesabınıza giriş yapın veya yeni hesap oluşturun
               </p>
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <AnimatePresence mode="wait">
-                {isLoginSuccess ? (
-                  <motion.div
-                    key="login-success"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-8 space-y-4"
-                  >
-                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                      <CheckCircle className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-green-400">
-                      Giriş Başarılı!
-                    </h3>
-                    <p className="text-slate-400">Yönlendiriliyor...</p>
-                  </motion.div>
-                ) : (
-                  <motion.form
-                    key="login-form"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-                    className="space-y-4"
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="login-username" className="text-slate-300">
-                        Kullanıcı Adı
-                      </Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input
-                          id="login-username"
-                          placeholder="Kullanıcı adınız"
-                          className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
-                          {...loginForm.register("username")}
-                        />
-                      </div>
-                      {loginForm.formState.errors.username && (
-                        <p className="text-red-400 text-sm">
-                          {loginForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-700">
+                  <TabsTrigger value="login" data-value="login">Giriş Yap</TabsTrigger>
+                  <TabsTrigger value="register">Kayıt Ol</TabsTrigger>
+                </TabsList>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password" className="text-slate-300">
-                        Şifre
-                      </Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input
-                          id="login-password"
-                          type="password"
-                          placeholder="Şifreniz"
-                          className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
-                          {...loginForm.register("password")}
-                        />
-                      </div>
-                      {loginForm.formState.errors.password && (
-                        <p className="text-red-400 text-sm">
-                          {loginForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
+                <TabsContent value="login">
+                  <AnimatePresence mode="wait">
+                    {isLoginSuccess ? (
+                      <motion.div
+                        key="login-success"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-8 space-y-4"
+                      >
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-green-400">
+                          Giriş Başarılı!
+                        </h3>
+                        <p className="text-slate-400">Yönlendiriliyor...</p>
+                      </motion.div>
+                    ) : (
+                      <motion.form
+                        key="login-form"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                        className="space-y-4 mt-6"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="login-username" className="text-slate-300">
+                            Kullanıcı Adı
+                          </Label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="login-username"
+                              placeholder="Kullanıcı adınız"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...loginForm.register("username")}
+                            />
+                          </div>
+                          {loginForm.formState.errors.username && (
+                            <p className="text-red-400 text-sm">
+                              {loginForm.formState.errors.username.message}
+                            </p>
+                          )}
+                        </div>
 
-                    <Button
-                      type="submit"
-                      disabled={isLoginLoading || loginMutation.isPending}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white h-12 font-medium"
-                    >
-                      {isLoginLoading || loginMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Giriş Yapılıyor...
-                        </>
-                      ) : (
-                        <>
-                          <LogIn className="w-4 h-4 mr-2" />
-                          Giriş Yap
-                        </>
-                      )}
-                    </Button>
-                  </motion.form>
-                )}
-              </AnimatePresence>
+                        <div className="space-y-2">
+                          <Label htmlFor="login-password" className="text-slate-300">
+                            Şifre
+                          </Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="login-password"
+                              type="password"
+                              placeholder="Şifreniz"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...loginForm.register("password")}
+                            />
+                          </div>
+                          {loginForm.formState.errors.password && (
+                            <p className="text-red-400 text-sm">
+                              {loginForm.formState.errors.password.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          type="submit"
+                          disabled={isLoginLoading || loginMutation.isPending}
+                          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white h-12 font-medium"
+                        >
+                          {isLoginLoading || loginMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Giriş Yapılıyor...
+                            </>
+                          ) : (
+                            <>
+                              <LogIn className="w-4 h-4 mr-2" />
+                              Giriş Yap
+                            </>
+                          )}
+                        </Button>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+                </TabsContent>
+
+                <TabsContent value="register">
+                  <AnimatePresence mode="wait">
+                    {isRegisterSuccess ? (
+                      <motion.div
+                        key="register-success"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-8 space-y-4"
+                      >
+                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                          <CheckCircle className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-green-400">
+                          Kayıt Başarılı!
+                        </h3>
+                        <p className="text-slate-400">Giriş sekmesine yönlendiriliyorsunuz...</p>
+                      </motion.div>
+                    ) : (
+                      <motion.form
+                        key="register-form"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
+                        className="space-y-4 mt-6"
+                      >
+                        <div className="space-y-2">
+                          <Label htmlFor="register-username" className="text-slate-300">
+                            Kullanıcı Adı
+                          </Label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="register-username"
+                              placeholder="Kullanıcı adınız"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...registerForm.register("username")}
+                            />
+                          </div>
+                          {registerForm.formState.errors.username && (
+                            <p className="text-red-400 text-sm">
+                              {registerForm.formState.errors.username.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="register-email" className="text-slate-300">
+                            E-posta
+                          </Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="register-email"
+                              type="email"
+                              placeholder="E-posta adresiniz"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...registerForm.register("email")}
+                            />
+                          </div>
+                          {registerForm.formState.errors.email && (
+                            <p className="text-red-400 text-sm">
+                              {registerForm.formState.errors.email.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="register-password" className="text-slate-300">
+                            Şifre
+                          </Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="register-password"
+                              type="password"
+                              placeholder="Şifreniz"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...registerForm.register("password")}
+                            />
+                          </div>
+                          {registerForm.formState.errors.password && (
+                            <p className="text-red-400 text-sm">
+                              {registerForm.formState.errors.password.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="register-confirm-password" className="text-slate-300">
+                            Şifre Tekrarı
+                          </Label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Input
+                              id="register-confirm-password"
+                              type="password"
+                              placeholder="Şifrenizi tekrar giriniz"
+                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              {...registerForm.register("confirmPassword")}
+                            />
+                          </div>
+                          {registerForm.formState.errors.confirmPassword && (
+                            <p className="text-red-400 text-sm">
+                              {registerForm.formState.errors.confirmPassword.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          type="submit"
+                          disabled={isRegisterLoading || registerMutation.isPending}
+                          className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white h-12 font-medium"
+                        >
+                          {isRegisterLoading || registerMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Kayıt Oluşturuluyor...
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Kayıt Ol
+                            </>
+                          )}
+                        </Button>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </motion.div>

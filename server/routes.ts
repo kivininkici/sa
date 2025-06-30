@@ -117,7 +117,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAdminAuth(app);
 
   // Normal user registration
-  app.post('/api/register', async (req, res) => {
+  // Normal user authentication routes
+  app.post('/api/auth/register', async (req, res) => {
     try {
       const { username, email, password } = userRegisterSchema.parse(req.body);
       
@@ -152,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/login', async (req, res) => {
+  app.post('/api/auth/login', async (req, res) => {
     try {
       const { username, password } = userLoginSchema.parse(req.body);
       
