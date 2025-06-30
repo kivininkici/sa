@@ -633,6 +633,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public order search endpoint
+  app.get("/api/orders/search/:orderId", async (req, res) => {
+    try {
+      const { orderId } = req.params;
+      
+      if (!orderId) {
+        return res.status(400).json({ message: "Sipariş ID gerekli" });
+      }
+
+      const order = await storage.getOrderByOrderId(orderId);
+      
+      if (!order) {
+        return res.status(404).json({ message: "Sipariş bulunamadı" });
+      }
+
+      // Get order details with key and service information
+      const keys = await storage.getAllKeys();
+      const key = keys.find(k => k.id === order.keyId);
+      const service = await storage.getServiceById(order.serviceId);
+
+      if (!key || !service) {
+        return res.status(404).json({ message: "Sipariş detayları eksik" });
+      }
+
+      // Return detailed order information
+      res.json({
+        ...order,
+        key: {
+          id: key.id,
+          value: key.value,
+          name: key.name
+        },
+        service: {
+          id: service.id,
+          name: service.name,
+          platform: service.platform,
+          type: service.type
+        }
+      });
+    } catch (error) {
+      console.error("Error searching public order:", error);
+      res.status(500).json({ message: "Sipariş arama hatası" });
+    }
+  });
+
   // User orders - kullanıcının kendi siparişlerini görmesi için
   app.get("/api/user/orders", requireUserAuth, async (req: any, res) => {
     try {

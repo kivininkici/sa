@@ -138,8 +138,14 @@ Changelog:
 - Key oluşturmada seçilen servis kaydediliyor ve doğru döndürülüyor
 - Sipariş oluşturma sisteminde doğru API routing yapılıyor
 - Gerçek API entegrasyonu: MedyaBayim API ile order ID takibi çalışıyor
-- Otomatik sipariş durum kontrolü ve bildirim sistemi aktif
+- Otomatik sipariş durum kontrolü ve bildirim sistemi aktiv
 - Sistem production seviyesinde güvenilir ve hatasız çalışıyor
+- June 30, 2025: Replit Agent'tan Replit ortamına migration tamamlandı
+- PostgreSQL database kuruldu ve schema başarıyla push edildi
+- Public sipariş sorgulama sayfası eklendi (/order-search route)
+- Public API endpoint eklendi: GET /api/orders/search/:orderId
+- Bildirim butonu header'dan kaldırıldı
+- Sipariş sorgulama sistemi gerçek API durumlarını yansıtacak şekilde ayarlandı
 
 ## User Preferences
 

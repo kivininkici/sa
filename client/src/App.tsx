@@ -17,6 +17,7 @@ import Logs from "@/pages/admin/logs";
 import Settings from "@/pages/admin/settings";
 import AdminOrders from "@/pages/admin/orders";
 import AdminOrderSearch from "@/pages/admin-order-search";
+import OrderSearch from "@/pages/order-search";
 import ApiManagement from "@/pages/admin/api-management";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
@@ -35,6 +36,7 @@ function Router() {
       {/* Public routes */}
       <Route path="/auth" component={Auth} />
       <Route path="/user" component={UserInterface} />
+      <Route path="/order-search" component={OrderSearch} />
       
       {/* Admin login routes */}
       <Route path="/admin/login" component={AdminLogin} />
