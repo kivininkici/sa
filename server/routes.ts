@@ -1415,13 +1415,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           for (const serviceData of formattedServices) {
             try {
+              // Validate and cap price to prevent numeric overflow
+              const rawPrice = parseFloat(serviceData.price?.toString() || '0');
+              const maxPrice = 99999999.99; // Maximum value for numeric(10,2)
+              const validatedPrice = isNaN(rawPrice) ? 0 : Math.min(Math.max(0, rawPrice), maxPrice);
+              
               const validated = insertServiceSchema.parse({
                 name: serviceData.name || `Service ${serviceData.serviceId || 'Unknown'}`,
                 description: serviceData.description || serviceData.name || '',
                 platform: serviceData.platform || 'External API',
                 type: serviceData.type || 'social_media',
                 icon: serviceData.icon || 'Settings',
-                price: serviceData.price?.toString() || '0',
+                price: validatedPrice.toString(),
                 isActive: serviceData.isActive !== false,
                 apiEndpoint: serviceData.apiEndpoint || apiSetting.apiUrl,
                 apiMethod: serviceData.apiMethod || 'POST',
