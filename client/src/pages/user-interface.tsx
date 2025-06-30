@@ -160,11 +160,20 @@ export default function UserInterface() {
   };
 
   const onOrderSubmit = (data: OrderData) => {
-    if (!validatedKey) return;
+    console.log("Order submit clicked with data:", data);
+    console.log("Validated key:", validatedKey);
+    
+    if (!validatedKey) {
+      console.log("No validated key found");
+      return;
+    }
     
     // Check remaining quantity
     const maxAllowed = validatedKey.remainingQuantity || validatedKey.maxQuantity;
+    console.log("Max allowed quantity:", maxAllowed, "Requested:", data.quantity);
+    
     if (data.quantity > maxAllowed) {
+      console.log("Quantity check failed");
       toast({
         title: "Miktar Hatası",
         description: `Maksimum ${maxAllowed} sipariş verebilirsiniz`,
@@ -175,6 +184,8 @@ export default function UserInterface() {
     
     // Send order with serviceId from validated key
     const serviceId = validatedKey.service?.id || 1; // Use default service ID if none available
+    console.log("Creating order with serviceId:", serviceId);
+    
     createOrderMutation.mutate({
       keyValue: validatedKey.value,
       serviceId: serviceId,
