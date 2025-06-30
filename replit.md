@@ -202,6 +202,11 @@ Changelog:
 - Admin rolü verilen kullanıcılarda admin panel erişimi aktifleşir
 - İki ayrı auth sistemi: /api/auth/* (normal user) ve /api/admin/* (admin)
 - Session bazlı authentication her iki sistem için destekleniyor
+- June 30, 2025: Replit Agent'tan Replit ortamına migration başarıyla tamamlandı
+- PostgreSQL database kuruldu, tüm dependencies yüklendi
+- tsx paketi eklendi, server port 5000'de çalışıyor
+- KeyPanel sistemi Replit ortamında production seviyesinde aktif
+- Kullanıcı rol değiştirme sisteminde iyileştirme gerekiyor (yarın planlandı)
 
 ## User Preferences
 
