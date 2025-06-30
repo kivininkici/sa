@@ -265,7 +265,7 @@ export default function Keys() {
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" className="rounded border-slate-600" />
                                 <div className="flex items-center gap-2">
-                                  <code className="px-3 py-2 bg-slate-800 text-blue-400 text-sm rounded-lg font-mono border border-slate-600">
+                                  <code className="px-3 py-2 text-blue-400 rounded-lg font-mono border border-slate-600 text-[14px] font-extrabold bg-[#0b0b0f]">
                                     {hiddenKeys.has(key.id) ? maskKey(key.value) : key.value}
                                   </code>
                                   <Button
@@ -386,7 +386,6 @@ export default function Keys() {
           </div>
         </div>
       </main>
-
       <KeyCreationModal 
         open={showKeyModal} 
         onOpenChange={setShowKeyModal} 
