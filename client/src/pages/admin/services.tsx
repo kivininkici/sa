@@ -11,7 +11,9 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Settings
+  Settings,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Service } from "@shared/schema";
@@ -20,6 +22,8 @@ export default function Services() {
   const { toast } = useToast();
   const { admin, isLoading } = useAdminAuth();
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
+  const SERVICES_PER_PAGE = 50;
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -67,6 +71,25 @@ export default function Services() {
   }
 
   const servicesList = Array.isArray(services) ? services : [];
+  
+  // Pagination calculations
+  const totalServices = servicesList.length;
+  const totalPages = Math.ceil(totalServices / SERVICES_PER_PAGE);
+  const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
+  const endIndex = startIndex + SERVICES_PER_PAGE;
+  const paginatedServices = servicesList.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-slate-950">
@@ -74,7 +97,7 @@ export default function Services() {
       <main className="flex-1 overflow-hidden">
         <Header 
           title="Servis Yönetimi" 
-          description="Sosyal medya servislerini yapılandırın" 
+          description="Sosyal Medya Servislerini Yapılandırın" 
         />
         
         <div className="content-area">
@@ -83,7 +106,12 @@ export default function Services() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-slate-50">Servis Yönetimi</h2>
-                <p className="text-slate-400">Sosyal medya servislerini yapılandırın</p>
+                <p className="text-slate-400">Sosyal Medya Servislerini Yapılandırın</p>
+                {totalServices > 0 && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    Toplam {totalServices} servis • Sayfa {currentPage} / {totalPages}
+                  </p>
+                )}
               </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
@@ -96,7 +124,7 @@ export default function Services() {
               {servicesLoading ? (
                 <div className="text-slate-400">Servisler yükleniyor...</div>
               ) : (
-                servicesList.map((service: Service) => (
+                paginatedServices.map((service: Service) => (
                   <Card key={service.id} className="dashboard-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
@@ -152,6 +180,39 @@ export default function Services() {
                 ))
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && !servicesLoading && (
+              <div className="flex items-center justify-center space-x-4 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Önceki
+                </Button>
+                
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-400">
+                    Sayfa {currentPage} / {totalPages}
+                  </span>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className="border-slate-600 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sonraki
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            )}
 
             {/* Add Default Services Button */}
             {servicesList.length === 0 && !servicesLoading && (
