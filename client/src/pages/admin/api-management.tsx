@@ -226,10 +226,12 @@ export default function ApiManagement() {
       return response.json();
     },
     onSuccess: (data) => {
-      setFetchedServices(data);
+      // Backend returns array directly or in different formats
+      const servicesArray = Array.isArray(data) ? data : Object.values(data);
+      setFetchedServices(servicesArray);
       toast({
-        title: "Başarılı",
-        description: `${data.length} servis bulundu`,
+        title: "Başarılı", 
+        description: `${servicesArray.length} servis bulundu`,
       });
     },
     onError: (error) => {

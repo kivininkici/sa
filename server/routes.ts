@@ -356,7 +356,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Key limiti dolmuş" });
       }
 
-      // Get services associated with this key's API
+      // Get the specific service this key was created for
+      let keyService = null;
+      if (foundKey.serviceId) {
+        keyService = await storage.getServiceById(foundKey.serviceId);
+      }
+
+      // Get services associated with this key's API for selection
       let availableServices = [];
       if (foundKey.apiSettingsId) {
         // Get all services that belong to the same API as this key
@@ -374,7 +380,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableServices = await storage.getActiveServices();
       }
 
-      const defaultService = availableServices.length > 0 ? availableServices[0] : null;
+      // Use the key's specific service, fallback to first available
+      const displayService = keyService || (availableServices.length > 0 ? availableServices[0] : null);
 
       res.json({ 
         id: foundKey.id,
@@ -382,17 +389,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxQuantity: maxQuantity,
         usedQuantity: usedQuantity,
         remainingQuantity: remainingQuantity,
-        apiSettingsId: foundKey.apiSettingsId, // API bilgisini frontend'e gönder
-        service: defaultService ? {
-          id: defaultService.id,
-          name: defaultService.name,
-          platform: defaultService.platform,
-          type: defaultService.type
+        apiSettingsId: foundKey.apiSettingsId,
+        service: displayService ? {
+          id: displayService.id,
+          name: displayService.name,
+          platform: displayService.platform,
+          type: displayService.type,
+          serviceId: displayService.serviceId
         } : {
           id: 1,
-          name: "Default Service",
+          name: "Default Service", 
           platform: "Test",
-          type: "followers"
+          type: "followers",
+          serviceId: "1"
         },
         availableServices: availableServices.map(service => ({
           id: service.id,
