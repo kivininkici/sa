@@ -1172,7 +1172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 platform: serviceData.platform || 'External API',
                 type: serviceData.type || 'social_media',
                 icon: serviceData.icon || 'Settings',
-                price: serviceData.price || '0',
+                price: serviceData.price?.toString() || '0',
                 isActive: serviceData.isActive !== false,
                 apiEndpoint: serviceData.apiEndpoint || apiSetting.apiUrl,
                 apiMethod: serviceData.apiMethod || 'POST',
@@ -1386,7 +1386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             platform: serviceData.platform || 'External API',
             type: serviceData.type || 'social_media',
             icon: serviceData.icon || 'Settings',
-            price: serviceData.price || '0',
+            price: serviceData.price?.toString() || '0',
             isActive: serviceData.isActive !== false,
             apiEndpoint: serviceData.apiEndpoint || '',
             apiMethod: serviceData.apiMethod || 'POST',
@@ -1548,11 +1548,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          service.serviceName || service.description || service.desc ||
                          `Service ${serviceId}`;
       
-      // Handle various price/rate formats
-      const price = parseFloat(
-        service.rate || service.price || service.cost || service.amount || 
-        service.price_per_1000 || service.rate_per_1000 || 0
-      );
+      // Handle various price/rate formats - ensure valid number and convert to string
+      let priceValue = service.rate || service.price || service.cost || service.amount || 
+                      service.price_per_1000 || service.rate_per_1000 || 0;
+      
+      // Convert to number first, then to string to ensure valid format
+      const price = isNaN(parseFloat(priceValue)) ? "0" : parseFloat(priceValue).toString();
       
       // Detect request format based on successful method
       let apiHeaders = { 'Content-Type': 'application/json' };
