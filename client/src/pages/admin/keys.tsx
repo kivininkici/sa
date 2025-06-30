@@ -51,6 +51,8 @@ export default function Keys() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
   const [hiddenKeys, setHiddenKeys] = useState<Set<number>>(new Set());
+  const [selectedKeys, setSelectedKeys] = useState<Set<number>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -143,6 +145,62 @@ export default function Keys() {
     return `${prefix}${masked}${suffix}`;
   };
 
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectedKeys(new Set());
+      setSelectAll(false);
+    } else {
+      const allKeyIds = new Set(paginatedKeys.map(key => key.id));
+      setSelectedKeys(allKeyIds);
+      setSelectAll(true);
+    }
+  };
+
+  const toggleKeySelection = (keyId: number) => {
+    setSelectedKeys(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(keyId)) {
+        newSet.delete(keyId);
+      } else {
+        newSet.add(keyId);
+      }
+      
+      // Update selectAll state based on current selection
+      setSelectAll(newSet.size === paginatedKeys.length && paginatedKeys.length > 0);
+      
+      return newSet;
+    });
+  };
+
+  const deleteSelectedKeys = async () => {
+    if (selectedKeys.size === 0) return;
+    
+    try {
+      // Delete all selected keys
+      await Promise.all(
+        Array.from(selectedKeys).map(keyId => 
+          apiRequest("DELETE", `/api/admin/keys/${keyId}`)
+        )
+      );
+      
+      toast({
+        title: "Başarılı",
+        description: `${selectedKeys.size} key başarıyla silindi`,
+      });
+      
+      setSelectedKeys(new Set());
+      setSelectAll(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/keys/stats"] });
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Keyler silinirken bir hata oluştu",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-950">
       <Sidebar />
@@ -227,8 +285,23 @@ export default function Keys() {
                       <TableRow className="border-slate-700">
                         <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
                           <div className="flex items-center gap-2">
-                            <input type="checkbox" className="rounded border-slate-600" />
-                            Key
+                            <input 
+                              type="checkbox" 
+                              className="rounded border-slate-600" 
+                              checked={selectAll}
+                              onChange={toggleSelectAll}
+                            />
+                            <span>Key</span>
+                            {selectedKeys.size > 0 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="w-6 h-6 p-0 text-red-400 hover:text-red-300 ml-2"
+                                onClick={deleteSelectedKeys}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableHead>
                         <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
@@ -262,12 +335,20 @@ export default function Keys() {
                         paginatedKeys?.map((key: KeyType) => (
                           <TableRow key={key.id} className="border-slate-700 hover:bg-slate-900/30">
                             <TableCell>
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" className="rounded border-slate-600" />
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="checkbox" 
+                                  className="rounded border-slate-600" 
+                                  checked={selectedKeys.has(key.id)}
+                                  onChange={() => toggleKeySelection(key.id)}
+                                />
                                 <div className="flex items-center gap-2">
-                                  <code className="px-3 py-2 text-blue-400 rounded-lg font-mono border border-slate-600 text-[14px] font-extrabold bg-[#0b0b0f]">
+                                  <code className="px-3 py-2 text-blue-400 rounded-lg font-mono border border-slate-600 text-[14px] font-extrabold bg-[#0b0b0f] whitespace-nowrap">
                                     {hiddenKeys.has(key.id) ? maskKey(key.value) : key.value}
                                   </code>
+                                  {key.name && (
+                                    <span className="text-xs text-slate-400">({key.name})</span>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -277,9 +358,6 @@ export default function Keys() {
                                     <Copy className="w-4 h-4" />
                                   </Button>
                                 </div>
-                                {key.name && (
-                                  <div className="text-xs text-slate-400 mt-1">{key.name}</div>
-                                )}
                               </div>
                             </TableCell>
                             <TableCell className="text-slate-300">
