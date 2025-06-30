@@ -64,6 +64,7 @@ export const keys = pgTable("keys", {
   value: varchar("value", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }),
   type: varchar("type", { length: 50 }).notNull().default("single-use"),
+  category: varchar("category", { length: 100 }).notNull().default("Instagram"), // Key kategorisi
   serviceId: integer("service_id"),
   apiSettingsId: integer("api_settings_id"), // Hangi API'ye ait olduğunu belirler
   maxQuantity: integer("max_quantity"),

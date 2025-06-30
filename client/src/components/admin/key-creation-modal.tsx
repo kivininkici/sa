@@ -35,6 +35,7 @@ import { Search } from "lucide-react";
 const keySchema = z.object({
   name: z.string().min(1, "Key adı gerekli"),
   type: z.string().default("single-use"),
+  category: z.string().min(1, "Kategori seçimi gerekli"),
   serviceId: z.number().min(1, "Servis seçimi gerekli"),
   maxQuantity: z.number().min(1, "Miktar en az 1 olmalı"),
   validityDays: z.number().min(1, "Geçerlilik süresi en az 1 gün olmalı").max(365, "Geçerlilik süresi en fazla 365 gün olabilir").default(7),
@@ -85,6 +86,7 @@ export default function KeyCreationModal({
     defaultValues: {
       name: "",
       type: "single-use",
+      category: "Instagram",
       maxQuantity: 1000,
       validityDays: 7,
       keyCount: 1,
@@ -244,9 +246,39 @@ export default function KeyCreationModal({
               )}
             />
 
-            {/* Kategori Seçimi */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-200">Key Kategorisi</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-50">
+                        <SelectValue placeholder="Kategori seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-slate-700 border-slate-600">
+                      <SelectItem value="Instagram">Instagram</SelectItem>
+                      <SelectItem value="YouTube">YouTube</SelectItem>
+                      <SelectItem value="Twitter">Twitter</SelectItem>
+                      <SelectItem value="TikTok">TikTok</SelectItem>
+                      <SelectItem value="Kick">Kick</SelectItem>
+                      <SelectItem value="Twitch">Twitch</SelectItem>
+                      <SelectItem value="Facebook">Facebook</SelectItem>
+                      <SelectItem value="Telegram">Telegram</SelectItem>
+                      <SelectItem value="Spotify">Spotify</SelectItem>
+                      <SelectItem value="Diğer">Diğer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Servis Kategori Filtresi */}
             <div className="space-y-2">
-              <label className="text-slate-200 text-sm font-medium">Kategori</label>
+              <label className="text-slate-200 text-sm font-medium">Servis Filtresi</label>
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   type="button"

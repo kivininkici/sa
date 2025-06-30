@@ -498,6 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         id: foundKey.id,
         value: foundKey.value,
+        category: foundKey.category || 'Instagram',
         maxQuantity: maxQuantity,
         usedQuantity: usedQuantity,
         remainingQuantity: remainingQuantity,
@@ -856,7 +857,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         key: {
           id: key.id,
           value: key.value,
-          name: key.name
+          name: key.name,
+          category: key.category || 'Instagram'
         },
         service: {
           id: service.id,
@@ -2020,6 +2022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         id: key.id,
         value: key.value,
+        category: key.category || 'Instagram',
         maxQuantity: key.maxQuantity || 1000,
         usedQuantity: currentUsed,
         remainingQuantity: remainingQuantity,
@@ -2367,7 +2370,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         key: {
           id: key.id,
           value: key.value,
-          name: key.name
+          name: key.name,
+          category: key.category || 'Instagram'
         },
         service: {
           id: service.id,

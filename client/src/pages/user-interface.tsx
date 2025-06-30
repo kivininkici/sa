@@ -43,6 +43,7 @@ type OrderData = z.infer<typeof orderSchema>;
 interface ValidatedKey {
   id: number;
   value: string;
+  category: string;
   maxQuantity: number;
   usedQuantity: number;
   remainingQuantity: number;
@@ -438,8 +439,8 @@ export default function UserInterface() {
                         <span className="text-slate-50 font-medium">{validatedKey.remainingQuantity}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-300">Servis:</span>
-                        <span className="text-slate-50">{validatedKey.service.name}</span>
+                        <span className="text-slate-300">Kategori:</span>
+                        <span className="text-slate-50">{validatedKey.category}</span>
                       </div>
                     </div>
                   </CardHeader>
