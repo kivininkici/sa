@@ -15,6 +15,7 @@ import { Link } from "wouter";
 export default function AdminLogin() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const {
     register,
