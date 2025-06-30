@@ -657,12 +657,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Sipariş detayları eksik" });
       }
 
-      // If order has API response with order ID and is not completed, try to update status
-      if (order.response?.order && !['completed', 'failed', 'cancelled'].includes(order.status)) {
-        // Trigger async status check without waiting for result
-        checkOrderStatusAsync(order.id, order.response.order.toString());
+      // Always check real API status if we have an external order ID
+      if (order.response && typeof order.response === 'object') {
+        const responseData = order.response as any;
+        const externalOrderId = responseData.order || responseData.orderId || responseData.id;
         
-        // Return current status immediately, updates will come from the background check
+        if (externalOrderId) {
+          try {
+            console.log(`Checking real API status for order ${order.orderId} (external ID: ${externalOrderId})`);
+            
+            // Get the API settings for this order's service
+            const apiSettings = await storage.getActiveApiSettings();
+            const serviceApiSettings = apiSettings.find(api => api.id === service.apiSettingsId);
+            
+            if (serviceApiSettings) {
+              // Make direct API call to get current status using the same format as checkOrderStatusAsync
+              const formData = new URLSearchParams();
+              formData.append('key', serviceApiSettings.apiKey);
+              formData.append('action', 'status');
+              formData.append('order', externalOrderId.toString());
+
+              const statusResponse = await fetch(serviceApiSettings.apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData.toString()
+              });
+
+              if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                console.log(`Real API status response:`, statusData);
+                
+                if (statusData.status) {
+                  // Map API status to our internal status
+                  let mappedStatus = statusData.status.toLowerCase();
+                  if (mappedStatus === 'canceled') mappedStatus = 'cancelled';
+                  if (mappedStatus === 'inprogress' || mappedStatus === 'in_progress') mappedStatus = 'processing';
+                  
+                  // Update order status if it's different
+                  if (mappedStatus !== order.status) {
+                    console.log(`Status changed from ${order.status} to ${mappedStatus}`);
+                    await storage.updateOrder(order.id, { 
+                      status: mappedStatus as any,
+                      message: statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status 
+                    });
+                    
+                    // Update the order object for response
+                    order.status = mappedStatus as any;
+                    order.message = statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status;
+                  }
+                }
+              } else {
+                console.log(`API status check failed: ${statusResponse.status}`);
+              }
+            } else {
+              console.log(`No API settings found for service ${service.id}`);
+            }
+          } catch (error) {
+            console.error('Error checking real API status:', error);
+            // Continue with cached status if API check fails
+          }
+        }
       }
 
       // Return detailed order information
