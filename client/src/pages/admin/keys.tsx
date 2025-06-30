@@ -32,6 +32,7 @@ import {
   Clock, 
   Plus, 
   Eye, 
+  EyeOff,
   Trash2,
   ChevronLeft,
   ChevronRight,
@@ -49,6 +50,7 @@ export default function Keys() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
+  const [hiddenKeys, setHiddenKeys] = useState<Set<number>>(new Set());
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -118,6 +120,27 @@ export default function Keys() {
       title: "Kopyalandı",
       description: "Key panoya kopyalandı",
     });
+  };
+
+  const toggleKeyVisibility = (keyId: number) => {
+    setHiddenKeys(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(keyId)) {
+        newSet.delete(keyId);
+      } else {
+        newSet.add(keyId);
+      }
+      return newSet;
+    });
+  };
+
+  const maskKey = (keyValue: string) => {
+    if (keyValue.length <= 8) return keyValue;
+    const prefix = keyValue.substring(0, 4);
+    const suffix = keyValue.substring(keyValue.length - 4);
+    const middleLength = keyValue.length - 8;
+    const masked = "*".repeat(middleLength);
+    return `${prefix}${masked}${suffix}`;
   };
 
   return (
@@ -243,7 +266,7 @@ export default function Keys() {
                                 <input type="checkbox" className="rounded border-slate-600" />
                                 <div className="flex items-center gap-2">
                                   <code className="px-3 py-2 bg-slate-800 text-blue-400 text-sm rounded-lg font-mono border border-slate-600">
-                                    {key.value}
+                                    {hiddenKeys.has(key.id) ? maskKey(key.value) : key.value}
                                   </code>
                                   <Button
                                     variant="ghost"
@@ -300,8 +323,13 @@ export default function Keys() {
                                   variant="ghost"
                                   size="sm"
                                   className="w-8 h-8 p-0 text-slate-400 hover:text-blue-400"
+                                  onClick={() => toggleKeyVisibility(key.id)}
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  {hiddenKeys.has(key.id) ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
                                 </Button>
                                 <Button
                                   variant="ghost"
