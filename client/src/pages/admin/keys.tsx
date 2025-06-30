@@ -200,13 +200,26 @@ export default function Keys() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-slate-900">
+                    <TableHeader className="bg-slate-900/50">
                       <TableRow className="border-slate-700">
-                        <TableHead className="text-slate-400">Key</TableHead>
-                        <TableHead className="text-slate-400">Limit/Kullanılan</TableHead>
-                        <TableHead className="text-slate-400">Durum</TableHead>
-                        <TableHead className="text-slate-400">Oluşturulma</TableHead>
-                        <TableHead className="text-slate-400">İşlemler</TableHead>
+                        <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" className="rounded border-slate-600" />
+                            Key
+                          </div>
+                        </TableHead>
+                        <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
+                          Oluşturma Tarihi
+                        </TableHead>
+                        <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
+                          Durum
+                        </TableHead>
+                        <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
+                          Kullanım
+                        </TableHead>
+                        <TableHead className="text-slate-400 font-medium text-xs uppercase tracking-wider">
+                          İşlemler
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
