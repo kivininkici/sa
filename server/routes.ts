@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(key);
     } catch (error) {
       console.error("Error creating key:", error);
-      res.status(500).json({ message: error.message || "Failed to create key" });
+      res.status(500).json({ message: (error as Error).message || "Failed to create key" });
     }
   });
 
@@ -356,10 +356,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Key limiti dolmuş" });
       }
 
-      // Since any key can work with any service, we'll get the first active service for validation
-      // The user will be able to select any service in the frontend
-      const activeServices = await storage.getActiveServices();
-      const defaultService = activeServices.length > 0 ? activeServices[0] : null;
+      // Get services associated with this key's API
+      let availableServices = [];
+      if (foundKey.apiSettingsId) {
+        // Get all services that belong to the same API as this key
+        const allServices = await storage.getAllServices();
+        availableServices = allServices.filter(service => 
+          service.isActive && (service as any).apiSettingsId === foundKey.apiSettingsId
+        );
+        
+        // If no services found for this API, show all active services
+        if (availableServices.length === 0) {
+          availableServices = await storage.getActiveServices();
+        }
+      } else {
+        // If no API settings, get all active services
+        availableServices = await storage.getActiveServices();
+      }
+
+      const defaultService = availableServices.length > 0 ? availableServices[0] : null;
 
       res.json({ 
         id: foundKey.id,
@@ -367,17 +382,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxQuantity: maxQuantity,
         usedQuantity: usedQuantity,
         remainingQuantity: remainingQuantity,
+        apiSettingsId: foundKey.apiSettingsId, // API bilgisini frontend'e gönder
         service: defaultService ? {
           id: defaultService.id,
           name: defaultService.name,
           platform: defaultService.platform,
           type: defaultService.type
         } : {
-          id: 1, // Default service ID
+          id: 1,
           name: "Default Service",
           platform: "Test",
           type: "followers"
-        }
+        },
+        availableServices: availableServices.map(service => ({
+          id: service.id,
+          name: service.name,
+          platform: service.platform,
+          type: service.type,
+          serviceId: service.serviceId
+        }))
       });
     } catch (error) {
       console.error("Error validating key:", error);
@@ -432,6 +455,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get the API settings from the key to determine which API to use
+      if (!key.apiSettingsId) {
+        return res.status(400).json({ message: "Key için API ayarları bulunamadı" });
+      }
+      
       const apiSettings = await storage.getApiSettingsById(key.apiSettingsId);
       if (!apiSettings || !apiSettings.isActive) {
         return res.status(400).json({ message: "API ayarları bulunamadı veya aktif değil" });
@@ -507,11 +534,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requestData
         );
 
-        // Update order with response
+        console.log('API Response:', response);
+
+        // Check API response and update order status accordingly
+        let orderStatus = "completed";
+        let orderMessage = "Sipariş başarıyla tamamlandı";
+        
+        if (response && response.order) {
+          // API'den gelen sipariş ID'sini kaydet
+          orderMessage = `Sipariş başarıyla oluşturuldu. API Sipariş ID: ${response.order}`;
+        } else if (response && response.error) {
+          orderStatus = "failed";
+          orderMessage = `Sipariş başarısız: ${response.error}`;
+        }
+
         const updatedOrder = await storage.updateOrder(order.id, {
-          status: "completed",
+          status: orderStatus,
           response,
-          completedAt: new Date(),
+          message: orderMessage,
+          completedAt: orderStatus === "completed" ? new Date() : null,
         });
 
         // Log success
@@ -973,8 +1014,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('Tüm API format denemeleri başarısız oldu. API dokümantasyonunu kontrol edin.');
         }
 
-        const formattedServices = formatServicesResponse(data, apiUrl, apiKey);
-        return res.json(formattedServices);
+        // Create API settings first to get the ID
+        const apiSettings = await storage.createApiSettings({
+          name: `API - ${new Date().toISOString()}`,
+          apiUrl: apiUrl,
+          apiKey: apiKey,
+          isActive: true
+        });
+
+        const formattedServices = formatServicesResponse(data, apiUrl, apiKey, apiSettings.id);
+        return res.json({
+          ...formattedServices,
+          apiSettingsId: apiSettings.id
+        });
 
       } catch (fetchError) {
         clearTimeout(timeoutId);
@@ -1347,7 +1399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper function to format API responses
-  function formatServicesResponse(data: any, apiUrl: string, apiKey: string) {
+  function formatServicesResponse(data: any, apiUrl: string, apiKey: string, apiSettingsId?: number) {
     let formattedServices = [];
     
     console.log('Formatting response data type:', typeof data);
@@ -1507,6 +1559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: service.category || service.category_name || service.type || 'general',
         minQuantity: Math.max(1, parseInt(service.min || service.minimum || service.min_quantity || '1') || 1),
         maxQuantity: Math.max(1, parseInt(service.max || service.maximum || service.max_quantity || '10000') || 10000),
+        apiSettingsId: apiSettingsId || null, // Hangi API'den geldiğini kaydeder
         originalData: service // Keep original for debugging
       };
     });
