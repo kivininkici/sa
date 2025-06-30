@@ -127,6 +127,9 @@ Changelog:
 - June 29, 2025. Canlı destek referansları kaldırıldı, sipariş sorgulama sistemi eklendi
 
 ## Recent Changes
+- June 30, 2025: Replit Agent'dan Replit ortamına migration tamamlandı
+- PostgreSQL veritabanı yapılandırıldı ve tüm tablolar oluşturuldu
+- Admin hesabı oluşturuldu (admin/admin123)
 - Ana sayfa tamamen yeniden tasarlandı (modern gradient, animasyonlar)
 - Replit Auth sistemi kaldırıldı, özel giriş/kayıt sistemi eklendi
 - Giriş yapmamış kullanıcılar için landing sayfası oluşturuldu
