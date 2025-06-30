@@ -58,18 +58,6 @@ export default function Home() {
                 </Button>
               )}
               
-              {/* Admin Login Button - For non-admin users */}
-              {!user?.isAdmin && (
-                <Button 
-                  variant="outline"
-                  className="border-yellow-400/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 hover:text-yellow-300"
-                  onClick={() => window.location.href = '/admin/login'}
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Admin Girişi
-                </Button>
-              )}
-              
               <Button 
                 onClick={async () => {
                   try {
