@@ -59,6 +59,8 @@ export default function OrderSearch() {
   const [searchedOrder, setSearchedOrder] = useState<OrderDetails | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [orderNotFound, setOrderNotFound] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
 
   const searchForm = useForm<SearchData>({
     resolver: zodResolver(searchSchema),
@@ -77,14 +79,20 @@ export default function OrderSearch() {
     }
   }, []);
 
-  // Auto-refresh order status every 30 seconds if order is found and not completed
+  // Auto-refresh order status every 5 seconds if order is found and not completed
   useEffect(() => {
     if (searchedOrder && !['completed', 'failed', 'cancelled'].includes(searchedOrder.status)) {
+      setIsAutoRefreshing(true);
       const interval = setInterval(() => {
         searchOrderMutation.mutate({ orderId: searchedOrder.orderId });
-      }, 30000);
+      }, 5000); // 5 saniyede bir güncelle
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        setIsAutoRefreshing(false);
+      };
+    } else {
+      setIsAutoRefreshing(false);
     }
   }, [searchedOrder]);
 
@@ -100,6 +108,7 @@ export default function OrderSearch() {
       setSearchedOrder(data);
       setIsSearching(false);
       setOrderNotFound(false);
+      setLastUpdated(new Date());
       toast({
         title: "Sipariş bilgileri güncellendi",
         description: `Sipariş durumu: ${getStatusText(data.status)}`,
@@ -295,10 +304,36 @@ export default function OrderSearch() {
                   </div>
 
                   {/* Status Text */}
-                  <div className="text-center">
+                  <div className="text-center space-y-2">
                     <p className="text-lg text-gray-700">
-                      Oluşturulma: <span className="font-semibold">Bilinmiyor</span>
+                      Oluşturulma: <span className="font-semibold">
+                        {searchedOrder.createdAt 
+                          ? new Date(searchedOrder.createdAt).toLocaleString('tr-TR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })
+                          : 'Bilinmiyor'
+                        }
+                      </span>
                     </p>
+                    {lastUpdated && (
+                      <p className="text-sm text-gray-500">
+                        Son güncelleme: {lastUpdated.toLocaleString('tr-TR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit'
+                        })}
+                      </p>
+                    )}
+                    {isAutoRefreshing && (
+                      <div className="flex items-center justify-center space-x-2 text-sm text-blue-600">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Canlı takip aktif - 5 saniyede bir güncelleniyor</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Progress Steps */}
@@ -344,6 +379,28 @@ export default function OrderSearch() {
                     </div>
                   </div>
 
+                  {/* Order Details */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Servis:</span>
+                        <p className="text-gray-900 mt-1">{searchedOrder.service?.name || 'Bilinmiyor'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Miktar:</span>
+                        <p className="text-gray-900 mt-1">{searchedOrder.quantity?.toLocaleString() || 'Bilinmiyor'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Hedef URL:</span>
+                        <p className="text-gray-900 mt-1 break-all">{searchedOrder.targetUrl || 'Belirtilmemiş'}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Anahtar:</span>
+                        <p className="text-gray-900 mt-1 font-mono">{searchedOrder.key?.value || 'Bilinmiyor'}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Refresh Button */}
                   <div className="text-center pt-4">
                     <Button
@@ -352,8 +409,8 @@ export default function OrderSearch() {
                       disabled={isSearching}
                       className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
                     >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Yenile
+                      <RefreshCw className={`w-4 h-4 mr-2 ${isSearching ? 'animate-spin' : ''}`} />
+                      {isSearching ? 'Güncelleniyor...' : 'Manuel Yenile'}
                     </Button>
                   </div>
                 </div>

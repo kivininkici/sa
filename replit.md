@@ -158,6 +158,14 @@ Changelog:
 - Dashboard ve Key İstatistikleri sayfaları mobile uyumlu hale getirildi
 - Grafik bileşenleri mobile ekranlar için optimize edildi
 - Error handling ve loading state'leri iyileştirildi
+- June 30, 2025: Replit Agent'tan Replit ortamına migration tamamlandı
+- Sipariş sorgulama sistemi tamamen iyileştirildi ve optimize edildi
+- Gerçek zamanlı sipariş takibi: 5 saniyede bir otomatik güncelleme
+- Sipariş oluşturulma tarihi düzgün gösteriliyor (TR locale)
+- Son güncelleme zamanı ve canlı takip durumu eklendi
+- Sipariş detayları genişletildi: servis, miktar, hedef URL, anahtar bilgileri
+- PostgreSQL database kuruldu ve tüm tablolar başarıyla oluşturuldu
+- Sistem production seviyesinde güvenilir çalışıyor
 
 ## User Preferences
 
