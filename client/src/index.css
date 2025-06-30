@@ -23,6 +23,11 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.75rem;
+  --chart-1: hsl(262, 83%, 58%);
+  --chart-2: hsl(213, 88%, 51%);
+  --chart-3: hsl(142, 76%, 36%);
+  --chart-4: hsl(47, 96%, 53%);
+  --chart-5: hsl(0, 84%, 60%);
 }
 
 .dark {
@@ -46,6 +51,11 @@
   --destructive-foreground: hsl(210, 40%, 98%);
   --ring: hsl(216, 34%, 17%);
   --radius: 0.75rem;
+  --chart-1: hsl(262, 83%, 58%);
+  --chart-2: hsl(213, 88%, 51%);
+  --chart-3: hsl(142, 76%, 36%);
+  --chart-4: hsl(47, 96%, 53%);
+  --chart-5: hsl(0, 84%, 60%);
   
   /* Custom gradient colors */
   --gradient-from: hsl(262, 83%, 58%);

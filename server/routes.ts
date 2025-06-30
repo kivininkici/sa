@@ -293,6 +293,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Key İstatistikleri endpoint'i
+  app.get("/api/admin/key-stats", requireAdminAuth, async (req, res) => {
+    try {
+      const timeRange = (req.query.timeRange as string) || '7d';
+      const stats = await storage.getKeyStatistics(timeRange);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching key statistics:", error);
+      res.status(500).json({ message: "Failed to fetch key statistics" });
+    }
+  });
+
   // Services routes
   app.get("/api/services", async (req, res) => {
     try {
@@ -702,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (serviceApiSettings) {
               // Make direct API call to get current status using the same format as checkOrderStatusAsync
               const formData = new URLSearchParams();
-              formData.append('key', serviceApiSettings.apiKey);
+              formData.append('key', serviceApiSettings.apiKey || '');
               formData.append('action', 'status');
               formData.append('order', externalOrderId.toString());
 
@@ -2454,7 +2466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Prepare status check request - try form-data format first
       const formData = new URLSearchParams();
-      formData.append('key', apiSetting.apiKey);
+      formData.append('key', apiSetting.apiKey || '');
       formData.append('action', 'status');
       formData.append('order', apiOrderId);
 

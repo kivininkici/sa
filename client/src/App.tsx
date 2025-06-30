@@ -19,6 +19,7 @@ import AdminOrders from "@/pages/admin/orders";
 import AdminOrderSearch from "@/pages/admin-order-search";
 import OrderSearch from "@/pages/order-search";
 import ApiManagement from "@/pages/admin/api-management";
+import AdminKeyStats from "@/pages/admin-key-stats";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 
@@ -69,6 +70,9 @@ function Router() {
       </Route>
       <Route path="/admin/order-search">
         {isAdminAuthenticated ? <AdminOrderSearch /> : <AdminLogin />}
+      </Route>
+      <Route path="/admin/key-stats">
+        {isAdminAuthenticated ? <AdminKeyStats /> : <AdminLogin />}
       </Route>
       
       {/* 404 fallback */}
