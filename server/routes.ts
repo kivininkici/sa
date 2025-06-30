@@ -44,13 +44,19 @@ async function makeServiceRequest(
   headers: any,
   data: any
 ): Promise<any> {
+  // For MedyaBayim API, use form-data format
+  const formData = new URLSearchParams();
+  Object.keys(data).forEach(key => {
+    formData.append(key, data[key]);
+  });
+
   const response = await fetch(endpoint, {
     method,
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
       ...headers,
     },
-    body: JSON.stringify(data),
+    body: formData.toString(),
   });
 
   if (!response.ok) {
@@ -1796,15 +1802,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Simulate API call to external service
       if (service.apiEndpoint) {
         try {
+          // Use MedyaBayim API format with fixed service ID 2201
           const apiResponse = await makeServiceRequest(
-            service.apiEndpoint,
-            service.apiMethod || 'POST',
-            service.apiHeaders || {},
+            "https://medyabayim.com/api/v2",
+            "POST",
+            {},
             {
-              service: service.serviceId || service.id,
+              key: "aa2957fd3a856ddc0e1e5d5ab02eb8e9",
+              action: "add",
+              service: "2201", // Fixed working service ID
               link: targetUrl,
-              quantity: quantity,
-              ...(service.requestTemplate || {})
+              quantity: quantity.toString()
             }
           );
 
