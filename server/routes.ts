@@ -1148,7 +1148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (response.ok) {
             const responseText = await response.text();
             const fetchResponse = JSON.parse(responseText);
-            formattedServices = formatServicesResponse(fetchResponse, validatedData.apiUrl, validatedData.apiKey || '');
+            formattedServices = formatServicesResponse(fetchResponse, validatedData.apiUrl, validatedData.apiKey || '', apiSetting.id);
           } else {
             throw new Error(`API request failed: ${response.status}`);
           }
@@ -1358,8 +1358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const servicesResponse = await response.json();
 
-      // Format the services
-      const formattedServices = formatServicesResponse(servicesResponse, apiUrl, apiKey);
+      // Format the services (without API settings ID for standalone import)
+      const formattedServices = formatServicesResponse(servicesResponse, apiUrl, apiKey, undefined);
       
       if (formattedServices.error) {
         return res.status(400).json({ 
@@ -1381,8 +1381,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const serviceData of formattedServices) {
         try {
           const validated = insertServiceSchema.parse({
-            ...serviceData,
-            serviceId: serviceData.serviceId || null
+            name: serviceData.name || `Service ${serviceData.serviceId || 'Unknown'}`,
+            description: serviceData.description || serviceData.name || '',
+            platform: serviceData.platform || 'External API',
+            type: serviceData.type || 'social_media',
+            icon: serviceData.icon || 'Settings',
+            price: serviceData.price || '0',
+            isActive: serviceData.isActive !== false,
+            apiEndpoint: serviceData.apiEndpoint || '',
+            apiMethod: serviceData.apiMethod || 'POST',
+            apiHeaders: serviceData.apiHeaders || {},
+            requestTemplate: serviceData.requestTemplate || {},
+            responseFormat: serviceData.responseFormat || {},
+            serviceId: serviceData.serviceId?.toString() || null,
+            apiSettingsId: serviceData.apiSettingsId || undefined,
+            category: serviceData.category || 'general',
+            minQuantity: serviceData.minQuantity || 1,
+            maxQuantity: serviceData.maxQuantity || 10000
           });
           await storage.createService(validated);
           imported++;
@@ -1415,7 +1430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Helper function to format API responses
-  function formatServicesResponse(data: any, apiUrl: string, apiKey: string, apiSettingsId?: number) {
+  function formatServicesResponse(data: any, apiUrl: string, apiKey: string, apiSettingsId?: number | null) {
     let formattedServices = [];
     
     console.log('Formatting response data type:', typeof data);
@@ -1575,7 +1590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: service.category || service.category_name || service.type || 'general',
         minQuantity: Math.max(1, parseInt(service.min || service.minimum || service.min_quantity || '1') || 1),
         maxQuantity: Math.max(1, parseInt(service.max || service.maximum || service.max_quantity || '10000') || 10000),
-        apiSettingsId: apiSettingsId || null, // Hangi API'den geldiğini kaydeder
+        apiSettingsId: apiSettingsId || undefined, // Hangi API'den geldiğini kaydeder (opsiyonel)
         originalData: service // Keep original for debugging
       };
     });
