@@ -658,11 +658,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('API Response:', response);
 
         // Check API response and update order status accordingly
-        let orderStatus = "completed";
-        let orderMessage = "Sipariş başarıyla tamamlandı";
+        let orderStatus = "pending";
+        let orderMessage = "Sipariş işleme alındı";
         
         if (response && response.order) {
-          // API'den gelen sipariş ID'sini kaydet
+          // API'den gelen sipariş ID'sini kaydet - başlangıçta pending olarak başla
+          orderStatus = "pending";
           orderMessage = `Sipariş başarıyla oluşturuldu. API Sipariş ID: ${response.order}`;
         } else if (response && response.error) {
           orderStatus = "failed";
@@ -789,6 +790,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
               
               if (statusData?.status) {
+                console.log('API Response for order:', externalOrderId, statusData);
+                
                 // Map MedyaBayim API status to internal status
                 let mappedStatus = statusData.status.toLowerCase();
                 
@@ -827,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   
                   // Set completion time for final statuses
                   if (['completed', 'cancelled', 'partial'].includes(mappedStatus)) {
-                    updateData.completedAt = new Date().toISOString();
+                    updateData.completedAt = new Date();
                   }
                   
                   await storage.updateOrder(order.id, updateData);
@@ -2618,7 +2621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           if (shouldCompleteOrder) {
-            updateData.completedAt = new Date().toISOString();
+            updateData.completedAt = new Date();
           }
 
           await storage.updateOrder(orderId, updateData);
