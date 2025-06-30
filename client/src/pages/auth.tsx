@@ -15,6 +15,8 @@ import {
   ArrowLeft,
   UserPlus,
   LogIn,
+  CheckCircle,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -42,6 +44,10 @@ type RegisterData = z.infer<typeof registerSchema>;
 
 export default function Auth() {
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isLoginSuccess, setIsLoginSuccess] = useState(false);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+  const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
   const { toast } = useToast();
 
   const loginForm = useForm<LoginData>({
@@ -68,13 +74,19 @@ export default function Auth() {
       return response.json();
     },
     onSuccess: () => {
+      setIsLoginLoading(false);
+      setIsLoginSuccess(true);
       toast({
-        title: "Giriş Başarılı",
+        title: "Kullanıcı Girişi Başarılı",
         description: "Hoş geldiniz!",
       });
-      window.location.href = "/";
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     },
     onError: (error: Error) => {
+      setIsLoginLoading(false);
+      setIsLoginSuccess(false);
       toast({
         title: "Giriş Hatası",
         description: error.message,
@@ -89,13 +101,19 @@ export default function Auth() {
       return response.json();
     },
     onSuccess: () => {
+      setIsRegisterLoading(false);
+      setIsRegisterSuccess(true);
       toast({
         title: "Kayıt Başarılı",
         description: "Hesabınız oluşturuldu ve giriş yapıldı!",
       });
-      window.location.href = "/";
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
     },
     onError: (error: Error) => {
+      setIsRegisterLoading(false);
+      setIsRegisterSuccess(false);
       toast({
         title: "Kayıt Hatası",
         description: error.message,
@@ -105,10 +123,14 @@ export default function Auth() {
   });
 
   const onLoginSubmit = (data: LoginData) => {
+    setIsLoginLoading(true);
+    setIsLoginSuccess(false);
     loginMutation.mutate(data);
   };
 
   const onRegisterSubmit = (data: RegisterData) => {
+    setIsRegisterLoading(true);
+    setIsRegisterSuccess(false);
     registerMutation.mutate(data);
   };
 
@@ -232,12 +254,21 @@ export default function Auth() {
 
                       <Button
                         type="submit"
-                        disabled={loginMutation.isPending}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6"
+                        disabled={isLoginLoading || loginMutation.isPending || isLoginSuccess}
+                        className={`w-full text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6 ${
+                          isLoginSuccess 
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' 
+                            : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                        }`}
                       >
-                        {loginMutation.isPending ? (
+                        {isLoginSuccess ? (
                           <div className="flex items-center">
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Kullanıcı Girişi Başarılı
+                          </div>
+                        ) : isLoginLoading || loginMutation.isPending ? (
+                          <div className="flex items-center">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             Giriş yapılıyor...
                           </div>
                         ) : (
@@ -350,12 +381,21 @@ export default function Auth() {
 
                       <Button
                         type="submit"
-                        disabled={registerMutation.isPending}
-                        className="w-full bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6"
+                        disabled={isRegisterLoading || registerMutation.isPending || isRegisterSuccess}
+                        className={`w-full text-white font-semibold py-3 rounded-xl transition-all duration-300 mt-6 ${
+                          isRegisterSuccess 
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' 
+                            : 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700'
+                        }`}
                       >
-                        {registerMutation.isPending ? (
+                        {isRegisterSuccess ? (
                           <div className="flex items-center">
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Kayıt Başarılı
+                          </div>
+                        ) : isRegisterLoading || registerMutation.isPending ? (
+                          <div className="flex items-center">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
                             Kayıt yapılıyor...
                           </div>
                         ) : (

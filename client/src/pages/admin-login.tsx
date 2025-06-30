@@ -31,14 +31,20 @@ export default function AdminLogin() {
       return await res.json();
     },
     onSuccess: () => {
+      setIsLoading(false);
+      setIsSuccess(true);
       toast({
-        title: "Giriş başarılı",
+        title: "Yetkili Girişi Başarılı",
         description: "Admin paneline yönlendiriliyorsunuz...",
       });
-      // Redirect to admin dashboard
-      window.location.href = "/admin/dashboard";
+      // Redirect to admin dashboard after animation
+      setTimeout(() => {
+        window.location.href = "/admin/dashboard";
+      }, 2000);
     },
     onError: (error: Error) => {
+      setIsLoading(false);
+      setIsSuccess(false);
       toast({
         title: "Giriş başarısız",
         description: error.message,
@@ -49,8 +55,8 @@ export default function AdminLogin() {
 
   const onSubmit = (data: AdminLogin) => {
     setIsLoading(true);
+    setIsSuccess(false);
     loginMutation.mutate(data);
-    setIsLoading(false);
   };
 
   return (
@@ -137,12 +143,21 @@ export default function AdminLogin() {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]" 
-                  disabled={isLoading || loginMutation.isPending}
+                  className={`w-full h-12 text-white font-medium shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                    isSuccess 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:shadow-green-500/25' 
+                      : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-blue-500/25'
+                  }`} 
+                  disabled={isLoading || loginMutation.isPending || isSuccess}
                 >
-                  {isLoading || loginMutation.isPending ? (
+                  {isSuccess ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <CheckCircle className="w-4 h-4" />
+                      Yetkili Girişi Başarılı
+                    </div>
+                  ) : isLoading || loginMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       Giriş yapılıyor...
                     </div>
                   ) : (
