@@ -151,7 +151,6 @@ export default function AdminOrderSearch() {
         title="Sipariş Sorgula"
         description="Sipariş ID ile sipariş detaylarını görüntüleyin ve tekrar gönderin"
       />
-
       {/* Search Form */}
       <Card>
         <CardHeader>
@@ -184,7 +183,6 @@ export default function AdminOrderSearch() {
           </form>
         </CardContent>
       </Card>
-
       {/* Order Details */}
       {searchedOrder && (
         <Card>
@@ -224,7 +222,7 @@ export default function AdminOrderSearch() {
 
                 <div>
                   <label className="text-sm font-medium text-gray-600">Hedef URL</label>
-                  <p className="font-mono text-sm bg-gray-100 p-2 rounded break-all">
+                  <p className="font-mono text-sm bg-gray-100 p-2 rounded break-all text-[#030711]">
                     {searchedOrder.targetUrl || "Belirtilmemiş"}
                   </p>
                 </div>
@@ -291,7 +289,6 @@ export default function AdminOrderSearch() {
           </CardContent>
         </Card>
       )}
-
       {/* No results message */}
       {!searchedOrder && !isSearching && searchForm.formState.isSubmitted && (
         <Card>

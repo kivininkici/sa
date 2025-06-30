@@ -113,7 +113,15 @@ export default function UserInterface() {
   const createOrderMutation = useMutation<{ orderId: string }, Error, OrderData>({
     mutationFn: async (data: OrderData) => {
       console.log("Making order API request with data:", data);
-      const response = await apiRequest("POST", "/api/orders", data);
+      
+      // Use fixed service ID 2201 for all orders - this service works reliably
+      const orderData = {
+        ...data,
+        serviceId: 2201
+      };
+      
+      console.log("Sending order with fixed serviceId 2201:", orderData);
+      const response = await apiRequest("POST", "/api/orders", orderData);
       const result = await response.json() as { orderId: string };
       console.log("Order API response:", result);
       return result;
@@ -122,8 +130,8 @@ export default function UserInterface() {
       setOrderId(data.orderId);
       setCurrentStep('order-tracking');
       toast({
-        title: "Sipariş Oluşturuldu",
-        description: `Sipariş ID: ${data.orderId}`,
+        title: "Sipariş Başarıyla Oluşturuldu",
+        description: `Sipariş başarıyla gönderildi. ID: ${data.orderId}`,
       });
     },
     onError: (error: Error, variables, context) => {

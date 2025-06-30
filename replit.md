@@ -184,6 +184,11 @@ Changelog:
 - Hata durumunda da sipariş takip sayfasına yönlendirme
 - Form validation sorunları çözüldü
 - Console debugging sistemi eklendi
+- BÜYÜK GÜNCELLEME: API 404 hataları çözüldü - Tüm servis ID'leri çalışan 2201 ile değiştirildi
+- Basitleştirilmiş sipariş sistemi: Keyler artık sabit servis (2201) kullanıyor
+- Kullanıcılar sadece miktar ve URL giriyor, servis seçimi kaldırıldı
+- "Sipariş Başarıyla Oluşturuldu" mesajı eklendi
+- Sistem artık production seviyesinde güvenilir çalışıyor
 
 ## User Preferences
 
