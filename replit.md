@@ -258,6 +258,11 @@ Changelog:
 - Enhanced logging eklendi - API silme işlemi detaylı log'larla takip ediliyor
 - Cascade deletion: API silme sırasında ilişkili servisler saniyesinde kaldırılıyor
 - Replit Agent'tan Replit ortamına migration başarıyla tamamlandı
+- July 1, 2025: Kırmızı "Satın Al" butonu header'a eklendi
+- Satın Al butonu tüm sayfalarda görünür ve https://www.itemsatis.com/p/KiwiPazari adresine yönlendiriyor
+- Kırmızı tema ile tutarlı tasarım - hover efektleri ve gölge animasyonları
+- Alışveriş sepeti ikonu ile görsel ipucu eklendi
+- Yeni sekmede açılarak kullanıcı deneyimini kesintisiz tutuyor
 
 ## User Preferences
 
