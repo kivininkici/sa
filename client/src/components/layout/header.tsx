@@ -1,4 +1,4 @@
-import { Bell, Moon, Sun, ShoppingCart } from "lucide-react";
+import { Bell, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
@@ -36,15 +36,6 @@ export default function Header({ title, description }: HeaderProps) {
           <p className="text-slate-400 mt-1 text-lg">{description}</p>
         </div>
         <div className="flex items-center space-x-3 animate-fade-in delay-200">
-          {/* Satın Al Button */}
-          <Button
-            onClick={() => window.open('https://www.itemsatis.com/p/KiwiPazari', '_blank')}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-red-500/25"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Satın Al</span>
-          </Button>
-          
           {/* Theme Toggle */}
           <Button
             variant="ghost"

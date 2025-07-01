@@ -332,12 +332,25 @@ export default function Auth() {
                               transition={{ duration: 0.5, delay: 0.3 }}
                               className="relative z-10 w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-500/50"
                             >
+                              {/* Animated Circle Glow */}
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: [0, 1.2, 1], opacity: [0, 0.5, 0] }}
+                                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                                className="absolute inset-0 bg-blue-400/30 rounded-full blur-md"
+                              />
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: [0, 1.4, 1], opacity: [0, 0.3, 0] }}
+                                transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+                                className="absolute inset-0 bg-cyan-400/20 rounded-full blur-lg"
+                              />
                               {/* Animated Checkmark */}
                               <svg 
                                 width="32" 
                                 height="32" 
                                 viewBox="0 0 32 32" 
-                                className="text-white"
+                                className="text-white relative z-10"
                               >
                                 <motion.path
                                   d="M8 16l6 6 12-12"
