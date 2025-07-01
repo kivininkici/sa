@@ -54,10 +54,31 @@ export default function Auth() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Removed mouse tracking effect for static background
+  // Mouse tracking effect like home page
+  useEffect(() => {
+    let rafId: number;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) cancelAnimationFrame(rafId);
+      
+      rafId = requestAnimationFrame(() => {
+        setMousePosition({
+          x: e.clientX,
+          y: e.clientY,
+        });
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -163,20 +184,32 @@ export default function Auth() {
       <FloatingOrbs />
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-cyan-500/10 pointer-events-none"></div>
       
-      {/* Removed mouse tracking - keeping background static */}
+      {/* Mouse tracking effect like home page */}
+      <motion.div
+        className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10"
+        style={{
+          x: mousePosition.x - 96,
+          y: mousePosition.y - 96,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      />
       
-      {/* Static floating particles - fixed positions */}
+      {/* Enhanced floating particles with better visibility */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-blue-400/60 to-purple-400/60 rounded-full floating-orb top-[15%] left-[10%]" style={{ animationDelay: '0s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-blue-400/60 to-purple-400/60 rounded-full floating-orb top-[25%] left-[85%]" style={{ animationDelay: '1s' }} />
-        <div className="absolute w-1.5 h-1.5 bg-gradient-to-r from-cyan-400/50 to-blue-400/50 rounded-full floating-orb top-[40%] left-[20%]" style={{ animationDelay: '2s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-purple-400/60 to-pink-400/60 rounded-full floating-orb top-[60%] left-[75%]" style={{ animationDelay: '1.5s' }} />
-        <div className="absolute w-1.5 h-1.5 bg-gradient-to-r from-blue-400/50 to-cyan-400/50 rounded-full floating-orb top-[80%] left-[15%]" style={{ animationDelay: '3s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400/60 to-blue-400/60 rounded-full floating-orb top-[70%] left-[90%]" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute w-1.5 h-1.5 bg-gradient-to-r from-purple-400/50 to-blue-400/50 rounded-full floating-orb top-[35%] left-[85%]" style={{ animationDelay: '2.5s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-blue-400/60 to-purple-400/60 rounded-full floating-orb top-[90%] left-[60%]" style={{ animationDelay: '4s' }} />
-        <div className="absolute w-1.5 h-1.5 bg-gradient-to-r from-cyan-400/50 to-purple-400/50 rounded-full floating-orb top-[10%] left-[70%]" style={{ animationDelay: '1.8s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-purple-400/60 to-cyan-400/60 rounded-full floating-orb top-[50%] left-[5%]" style={{ animationDelay: '3.5s' }} />
+        <div className="absolute w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full floating-orb top-[15%] left-[10%] opacity-80" style={{ animationDelay: '0s' }} />
+        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full floating-orb top-[25%] left-[85%] opacity-70" style={{ animationDelay: '1s' }} />
+        <div className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full floating-orb top-[40%] left-[20%] opacity-75" style={{ animationDelay: '2s' }} />
+        <div className="absolute w-3 h-3 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full floating-orb top-[60%] left-[75%] opacity-80" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full floating-orb top-[80%] left-[15%] opacity-70" style={{ animationDelay: '3s' }} />
+        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full floating-orb top-[70%] left-[90%] opacity-75" style={{ animationDelay: '0.5s' }} />
+        <div className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full floating-orb top-[35%] left-[85%] opacity-70" style={{ animationDelay: '2.5s' }} />
+        <div className="absolute w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full floating-orb top-[90%] left-[60%] opacity-80" style={{ animationDelay: '4s' }} />
+        <div className="absolute w-2 h-2 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full floating-orb top-[10%] left-[70%] opacity-75" style={{ animationDelay: '1.8s' }} />
+        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full floating-orb top-[50%] left-[5%] opacity-80" style={{ animationDelay: '3.5s' }} />
+        <div className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full floating-orb top-[30%] left-[50%] opacity-70" style={{ animationDelay: '5s' }} />
+        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full floating-orb top-[65%] left-[40%] opacity-75" style={{ animationDelay: '2.8s' }} />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
