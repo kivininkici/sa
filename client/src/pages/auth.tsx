@@ -266,7 +266,7 @@ export default function Auth() {
             <Button
               variant="ghost"
               onClick={() => (window.location.href = "/")}
-              className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3 transition-all duration-300"
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3 transition-all duration-300 cyber-button relative overflow-hidden"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Ana Sayfaya Dön
