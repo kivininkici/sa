@@ -184,55 +184,67 @@ export default function Auth() {
       <FloatingOrbs />
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-cyan-500/10 pointer-events-none"></div>
       
-      {/* Mouse tracking effect - positioned directly under cursor */}
-      <motion.div
-        className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10"
-        animate={{
-          x: mousePosition.x - 96,
-          y: mousePosition.y - 96,
+      {/* Mouse tracking effect - centered on cursor */}
+      <div 
+        className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10 transition-transform duration-75 ease-out"
+        style={{
+          left: mousePosition.x - 96,
+          top: mousePosition.y - 96,
         }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       />
       
-      {/* Secondary mouse tracking layers */}
-      <motion.div
-        className="fixed w-32 h-32 bg-gradient-to-br from-cyan-400/20 via-blue-400/15 to-purple-400/10 rounded-full blur-xl pointer-events-none z-10"
-        animate={{
-          x: mousePosition.x - 64,
-          y: mousePosition.y - 64,
+      <div 
+        className="fixed w-32 h-32 bg-gradient-to-br from-cyan-400/20 via-blue-400/15 to-purple-400/10 rounded-full blur-xl pointer-events-none z-10 transition-transform duration-100 ease-out"
+        style={{
+          left: mousePosition.x - 64,
+          top: mousePosition.y - 64,
         }}
-        transition={{ type: "spring", stiffness: 500, damping: 40 }}
       />
       
-      <motion.div
-        className="fixed w-64 h-64 bg-gradient-to-br from-purple-400/15 via-blue-400/10 to-cyan-400/5 rounded-full blur-3xl pointer-events-none z-10"
-        animate={{
-          x: mousePosition.x - 128,
-          y: mousePosition.y - 128,
+      <div 
+        className="fixed w-64 h-64 bg-gradient-to-br from-purple-400/15 via-blue-400/10 to-cyan-400/5 rounded-full blur-3xl pointer-events-none z-10 transition-transform duration-200 ease-out"
+        style={{
+          left: mousePosition.x - 128,
+          top: mousePosition.y - 128,
         }}
-        transition={{ type: "spring", stiffness: 200, damping: 50 }}
       />
       
-      {/* Floating particles with motion animations */}
+      {/* Independent floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 15 }).map((_, i) => (
+        {[
+          { top: 15, left: 10, delay: 0, size: 'w-3 h-3', color: 'from-blue-400 to-purple-400' },
+          { top: 25, left: 85, delay: 1, size: 'w-2 h-2', color: 'from-cyan-400 to-blue-400' },
+          { top: 40, left: 20, delay: 2, size: 'w-2.5 h-2.5', color: 'from-purple-400 to-pink-400' },
+          { top: 60, left: 75, delay: 1.5, size: 'w-2 h-2', color: 'from-emerald-400 to-cyan-400' },
+          { top: 80, left: 15, delay: 3, size: 'w-2.5 h-2.5', color: 'from-blue-400 to-cyan-400' },
+          { top: 70, left: 90, delay: 0.5, size: 'w-2 h-2', color: 'from-purple-400 to-blue-400' },
+          { top: 35, left: 85, delay: 2.5, size: 'w-3 h-3', color: 'from-cyan-400 to-purple-400' },
+          { top: 90, left: 60, delay: 4, size: 'w-2 h-2', color: 'from-blue-400 to-purple-400' },
+          { top: 10, left: 70, delay: 1.8, size: 'w-2.5 h-2.5', color: 'from-pink-400 to-purple-400' },
+          { top: 50, left: 5, delay: 3.5, size: 'w-2 h-2', color: 'from-emerald-400 to-blue-400' },
+          { top: 30, left: 50, delay: 5, size: 'w-2.5 h-2.5', color: 'from-cyan-400 to-blue-400' },
+          { top: 65, left: 40, delay: 2.8, size: 'w-2 h-2', color: 'from-purple-400 to-cyan-400' },
+          { top: 20, left: 30, delay: 1.2, size: 'w-3 h-3', color: 'from-blue-400 to-emerald-400' },
+          { top: 85, left: 80, delay: 4.5, size: 'w-2 h-2', color: 'from-pink-400 to-blue-400' },
+          { top: 45, left: 95, delay: 0.8, size: 'w-2.5 h-2.5', color: 'from-cyan-400 to-purple-400' }
+        ].map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
+            className={`absolute ${particle.size} bg-gradient-to-r ${particle.color} rounded-full`}
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
+              top: `${particle.top}%`,
+              left: `${particle.left}%`,
             }}
             animate={{
-              y: [0, -30, 0],
-              x: [0, 15, -15, 0],
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.8, 0.3]
+              y: [0, -25, 0],
+              x: [0, 10, -10, 0],
+              scale: [0.8, 1.2, 0.8],
+              opacity: [0.4, 0.9, 0.4]
             }}
             transition={{
-              duration: 6 + Math.random() * 4,
+              duration: 5 + Math.random() * 3,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
               ease: "easeInOut"
             }}
           />
