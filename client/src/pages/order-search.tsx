@@ -105,13 +105,34 @@ export default function OrderSearchPage() {
 
   // Search order mutation
   const searchOrderMutation = useMutation({
-    mutationFn: async (data: SearchData) => {
+    mutationFn: async (data: SearchData & { forceRefresh?: boolean }) => {
       setIsSearching(true);
       setOrderNotFound(false);
-      const response = await apiRequest("GET", `/api/orders/search/${data.orderId}`);
+      const url = `/api/orders/search/${data.orderId}${data.forceRefresh ? '?refresh=true' : ''}`;
+      const response = await apiRequest("GET", url);
       return response.json();
     },
     onSuccess: (data: OrderDetails) => {
+      // Check if status changed for existing order
+      if (searchedOrder && searchedOrder.status !== data.status) {
+        let statusMessage = '';
+        if (data.status === 'cancelled') {
+          statusMessage = 'Sipariş iptal edildi';
+        } else if (data.status === 'completed') {
+          statusMessage = 'Sipariş tamamlandı';
+        } else if (data.status === 'failed') {
+          statusMessage = 'Sipariş başarısız oldu';
+        } else {
+          statusMessage = `Durum güncellendi: ${data.status}`;
+        }
+        
+        toast({
+          title: "Durum Değişikliği",
+          description: statusMessage,
+          variant: data.status === 'cancelled' || data.status === 'failed' ? "destructive" : "default",
+        });
+      }
+      
       setSearchedOrder(data);
       setLastUpdated(new Date());
       setIsSearching(false);
@@ -627,7 +648,7 @@ export default function OrderSearchPage() {
                         >
                           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Button 
-                              onClick={() => searchOrderMutation.mutate({ orderId: searchedOrder.orderId })}
+                              onClick={() => searchOrderMutation.mutate({ orderId: searchedOrder.orderId, forceRefresh: true })}
                               disabled={searchOrderMutation.isPending}
                               variant="outline"
                               className="border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300"

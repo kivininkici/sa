@@ -910,8 +910,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Sipariş detayları eksik" });
       }
 
-      // Check if we should update from real API (only for non-final statuses)
-      const shouldCheckAPI = !['completed', 'failed', 'cancelled'].includes(order.status);
+      // Force fresh API check for manual refresh or non-final statuses
+      const forceRefresh = req.query.refresh === 'true';
+      const shouldCheckAPI = forceRefresh || !['completed', 'failed', 'cancelled'].includes(order.status);
       
       if (shouldCheckAPI && order.response && typeof order.response === 'object') {
         const responseData = order.response as any;
@@ -924,6 +925,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const serviceApiSettings = apiSettings.find(api => api.id === service.apiSettingsId);
             
             if (serviceApiSettings?.apiKey && serviceApiSettings?.apiUrl) {
+              // Clear cache for force refresh
+              if (forceRefresh) {
+                const cacheKey = `${externalOrderId}_${serviceApiSettings.apiKey}`;
+                apiStatusCache.delete(cacheKey);
+              }
+              
               // Use optimized API status check
               const statusData = await getOrderStatusFromAPI(
                 serviceApiSettings.apiKey,
@@ -934,7 +941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               if (statusData?.status) {
                 console.log('API Response for order:', externalOrderId, statusData);
                 
-                // Map MedyaBayim API status to internal status
+                // Map API status to internal status with enhanced cancellation detection
                 let mappedStatus = statusData.status.toLowerCase();
                 
                 // Handle all possible API status values
@@ -943,12 +950,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     mappedStatus = 'pending';
                     break;
                   case 'in progress':
+                  case 'inprogress':
                     mappedStatus = 'in_progress';
                     break;
                   case 'processing':
                     mappedStatus = 'processing';
                     break;
                   case 'completed':
+                  case 'complete':
                     mappedStatus = 'completed';
                     break;
                   case 'partial':
@@ -956,26 +965,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     break;
                   case 'canceled':
                   case 'cancelled':
+                  case 'cancel':
                     mappedStatus = 'cancelled';
                     break;
-                  default:
-                    // Keep original status if unknown
+                  case 'error':
+                  case 'failed':
+                  case 'failure':
+                    mappedStatus = 'failed';
                     break;
+                  default:
+                    // Check for error indicators that might suggest cancellation
+                    if (statusData.error) {
+                      const errorMsg = statusData.error.toLowerCase();
+                      if (errorMsg.includes('cancel') || errorMsg.includes('stopped') || errorMsg.includes('refund')) {
+                        mappedStatus = 'cancelled';
+                      } else {
+                        mappedStatus = 'failed';
+                      }
+                    }
+                    // Keep original status if no clear mapping
+                    break;
+                }
+                
+                // Additional check for cancelled orders based on charge amount
+                if (statusData.charge === '0' || statusData.charge === '0.000000') {
+                  // If charge is 0 and status was in progress, likely cancelled
+                  if (order.status === 'in_progress' || order.status === 'processing') {
+                    mappedStatus = 'cancelled';
+                  }
                 }
                 
                 // Update order if status changed
                 if (mappedStatus !== order.status) {
+                  let messageText = '';
+                  if (mappedStatus === 'cancelled') {
+                    messageText = 'Sipariş iptal edildi.';
+                  } else if (mappedStatus === 'completed') {
+                    messageText = 'Sipariş başarıyla tamamlandı!';
+                  } else if (mappedStatus === 'failed') {
+                    messageText = 'Sipariş başarısız oldu.';
+                  } else {
+                    messageText = statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status;
+                  }
+                  
                   const updateData: any = { 
                     status: mappedStatus as any,
-                    message: statusData.remains ? `Kalan: ${statusData.remains}` : statusData.status 
+                    message: messageText,
+                    response: { ...order.response, ...statusData } // Merge with latest API response
                   };
                   
                   // Set completion time for final statuses
-                  if (['completed', 'cancelled', 'partial'].includes(mappedStatus)) {
+                  if (['completed', 'cancelled', 'partial', 'failed'].includes(mappedStatus)) {
                     updateData.completedAt = new Date();
                   }
                   
                   await storage.updateOrder(order.id, updateData);
+                  
+                  // Log status change for audit
+                  await storage.createLog({
+                    type: "order_status_update",
+                    message: `Order ${order.orderId} status changed from ${order.status} to ${mappedStatus}`,
+                    orderId: order.id,
+                    data: { 
+                      previousStatus: order.status,
+                      newStatus: mappedStatus,
+                      apiResponse: statusData,
+                      source: 'public_search'
+                    },
+                  });
                   
                   // Update response object
                   order.status = mappedStatus as any;
@@ -983,6 +1040,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   if (updateData.completedAt) {
                     order.completedAt = updateData.completedAt;
                   }
+                  
+                  console.log(`Order ${order.orderId} status updated: ${order.status} -> ${mappedStatus}`);
                 }
               }
             }
@@ -2997,7 +3056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             message = 'Sipariş başarıyla tamamlandı!';
             shouldCompleteOrder = true;
             
-          } else if (apiStatus === 'cancelled' || apiStatus === 'canceled') {
+          } else if (apiStatus === 'cancelled' || apiStatus === 'canceled' || apiStatus === 'cancel') {
             dbStatus = 'cancelled';
             message = 'Sipariş iptal edildi.';
             
@@ -3017,10 +3076,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dbStatus = 'pending';
             message = 'Sipariş beklemede...';
             
+          } else if (apiStatus === 'error' || apiStatus === 'failed' || apiStatus === 'failure') {
+            dbStatus = 'failed';
+            message = 'Sipariş başarısız oldu.';
+            
           } else {
             // Keep original status if unknown
             dbStatus = apiStatus;
             message = `Sipariş durumu: ${statusResponse.status}`;
+          }
+
+          // Additional check: If API returns error field or charge is 0 for cancelled orders
+          if (statusResponse.error || statusResponse.charge === '0.000000' || statusResponse.charge === '0') {
+            // Check if this might be a cancelled order
+            if (statusResponse.error && statusResponse.error.toLowerCase().includes('cancel')) {
+              dbStatus = 'cancelled';
+              message = 'Sipariş iptal edildi.';
+            } else if (statusResponse.error) {
+              dbStatus = 'failed';
+              message = `Sipariş hatası: ${statusResponse.error}`;
+            }
           }
 
           // Update order in database

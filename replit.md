@@ -307,6 +307,14 @@ Changelog:
 - Auto-refresh sistemi aktif - pending/processing siparişler otomatik güncelleniyor
 - Responsive design ve dark mode desteği optimize edildi
 - Sistem production ortamında port 5000'de güvenilir çalışıyor
+- July 1, 2025: Sipariş iptal durumu senkronizasyonu tamamen düzeltildi
+- API'den iptal edilen siparişler artık order-search sayfasında doğru gösteriliyor
+- Enhanced status mapping: cancelled, canceled, cancel, error durumları destekleniyor
+- Manuel yenileme butonu force refresh özelliği ile cache'i atlıyor
+- Charge amount kontrolü: 0 TL ücretli siparişler iptal olarak algılanıyor
+- Status değişikliği bildirimleri: Toast mesajları ile kullanıcı bilgilendiriliyor
+- Audit log sistemi: Tüm durum değişiklikleri log'lanıyor
+- Real-time senkronizasyon: API durumu ile database tam uyumlu
 
 ## User Preferences
 
