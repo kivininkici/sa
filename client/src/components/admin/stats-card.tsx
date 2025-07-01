@@ -46,10 +46,7 @@ export default function StatsCard({
         </div>
         {change && (
           <div className="mt-4 pt-3 border-t border-slate-700/50">
-            <p className={`text-sm font-medium ${changeColors[changeType]} flex items-center`}>
-              <span className="mr-2 text-lg">{changeIcons[changeType]}</span>
-              {change}
-            </p>
+            
           </div>
         )}
       </CardContent>
