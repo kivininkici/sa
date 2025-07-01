@@ -1,16 +1,41 @@
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, ExternalLink, Search } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const { user, isLoading: userLoading } = useAuth();
   const { admin } = useAdminAuth();
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Mouse tracking effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative">
+        {/* Mouse tracking effect */}
+        <motion.div
+          className="fixed w-36 h-36 bg-blue-400/30 rounded-full blur-xl pointer-events-none z-10"
+          style={{
+            x: mousePosition.x - 72,
+            y: mousePosition.y - 72,
+          }}
+          initial={{ opacity: 1 }}
+        />
         <div className="text-center">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
             <KeyRound className="w-8 h-8 text-white" />
@@ -22,7 +47,16 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative">
+      {/* Mouse tracking effect */}
+      <motion.div
+        className="fixed w-36 h-36 bg-blue-400/30 rounded-full blur-xl pointer-events-none z-10"
+        style={{
+          x: mousePosition.x - 72,
+          y: mousePosition.y - 72,
+        }}
+        initial={{ opacity: 1 }}
+      />
       {/* Header */}
       <header className="border-b border-white/10 backdrop-blur-xl bg-black/20">
         <div className="container mx-auto px-4 py-6">
