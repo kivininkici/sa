@@ -184,32 +184,59 @@ export default function Auth() {
       <FloatingOrbs />
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-cyan-500/10 pointer-events-none"></div>
       
-      {/* Mouse tracking effect like home page */}
+      {/* Mouse tracking effect - positioned directly under cursor */}
       <motion.div
         className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10"
-        style={{
+        animate={{
           x: mousePosition.x - 96,
           y: mousePosition.y - 96,
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       />
       
-      {/* Enhanced floating particles with better visibility */}
+      {/* Secondary mouse tracking layers */}
+      <motion.div
+        className="fixed w-32 h-32 bg-gradient-to-br from-cyan-400/20 via-blue-400/15 to-purple-400/10 rounded-full blur-xl pointer-events-none z-10"
+        animate={{
+          x: mousePosition.x - 64,
+          y: mousePosition.y - 64,
+        }}
+        transition={{ type: "spring", stiffness: 500, damping: 40 }}
+      />
+      
+      <motion.div
+        className="fixed w-64 h-64 bg-gradient-to-br from-purple-400/15 via-blue-400/10 to-cyan-400/5 rounded-full blur-3xl pointer-events-none z-10"
+        animate={{
+          x: mousePosition.x - 128,
+          y: mousePosition.y - 128,
+        }}
+        transition={{ type: "spring", stiffness: 200, damping: 50 }}
+      />
+      
+      {/* Floating particles with motion animations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full floating-orb top-[15%] left-[10%] opacity-80" style={{ animationDelay: '0s' }} />
-        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full floating-orb top-[25%] left-[85%] opacity-70" style={{ animationDelay: '1s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full floating-orb top-[40%] left-[20%] opacity-75" style={{ animationDelay: '2s' }} />
-        <div className="absolute w-3 h-3 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full floating-orb top-[60%] left-[75%] opacity-80" style={{ animationDelay: '1.5s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full floating-orb top-[80%] left-[15%] opacity-70" style={{ animationDelay: '3s' }} />
-        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full floating-orb top-[70%] left-[90%] opacity-75" style={{ animationDelay: '0.5s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full floating-orb top-[35%] left-[85%] opacity-70" style={{ animationDelay: '2.5s' }} />
-        <div className="absolute w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full floating-orb top-[90%] left-[60%] opacity-80" style={{ animationDelay: '4s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full floating-orb top-[10%] left-[70%] opacity-75" style={{ animationDelay: '1.8s' }} />
-        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full floating-orb top-[50%] left-[5%] opacity-80" style={{ animationDelay: '3.5s' }} />
-        <div className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full floating-orb top-[30%] left-[50%] opacity-70" style={{ animationDelay: '5s' }} />
-        <div className="absolute w-2.5 h-2.5 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full floating-orb top-[65%] left-[40%] opacity-75" style={{ animationDelay: '2.8s' }} />
+        {Array.from({ length: 15 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 15, -15, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.8, 0.3]
+            }}
+            transition={{
+              duration: 6 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-md">
