@@ -378,6 +378,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/keys/export/:category", requireAdminAuth, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const keys = await storage.getAllKeys();
+      
+      // Filter keys by category
+      const filteredKeys = keys.filter(key => key.category === category);
+      
+      if (filteredKeys.length === 0) {
+        return res.status(404).json({ message: `Bu kategoride hiç key bulunmamaktadır: ${category}` });
+      }
+      
+      // Create text content with just the key values
+      const keyValues = filteredKeys.map(key => key.value).join('\n');
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="${category}_keys.txt"`);
+      
+      res.send(keyValues);
+    } catch (error) {
+      console.error("Error exporting keys:", error);
+      res.status(500).json({ message: "Failed to export keys" });
+    }
+  });
+
   app.post("/api/admin/keys", requireAdminAuth, async (req: any, res) => {
     try {
       console.log("Key creation request:", req.body);

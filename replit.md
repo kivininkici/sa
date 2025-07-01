@@ -249,6 +249,12 @@ Changelog:
 - Placeholder metinleri admin giriş alanlarından temizlendi
 - Şifre türü alanlar varsayılan gizli, göz ikonuna tıklayınca görünür oluyor
 - Hover efektleri mavi tema ile uyumlu hale getirildi
+- July 1, 2025: Toplu key export sistemi eklendi
+- Key Listesi başlığının yanına kırmızı "Toplu Key.txt" butonu eklendi
+- Kategori seçimi modal'ı ile sadece seçilen kategorideki key'ler export edilebiliyor
+- API endpoint (/api/admin/keys/export/:category) kategori bazlı key export için eklendi
+- İndirilen dosya kategoriye göre adlandırılıyor (örn: Instagram_keys.txt)
+- Replit Agent'tan Replit ortamına migration başarıyla tamamlandı
 
 ## User Preferences
 

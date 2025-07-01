@@ -18,6 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -36,7 +44,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  Copy
+  Copy,
+  Download
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Key as KeyType } from "@shared/schema";
@@ -53,6 +62,8 @@ export default function Keys() {
   const [hiddenKeys, setHiddenKeys] = useState<Set<number>>(new Set());
   const [selectedKeys, setSelectedKeys] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedExportCategory, setSelectedExportCategory] = useState("");
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -231,6 +242,62 @@ export default function Keys() {
     setSelectAll(false);
   };
 
+  // Get unique categories from keys
+  const getUniqueCategories = () => {
+    if (!Array.isArray(keys)) return [];
+    const categories = Array.from(new Set(keys.map((key: KeyType) => key.category).filter(Boolean)));
+    return categories.sort();
+  };
+
+  // Export keys by category
+  const exportKeysByCategory = async () => {
+    if (!selectedExportCategory) {
+      toast({
+        title: "Hata",
+        description: "Lütfen bir kategori seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/keys/export/${selectedExportCategory}`, {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Export failed');
+      }
+
+      // Download the file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedExportCategory}_keys.txt`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Başarılı",
+        description: `${selectedExportCategory} kategorisi key'leri indirildi`,
+      });
+
+      setShowExportModal(false);
+      setSelectedExportCategory("");
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Hata",
+        description: error instanceof Error ? error.message : "Export failed",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-950">
       <Sidebar />
@@ -285,9 +352,17 @@ export default function Keys() {
             <Card className="dashboard-card">
               <CardHeader className="border-b border-slate-700">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg font-semibold text-slate-50">
-                    Key Listesi
-                  </CardTitle>
+                  <div className="flex items-center space-x-3">
+                    <CardTitle className="text-lg font-semibold text-slate-50">
+                      Key Listesi
+                    </CardTitle>
+                    <Button 
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm"
+                      onClick={() => setShowExportModal(true)}
+                    >
+                      Toplu Key.txt
+                    </Button>
+                  </div>
                   <div className="flex items-center space-x-2">
                     <Input
                       placeholder="Key ara..."
@@ -510,6 +585,51 @@ export default function Keys() {
         open={showKeyModal} 
         onOpenChange={setShowKeyModal} 
       />
+
+      {/* Export Modal */}
+      <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
+        <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-slate-50">Key Kategorisi Seç</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              İndirmek istediğiniz key kategorisini seçiniz.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <Select value={selectedExportCategory} onValueChange={setSelectedExportCategory}>
+              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-50">
+                <SelectValue placeholder="Kategori seçin" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                {getUniqueCategories().map((category: string) => (
+                  <SelectItem key={category} value={category} className="text-slate-50">
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowExportModal(false)}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              İptal
+            </Button>
+            <Button
+              onClick={exportKeysByCategory}
+              disabled={!selectedExportCategory}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              İndir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
