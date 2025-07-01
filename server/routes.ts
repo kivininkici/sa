@@ -3,11 +3,11 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAdminAuth, requireAdminAuth, hashPassword, comparePassword } from "./adminAuth";
 import { db } from "./db";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 // Using admin session-based authentication only
 import { insertKeySchema, insertServiceSchema, insertOrderSchema, insertApiSettingsSchema } from "@shared/schema";
-import { normalUsers } from "@shared/schema";
+import { normalUsers, users } from "@shared/schema";
 import { z } from "zod";
 
 // Normal user auth schemas
@@ -1010,17 +1010,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get Replit users from users table  
       const replitUsers = await storage.getAllUsers();
       
+      // For normal users, check if they have a role entry in users table
+      const normalUsersWithRoles = await Promise.all(
+        normalUsersList.map(async (user: any) => {
+          // Check if this normal user has an entry in users table (for role info)
+          const userRole = await db
+            .select({ role: users.role })
+            .from(users)
+            .where(eq(users.id, user.id.toString()))
+            .limit(1);
+          
+          return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: userRole.length > 0 ? userRole[0].role : 'user',
+            createdAt: user.createdAt,
+            type: 'normal',
+            isActive: user.isActive
+          };
+        })
+      );
+      
       // Combine and format all users
       const allUsers = [
-        ...normalUsersList.map((user: any) => ({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: 'user', // Normal users start as 'user' role
-          createdAt: user.createdAt,
-          type: 'normal',
-          isActive: true
-        })),
+        ...normalUsersWithRoles,
         ...replitUsers.map((user: any) => ({
           id: user.id,
           username: user.firstName || user.email || 'Unknown',
@@ -1045,11 +1059,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { role } = req.body;
 
+      console.log(`Updating user role: id=${id}, role=${role}`);
+
       if (!["user", "admin"].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
 
       const updatedUser = await storage.updateUserRole(id, role);
+      console.log("Updated user:", updatedUser);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user role:", error);

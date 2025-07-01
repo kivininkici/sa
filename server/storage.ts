@@ -161,12 +161,56 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserRole(id: string, role: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    // First try to update in users table (Replit users)
+    try {
+      const [user] = await db
+        .update(users)
+        .set({ role, updatedAt: new Date() })
+        .where(eq(users.id, id))
+        .returning();
+      
+      if (user) {
+        return user;
+      }
+    } catch (error) {
+      // If not found in users table, might be a normal user
+    }
+
+    // If not found in users table, check if it's a normal user
+    // For normal users, we need to create a corresponding entry in users table
+    // or handle it differently based on your architecture needs
+    const normalUser = await db
+      .select()
+      .from(normalUsers)
+      .where(eq(normalUsers.id, parseInt(id)))
+      .limit(1);
+
+    if (normalUser.length > 0) {
+      // Create or update entry in users table for normal user
+      const userData = normalUser[0];
+      const [upsertedUser] = await db
+        .insert(users)
+        .values({
+          id: userData.id.toString(),
+          email: userData.email,
+          firstName: userData.username,
+          role,
+          createdAt: userData.createdAt,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            role,
+            updatedAt: new Date(),
+          }
+        })
+        .returning();
+      
+      return upsertedUser;
+    }
+
+    throw new Error("User not found");
   }
 
   // Key operations
