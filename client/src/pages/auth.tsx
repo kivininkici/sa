@@ -58,20 +58,14 @@ export default function Auth() {
   // Mouse tracking effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setMousePosition({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
-        });
-      }
+      setMousePosition({
+        x: e.clientX,
+        y: e.clientY,
+      });
     };
 
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('mousemove', handleMouseMove);
-      return () => container.removeEventListener('mousemove', handleMouseMove);
-    }
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   const loginForm = useForm<LoginData>({
@@ -181,18 +175,15 @@ export default function Auth() {
         
         {/* Mouse tracking effect */}
         <motion.div
-          className="absolute w-36 h-36 bg-blue-400/30 rounded-full blur-xl pointer-events-none z-10"
+          className="fixed w-36 h-36 bg-blue-400/30 rounded-full blur-xl pointer-events-none z-10"
           animate={{
             x: mousePosition.x - 72,
             y: mousePosition.y - 72,
           }}
           transition={{
-            type: "spring",
-            stiffness: 150,
-            damping: 20,
-            mass: 0.8,
-            restDelta: 0.01,
-            restSpeed: 0.01
+            type: "tween",
+            duration: 0.6,
+            ease: [0.25, 0.46, 0.45, 0.94]
           }}
           initial={{ opacity: 1 }}
         />
