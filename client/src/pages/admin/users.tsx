@@ -47,7 +47,15 @@ const createAdminSchema = z.object({
   password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
 });
 
+// Normal kullanıcı oluşturma formu için schema
+const createUserSchema = z.object({
+  username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalıdır"),
+  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+});
+
 type CreateAdminForm = z.infer<typeof createAdminSchema>;
+type CreateUserForm = z.infer<typeof createUserSchema>;
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -55,6 +63,7 @@ export default function UsersPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [createAdminOpen, setCreateAdminOpen] = useState(false);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
 
   // Redirect to admin login if not authenticated
   useEffect(() => {
@@ -146,6 +155,30 @@ export default function UsersPage() {
     },
   });
 
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (data: CreateUserForm) => {
+      const response = await apiRequest("POST", "/api/auth/register", data);
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı!",
+        description: "Yeni kullanıcı oluşturuldu.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setCreateUserOpen(false);
+      createUserForm.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata!",
+        description: error.message || "Kullanıcı oluşturulurken bir hata oluştu.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Create admin form
   const createAdminForm = useForm<CreateAdminForm>({
     resolver: zodResolver(createAdminSchema),
@@ -156,8 +189,22 @@ export default function UsersPage() {
     },
   });
 
+  // Create user form
+  const createUserForm = useForm<CreateUserForm>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+    },
+  });
+
   const onCreateAdmin = (data: CreateAdminForm) => {
     createAdminMutation.mutate(data);
+  };
+
+  const onCreateUser = (data: CreateUserForm) => {
+    createUserMutation.mutate(data);
   };
 
   if (isLoading || !admin) {
@@ -236,13 +283,87 @@ export default function UsersPage() {
                     className="pl-8"
                   />
                 </div>
-                <Dialog open={createAdminOpen} onOpenChange={setCreateAdminOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Admin Ekle
-                    </Button>
-                  </DialogTrigger>
+                <div className="flex gap-2">
+                  <Dialog open={createUserOpen} onOpenChange={setCreateUserOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Kullanıcı Oluştur
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Yeni Kullanıcı Oluştur</DialogTitle>
+                      </DialogHeader>
+                      <Form {...createUserForm}>
+                        <form onSubmit={createUserForm.handleSubmit(onCreateUser)} className="space-y-4">
+                          <FormField
+                            control={createUserForm.control}
+                            name="username"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Kullanıcı Adı</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="kullanici_adi" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={createUserForm.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>E-posta</FormLabel>
+                                <FormControl>
+                                  <Input type="email" placeholder="kullanici@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={createUserForm.control}
+                            name="password"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Şifre</FormLabel>
+                                <FormControl>
+                                  <Input type="password" placeholder="********" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex gap-2 pt-4">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setCreateUserOpen(false)}
+                              className="flex-1"
+                            >
+                              İptal
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={createUserMutation.isPending}
+                              className="flex-1"
+                            >
+                              {createUserMutation.isPending ? "Oluşturuluyor..." : "Oluştur"}
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={createAdminOpen} onOpenChange={setCreateAdminOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Admin Ekle
+                      </Button>
+                    </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Yeni Admin Oluştur</DialogTitle>
@@ -309,6 +430,7 @@ export default function UsersPage() {
                     </Form>
                   </DialogContent>
                 </Dialog>
+                </div>
               </div>
             </CardHeader>
           </Card>
