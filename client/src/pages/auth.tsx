@@ -207,13 +207,13 @@ export default function Auth() {
 
             <CardContent className="space-y-6">
               <Tabs defaultValue="login" className="w-full" onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 relative overflow-hidden rounded-xl p-1 backdrop-blur-sm">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 relative overflow-hidden rounded-xl p-0 backdrop-blur-sm">
                   <motion.div 
-                    className="absolute inset-y-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 rounded-lg shadow-lg tab-indicator-glow"
+                    className="absolute inset-y-0 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 rounded-xl shadow-lg tab-indicator-glow"
                     initial={false}
                     animate={{
-                      x: activeTab === "login" ? "0%" : "calc(100% - 2px)",
-                      width: "calc(50% - 2px)"
+                      x: activeTab === "login" ? "0%" : "50%",
+                      width: "50%"
                     }}
                     transition={{
                       type: "spring",
@@ -225,10 +225,10 @@ export default function Auth() {
                   />
                   <TabsTrigger 
                     value="login" 
-                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
+                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-xl py-4 font-medium h-full flex items-center justify-center"
                   >
                     <motion.div
-                      className="flex items-center"
+                      className="flex items-center justify-center"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
@@ -239,10 +239,10 @@ export default function Auth() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="register"
-                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
+                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-xl py-4 font-medium h-full flex items-center justify-center"
                   >
                     <motion.div
-                      className="flex items-center"
+                      className="flex items-center justify-center"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
