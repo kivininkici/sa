@@ -242,6 +242,13 @@ Changelog:
 - Input hover efektleri ve error message animasyonları iyileştirildi
 - Admin giriş başarı animasyonu eklendi - ortadan tüm sayfaya yayılan yeşil efekt
 - Radial gradient CSS utility eklendi ve çoklu katmanlı genişleme animasyonu optimize edildi
+- July 1, 2025: Şifre görünürlük sistemi tamamlandı
+- Admin panelinde hem kullanıcı adı hem de şifre alanlarına göz ikonu eklendi
+- Normal kullanıcı girişinde tüm şifre alanlarına (giriş, kayıt, şifre tekrarı) göz ikonu eklendi
+- Kilit ikonları kaldırıldı, yerine tıklanabilir Eye/EyeOff ikonları eklendi
+- Placeholder metinleri admin giriş alanlarından temizlendi
+- Şifre türü alanlar varsayılan gizli, göz ikonuna tıklayınca görünür oluyor
+- Hover efektleri mavi tema ile uyumlu hale getirildi
 
 ## User Preferences
 

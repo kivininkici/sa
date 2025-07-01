@@ -18,6 +18,7 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showUsername, setShowUsername] = useState(false);
 
   const {
     register,
@@ -201,11 +202,22 @@ export default function AdminLogin() {
                         <User className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
                         <Input
                           id="username"
-                          type="text"
+                          type={showUsername ? "text" : "password"}
                           placeholder=""
-                          className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+                          className="pl-11 pr-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
                           {...register("username")}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowUsername(!showUsername)}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-blue-400 transition-colors"
+                        >
+                          {showUsername ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                       {errors.username && (
                         <motion.p
