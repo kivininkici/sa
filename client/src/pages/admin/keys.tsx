@@ -359,11 +359,9 @@ export default function Keys() {
                       Key Listesi
                     </CardTitle>
                     <Button 
-                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-sm"
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 hover:bg-red-700 px-3 py-1 bg-[#5f8af2] font-bold text-[#ffffff] text-[18px]"
                       onClick={() => setShowExportModal(true)}
-                    >
-                      Toplu Key.txt
-                    </Button>
+                    >Keyleri İndir</Button>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Input
@@ -587,7 +585,6 @@ export default function Keys() {
         open={showKeyModal} 
         onOpenChange={setShowKeyModal} 
       />
-
       {/* Export Modal */}
       <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
         <DialogContent className="sm:max-w-lg bg-slate-900/95 border-slate-700/50 backdrop-blur-xl">
