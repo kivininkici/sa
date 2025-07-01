@@ -201,7 +201,7 @@ export default function AdminLogin() {
                         <Input
                           id="username"
                           type="text"
-                          placeholder="admin"
+                          placeholder=""
                           className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
                           {...register("username")}
                         />
@@ -226,7 +226,7 @@ export default function AdminLogin() {
                         <Input
                           id="password"
                           type="password"
-                          placeholder="••••••••"
+                          placeholder=""
                           className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
                           {...register("password")}
                         />
