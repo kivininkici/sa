@@ -97,51 +97,24 @@ export default function ApiManagement() {
   });
 
   // API deletion mutation
+  // Ultra fast delete - instant UI feedback
   const deleteApiMutation = useMutation({
     mutationFn: async (apiId: number) => {
-      console.log(`Attempting to delete API with ID: ${apiId}`);
+      // Instant UI update - remove immediately
+      queryClient.setQueryData(["/api/admin/api-settings"], (oldData: any) => 
+        oldData?.filter((api: any) => api.id !== apiId) || []
+      );
       
-      // Use fetch directly to avoid apiRequest throwing on errors
-      const response = await fetch(`/api/admin/api-settings/${apiId}`, {
+      // Fire and forget background delete
+      fetch(`/api/admin/api-settings/${apiId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: { 'Content-Type': 'application/json' },
+      }).then(response => response.ok ? response.json() : null)
+        .then(data => data && toast({ title: "✓", description: `${data.deletedServices || 0} servis silindi` }))
+        .catch(() => queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] }));
       
-      console.log('Delete response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Delete error response:', errorText);
-        throw new Error(errorText || `Failed to delete API (${response.status})`);
-      }
-      
-      const data = await response.json();
-      console.log('Delete response data:', data);
-      return data;
-    },
-    onSuccess: (data) => {
-      console.log('Delete success:', data);
-      toast({
-        title: "Başarılı",
-        description: data.message || `API silindi ve ${data.deletedServices || 0} servis kaldırıldı`,
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
-    },
-    onError: (error) => {
-      console.error('Delete error:', error);
-      if (isUnauthorizedError(error)) {
-        window.location.href = "/admin/login";
-        return;
-      }
-      toast({
-        title: "Hata",
-        description: error.message || "API silme işlemi başarısız",
-        variant: "destructive",
-      });
+      return { id: apiId };
     },
   });
 
@@ -818,13 +791,12 @@ export default function ApiManagement() {
                               </Badge>
                               <Button
                                 onClick={() => deleteApiMutation.mutate(api.id)}
-                                disabled={deleteApiMutation.isPending}
                                 variant="destructive"
                                 size="sm"
                                 className="bg-red-600 hover:bg-red-700 text-xs px-2 py-1 h-6"
-                                title="Hızlı sil"
+                                title="Anında sil"
                               >
-                                {deleteApiMutation.isPending ? "..." : "Hızlı Sil"}
+                                SİL
                               </Button>
                             </div>
                           </div>
