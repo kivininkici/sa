@@ -25,6 +25,16 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 
 export default function ApiManagement() {
@@ -42,6 +52,7 @@ export default function ApiManagement() {
   const [itemsPerPage] = useState(50); // 50 servis per page for better performance
   const [servicesCurrentPage, setServicesCurrentPage] = useState(1);
   const [servicesItemsPerPage] = useState(50); // 50 services per page
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   // API creation mutation with auto-import
   const createApiMutation = useMutation({
@@ -85,15 +96,31 @@ export default function ApiManagement() {
   // API deletion mutation
   const deleteApiMutation = useMutation({
     mutationFn: async (apiId: number) => {
-      const response = await apiRequest("DELETE", `/api/admin/api-settings/${apiId}`);
-      const responseText = await response.text();
-      try {
-        return JSON.parse(responseText);
-      } catch (error) {
-        return { success: true, message: "API başarıyla silindi" };
+      console.log(`Attempting to delete API with ID: ${apiId}`);
+      
+      // Use fetch directly to avoid apiRequest throwing on errors
+      const response = await fetch(`/api/admin/api-settings/${apiId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Delete response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete error response:', errorText);
+        throw new Error(errorText || `Failed to delete API (${response.status})`);
       }
+      
+      const data = await response.json();
+      console.log('Delete response data:', data);
+      return data;
     },
     onSuccess: (data) => {
+      console.log('Delete success:', data);
       toast({
         title: "Başarılı",
         description: data.message || `API silindi ve ${data.deletedServices || 0} servis kaldırıldı`,
@@ -102,13 +129,14 @@ export default function ApiManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
     },
     onError: (error) => {
+      console.error('Delete error:', error);
       if (isUnauthorizedError(error)) {
         window.location.href = "/admin/login";
         return;
       }
       toast({
         title: "Hata",
-        description: error.message,
+        description: error.message || "API silme işlemi başarısız",
         variant: "destructive",
       });
     },
@@ -698,11 +726,12 @@ export default function ApiManagement() {
                                 {api.isActive ? "Aktif" : "Pasif"}
                               </Badge>
                               <Button
-                                onClick={() => deleteApiMutation.mutate(api.id)}
+                                onClick={() => setDeleteConfirmId(api.id)}
                                 disabled={deleteApiMutation.isPending}
                                 variant="destructive"
                                 size="sm"
                                 className="w-8 h-8 p-0"
+                                title="API'yi sil"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -826,6 +855,38 @@ export default function ApiManagement() {
           </div>
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={() => setDeleteConfirmId(null)}>
+        <AlertDialogContent className="bg-slate-900 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-50">API'yi Sil</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              Bu API'yi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve 
+              bu API'ye bağlı tüm servisler de silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setDeleteConfirmId(null)}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              İptal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirmId) {
+                  deleteApiMutation.mutate(deleteConfirmId);
+                  setDeleteConfirmId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
