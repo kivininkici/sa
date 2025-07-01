@@ -103,10 +103,10 @@ export default function KeyCreationModal({
       // Determine API based on service platform
       let apiSettingsId;
       if (selectedService.platform === "MedyaBayim") {
-        const medyaApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "Medya") : null;
+        const medyaApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "MedyaBayim") : null;
         apiSettingsId = medyaApi?.id;
       } else if (selectedService.platform === "Resellers") {
-        const resellersApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "Resellers") : null;
+        const resellersApi = Array.isArray(apiSettings) ? apiSettings.find(api => api.name === "ResellerProvider") : null;
         apiSettingsId = resellersApi?.id;
       }
 
