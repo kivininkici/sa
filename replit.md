@@ -240,6 +240,8 @@ Changelog:
 - AnimatePresence ile form ve başarı animasyonları optimize edildi
 - Giriş sırasında loading ve başarı durumları için visual feedback eklendi
 - Input hover efektleri ve error message animasyonları iyileştirildi
+- Admin giriş başarı animasyonu eklendi - ortadan tüm sayfaya yayılan yeşil efekt
+- Radial gradient CSS utility eklendi ve çoklu katmanlı genişleme animasyonu optimize edildi
 
 ## User Preferences
 

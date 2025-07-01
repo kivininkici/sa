@@ -48,8 +48,11 @@
 /* Cool auth page animations */
 .tabs-indicator {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-  border-radius: 6px;
+}
+
+/* Radial gradient utility for success animations */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
 }
 
 /* Enhanced hover effects for tab triggers */

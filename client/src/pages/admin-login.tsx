@@ -119,15 +119,58 @@ export default function AdminLogin() {
                     key="admin-success"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-8 space-y-4"
+                    className="text-center py-8 space-y-4 relative"
                   >
-                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                      <CheckCircle className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-green-400">
+                    {/* Animated Success Background Effect */}
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [0, 1.5, 2], opacity: [0, 0.3, 0] }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className="absolute inset-0 -m-20 bg-gradient-radial from-green-400/30 via-green-500/20 to-transparent rounded-full pointer-events-none"
+                    />
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [0, 1, 1.5], opacity: [0, 0.5, 0] }}
+                      transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                      className="absolute inset-0 -m-16 bg-gradient-radial from-emerald-400/40 via-green-400/30 to-transparent rounded-full pointer-events-none"
+                    />
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [0, 0.8, 1.2], opacity: [0, 0.6, 0] }}
+                      transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
+                      className="absolute inset-0 -m-12 bg-gradient-radial from-green-300/50 via-emerald-400/40 to-transparent rounded-full pointer-events-none"
+                    />
+                    
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                      className="relative z-10 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-500/50"
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.3, delay: 0.6 }}
+                      >
+                        <CheckCircle className="w-8 h-8 text-white" />
+                      </motion.div>
+                    </motion.div>
+                    <motion.h3
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                      className="text-xl font-semibold text-green-400 relative z-10"
+                    >
                       Yetkili Girişi Başarılı!
-                    </h3>
-                    <p className="text-slate-400">Admin paneline yönlendiriliyor...</p>
+                    </motion.h3>
+                    <motion.p
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 1 }}
+                      className="text-slate-400 relative z-10"
+                    >
+                      Admin paneline yönlendiriliyor...
+                    </motion.p>
                   </motion.div>
                 ) : (
                   <motion.form
