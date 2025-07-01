@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, User, Shield, ArrowLeft, Sparkles, CheckCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Shield, ArrowLeft, Sparkles, CheckCircle, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +17,7 @@ export default function AdminLogin() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -222,14 +223,24 @@ export default function AdminLogin() {
                         Şifre
                       </Label>
                       <div className="relative group">
-                        <Lock className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
                         <Input
                           id="password"
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           placeholder=""
-                          className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+                          className="pr-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
                           {...register("password")}
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-3 text-slate-400 hover:text-blue-400 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                       {errors.password && (
                         <motion.p

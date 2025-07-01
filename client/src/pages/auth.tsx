@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   KeyRound,
   User,
-  Lock,
+  Eye,
+  EyeOff,
   ArrowLeft,
   LogIn,
   CheckCircle,
@@ -47,6 +48,9 @@ export default function Auth() {
   const [isLoginSuccess, setIsLoginSuccess] = useState(false);
   const [isRegisterSuccess, setIsRegisterSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
 
   // Tab indicator animation
@@ -278,14 +282,24 @@ export default function Auth() {
                             Şifre
                           </Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                               id="login-password"
-                              type="password"
+                              type={showLoginPassword ? "text" : "password"}
                               placeholder="Şifreniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
+                              className="pr-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...loginForm.register("password")}
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowLoginPassword(!showLoginPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
+                            >
+                              {showLoginPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
                           </div>
                           {loginForm.formState.errors.password && (
                             <p className="text-red-400 text-sm">
@@ -395,14 +409,24 @@ export default function Auth() {
                             Şifre
                           </Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                               id="register-password"
-                              type="password"
+                              type={showRegisterPassword ? "text" : "password"}
                               placeholder="Şifreniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
+                              className="pr-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 auth-input transition-all duration-300"
                               {...registerForm.register("password")}
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
+                            >
+                              {showRegisterPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
                           </div>
                           {registerForm.formState.errors.password && (
                             <p className="text-red-400 text-sm">
@@ -416,14 +440,24 @@ export default function Auth() {
                             Şifre Tekrarı
                           </Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                               id="register-confirm-password"
-                              type="password"
+                              type={showConfirmPassword ? "text" : "password"}
                               placeholder="Şifrenizi tekrar giriniz"
-                              className="pl-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
+                              className="pr-10 bg-slate-700 border-slate-600 text-slate-50 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500"
                               {...registerForm.register("confirmPassword")}
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
                           </div>
                           {registerForm.formState.errors.confirmPassword && (
                             <p className="text-red-400 text-sm">
