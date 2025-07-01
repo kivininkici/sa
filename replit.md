@@ -254,6 +254,9 @@ Changelog:
 - Kategori seçimi modal'ı ile sadece seçilen kategorideki key'ler export edilebiliyor
 - API endpoint (/api/admin/keys/export/:category) kategori bazlı key export için eklendi
 - İndirilen dosya kategoriye göre adlandırılıyor (örn: Instagram_keys.txt)
+- API silme sistemi iyileştirildi - API silindiğinde bağlı tüm servisler otomatik kaldırılıyor
+- Enhanced logging eklendi - API silme işlemi detaylı log'larla takip ediliyor
+- Cascade deletion: API silme sırasında ilişkili servisler saniyesinde kaldırılıyor
 - Replit Agent'tan Replit ortamına migration başarıyla tamamlandı
 
 ## User Preferences

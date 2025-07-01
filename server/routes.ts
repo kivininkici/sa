@@ -1728,29 +1728,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/api-settings/:id", requireAdminAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Starting API deletion for ID: ${id}`);
       
       // First, get all services that use this API setting
       const services = await storage.getAllServices();
-      const servicesToDelete = services.filter(service => 
-        (service as any).apiSettingsId === id
-      );
+      console.log(`Total services in database: ${services.length}`);
+      
+      const servicesToDelete = services.filter(service => {
+        const hasApiId = service.apiSettingsId === id;
+        if (hasApiId) {
+          console.log(`Service "${service.name}" (ID: ${service.id}) will be deleted - linked to API ID: ${service.apiSettingsId}`);
+        }
+        return hasApiId;
+      });
+      
+      console.log(`Found ${servicesToDelete.length} services to delete for API ID: ${id}`);
       
       // Delete all related services first
+      let deletedCount = 0;
       for (const service of servicesToDelete) {
-        await storage.deleteService(service.id);
+        try {
+          await storage.deleteService(service.id);
+          deletedCount++;
+          console.log(`Deleted service: ${service.name} (ID: ${service.id})`);
+        } catch (serviceError) {
+          console.error(`Failed to delete service ${service.id}:`, serviceError);
+        }
       }
       
       // Then delete the API setting
       await storage.deleteApiSettings(id);
+      console.log(`Deleted API setting with ID: ${id}`);
       
       res.json({ 
         success: true, 
-        deletedServices: servicesToDelete.length,
-        message: `API silindi ve ${servicesToDelete.length} bağlı servis kaldırıldı`
+        deletedServices: deletedCount,
+        message: `API başarıyla silindi ve ${deletedCount} bağlı servis kaldırıldı`
       });
     } catch (error) {
       console.error("Error deleting API setting:", error);
-      res.status(500).json({ message: "Failed to delete API setting" });
+      res.status(500).json({ message: "API silme işlemi başarısız" });
     }
   });
 
