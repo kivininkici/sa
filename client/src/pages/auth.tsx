@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -51,20 +51,28 @@ export default function Auth() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Tab indicator animation
+  // Mouse tracking effect
   useEffect(() => {
-    const indicator = document.querySelector('.tabs-indicator') as HTMLElement;
-    if (indicator) {
-      indicator.style.transition = "transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)";
-      if (activeTab === "register") {
-        indicator.style.transform = "translateX(100%)";
-      } else {
-        indicator.style.transform = "translateX(0%)";
+    const handleMouseMove = (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePosition({
+          x: ((e.clientX - rect.left) / rect.width) * 100,
+          y: ((e.clientY - rect.top) / rect.height) * 100,
+        });
       }
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+      return () => container.removeEventListener('mousemove', handleMouseMove);
     }
-  }, [activeTab]);
+  }, []);
 
   const loginForm = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -162,11 +170,32 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div 
+      ref={containerRef}
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4"
+    >
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        
+        {/* Mouse tracking effect */}
+        <motion.div
+          className="absolute w-80 h-80 bg-blue-400/8 rounded-full blur-3xl pointer-events-none"
+          animate={{
+            x: mousePosition.x + '%',
+            y: mousePosition.y + '%',
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 120,
+            damping: 30,
+            mass: 0.5
+          }}
+          style={{
+            transform: 'translate(-50%, -50%)',
+          }}
+        />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -210,18 +239,16 @@ export default function Auth() {
                 <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 relative overflow-hidden rounded-xl p-0 backdrop-blur-sm">
                   <motion.div 
                     className="absolute inset-y-0 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 rounded-xl shadow-lg tab-indicator-glow"
-                    initial={false}
+                    initial={{ x: "0%" }}
                     animate={{
-                      x: activeTab === "login" ? "0%" : "50%",
-                      width: "50%"
+                      x: activeTab === "register" ? "100%" : "0%"
                     }}
                     transition={{
-                      type: "spring",
-                      stiffness: 280,
-                      damping: 25,
-                      duration: 0.7,
-                      bounce: 0.2
+                      type: "tween",
+                      duration: 0.3,
+                      ease: [0.4, 0.0, 0.2, 1]
                     }}
+                    style={{ width: "50%" }}
                   />
                   <TabsTrigger 
                     value="login" 
