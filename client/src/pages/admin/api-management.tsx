@@ -100,9 +100,14 @@ export default function ApiManagement() {
   // Ultra fast delete - instant UI feedback
   const deleteApiMutation = useMutation({
     mutationFn: async (apiId: number) => {
-      // Instant UI update - remove immediately
+      // Instant UI update - remove API immediately
       queryClient.setQueryData(["/api/admin/api-settings"], (oldData: any) => 
         oldData?.filter((api: any) => api.id !== apiId) || []
+      );
+      
+      // Also instantly remove services linked to this API
+      queryClient.setQueryData(["/api/admin/services/all"], (oldData: any) => 
+        oldData?.filter((service: any) => service.apiSettingsId !== apiId) || []
       );
       
       // Fire and forget background delete
@@ -112,7 +117,11 @@ export default function ApiManagement() {
         headers: { 'Content-Type': 'application/json' },
       }).then(response => response.ok ? response.json() : null)
         .then(data => data && toast({ title: "✓", description: `${data.deletedServices || 0} servis silindi` }))
-        .catch(() => queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] }));
+        .catch(() => {
+          // Restore on error
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
+        });
       
       return { id: apiId };
     },
