@@ -204,7 +204,7 @@ export default function AdminLogin() {
                           id="username"
                           type={showUsername ? "text" : "password"}
                           placeholder=""
-                          className="pl-11 pr-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+                          className="pl-11 pr-11 h-12 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300 bg-[#1e293b80]"
                           {...register("username")}
                         />
                         <button
