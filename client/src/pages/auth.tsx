@@ -181,16 +181,16 @@ export default function Auth() {
         
         {/* Mouse tracking effect */}
         <motion.div
-          className="absolute w-72 h-72 bg-blue-400/25 rounded-full blur-2xl pointer-events-none"
+          className="absolute w-36 h-36 bg-blue-400/25 rounded-full blur-xl pointer-events-none"
           animate={{
             x: mousePosition.x + '%',
             y: mousePosition.y + '%',
           }}
           transition={{
             type: "spring",
-            stiffness: 120,
-            damping: 30,
-            mass: 0.5
+            stiffness: 400,
+            damping: 15,
+            mass: 0.2
           }}
           style={{
             transform: 'translate(-50%, -50%)',
