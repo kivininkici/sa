@@ -19,10 +19,13 @@ import {
   Loader2,
   UserPlus,
   Mail,
+  Sparkles,
+  Crown,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
+import { FloatingOrbs } from "@/components/ui/animated-background";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Kullanıcı adı en az 3 karakter olmalı"),
@@ -175,58 +178,127 @@ export default function Auth() {
   return (
     <div 
       ref={containerRef}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden"
     >
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
-        {/* Mouse tracking effect */}
-        <motion.div
-          className="fixed w-36 h-36 bg-gradient-to-br from-blue-400/20 via-purple-400/15 to-slate-400/10 rounded-full blur-xl pointer-events-none z-10"
-          style={{
-            x: mousePosition.x - 72,
-            y: mousePosition.y - 72,
-          }}
-          initial={{ opacity: 1 }}
-        />
+      {/* Enhanced Background Effects */}
+      <FloatingOrbs />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-cyan-500/10 pointer-events-none"></div>
+      
+      {/* Advanced Mouse tracking effect */}
+      <motion.div
+        className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10"
+        style={{
+          x: mousePosition.x - 96,
+          y: mousePosition.y - 96,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      />
+      
+      {/* Floating particles specific to auth */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 15, -15, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.8, 0.3]
+            }}
+            transition={{
+              duration: 6 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Back to home button */}
+        {/* Enhanced Back to home button */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          initial={{ opacity: 0, y: -30, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
+          className="mb-8"
         >
-          <Button
-            variant="ghost"
-            onClick={() => (window.location.href = "/")}
-            className="text-slate-300 hover:text-white hover:bg-slate-800/50"
+          <motion.div
+            whileHover={{ scale: 1.05, x: -5 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Ana Sayfaya Dön
-          </Button>
+            <Button
+              variant="ghost"
+              onClick={() => (window.location.href = "/")}
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3 transition-all duration-300"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Ana Sayfaya Dön
+            </Button>
+          </motion.div>
         </motion.div>
 
-        {/* Auth Card */}
+        {/* Enhanced Auth Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          initial={{ opacity: 0, y: 30, rotateX: 15 }}
+          animate={{ opacity: 1, y: 0, rotateX: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 80 }}
+          className="perspective-1000"
         >
-          <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-xl">
-            <CardHeader className="text-center pb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <KeyRound className="w-8 h-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl text-white mb-2">
-                KeyPanel
-              </CardTitle>
-              <p className="text-slate-400 text-sm">
-                Hesabınıza giriş yapın veya yeni hesap oluşturun
-              </p>
+          <Card className="neo-card bg-slate-800/70 border-slate-700/50 backdrop-blur-xl shadow-2xl hover:shadow-purple-500/20 transition-all duration-500">
+            <CardHeader className="text-center pb-8 relative overflow-hidden">
+              {/* Animated background element */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-t-xl"></div>
+              
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.8, delay: 0.4, type: "spring", stiffness: 100 }}
+                className="relative z-10"
+              >
+                <motion.div 
+                  className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg relative"
+                  whileHover={{ 
+                    scale: 1.1, 
+                    rotate: [0, -10, 10, 0],
+                    boxShadow: "0 20px 40px rgba(139, 92, 246, 0.4)"
+                  }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <KeyRound className="w-10 h-10 text-white drop-shadow-lg" />
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-400 rounded-3xl opacity-0"
+                    whileHover={{ opacity: 0.3 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </motion.div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="relative z-10"
+              >
+                <CardTitle className="text-3xl font-bold gradient-text mb-3">
+                  KeyPanel
+                </CardTitle>
+                <motion.p 
+                  className="text-slate-400 text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                >
+                  Hesabınıza giriş yapın veya yeni hesap oluşturun
+                </motion.p>
+              </motion.div>
             </CardHeader>
 
             <CardContent className="space-y-6">

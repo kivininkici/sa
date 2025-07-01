@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, User, Shield, ArrowLeft, Sparkles, CheckCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Shield, ArrowLeft, Sparkles, CheckCircle, Loader2, Crown } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { FloatingOrbs } from "@/components/ui/animated-background";
 
 export default function AdminLogin() {
   const { toast } = useToast();

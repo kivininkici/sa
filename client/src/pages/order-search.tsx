@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { FloatingOrbs } from "@/components/ui/animated-background";
 import { 
   Search, 
   RefreshCw, 
@@ -22,12 +23,14 @@ import {
   Link,
   Loader2,
   Sparkles,
-  PlayCircle
+  PlayCircle,
+  ArrowLeft,
+  KeyRound,
+  ShoppingCart,
+  Activity
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { ThemeProvider } from "@/hooks/use-theme";
 
 const searchSchema = z.object({
   orderId: z.string().min(1, "Sipariş ID gerekli"),
@@ -55,658 +58,535 @@ interface OrderDetails {
   };
   key: {
     id: number;
-    category: string;
     value: string;
     name: string;
   };
 }
 
-export default function OrderSearchPage() {
+export default function OrderSearchEnhanced() {
   const { toast } = useToast();
-  const [searchedOrder, setSearchedOrder] = useState<OrderDetails | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [orderNotFound, setOrderNotFound] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
-  const searchForm = useForm<SearchData>({
+  const form = useForm<SearchData>({
     resolver: zodResolver(searchSchema),
-    defaultValues: {
-      orderId: ""
-    }
   });
 
-  // Auto-populate order ID from URL parameters
+  // Mouse tracking effect
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const orderIdParam = urlParams.get('orderId');
-    if (orderIdParam) {
-      searchForm.setValue('orderId', orderIdParam);
-      searchOrderMutation.mutate({ orderId: orderIdParam });
-    }
+    let rafId: number;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) cancelAnimationFrame(rafId);
+      
+      rafId = requestAnimationFrame(() => {
+        setMousePosition({
+          x: e.clientX,
+          y: e.clientY,
+        });
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Auto-refresh for pending/processing orders
   useEffect(() => {
-    if (searchedOrder && (searchedOrder.status === 'pending' || searchedOrder.status === 'processing' || searchedOrder.status === 'in_progress')) {
-      setIsAutoRefreshing(true);
+    if (!orderDetails || !isAutoRefreshing) return;
+    
+    const shouldAutoRefresh = ['pending', 'processing', 'in_progress'].includes(orderDetails.status);
+    
+    if (shouldAutoRefresh) {
       const interval = setInterval(() => {
-        searchOrderMutation.mutate({ orderId: searchedOrder.orderId });
-      }, 10000); // Every 10 seconds
-
-      return () => {
-        clearInterval(interval);
-        setIsAutoRefreshing(false);
-      };
+        searchOrderMutation.mutate({ orderId: orderDetails.orderId });
+        setRefreshCount(prev => prev + 1);
+      }, 10000); // 10 seconds
+      
+      return () => clearInterval(interval);
     } else {
       setIsAutoRefreshing(false);
     }
-  }, [searchedOrder]);
+  }, [orderDetails, isAutoRefreshing]);
 
-  // Search order mutation
   const searchOrderMutation = useMutation({
-    mutationFn: async (data: SearchData & { forceRefresh?: boolean }) => {
-      setIsSearching(true);
-      setOrderNotFound(false);
-      const url = `/api/orders/search/${data.orderId}${data.forceRefresh ? '?refresh=true' : ''}`;
-      const response = await apiRequest("GET", url);
-      return response.json();
+    mutationFn: async (data: SearchData) => {
+      const response = await apiRequest(`/api/orders/search/${data.orderId}`, {
+        method: 'GET',
+      });
+      return response;
     },
-    onSuccess: (data: OrderDetails) => {
-      // Check if status changed for existing order
-      if (searchedOrder && searchedOrder.status !== data.status) {
-        let statusMessage = '';
-        if (data.status === 'cancelled') {
-          statusMessage = 'Sipariş iptal edildi';
-        } else if (data.status === 'completed') {
-          statusMessage = 'Sipariş tamamlandı';
-        } else if (data.status === 'failed') {
-          statusMessage = 'Sipariş başarısız oldu';
-        } else {
-          statusMessage = `Durum güncellendi: ${data.status}`;
-        }
-        
+    onSuccess: (data) => {
+      const previousStatus = orderDetails?.status;
+      setOrderDetails(data);
+      setLastUpdate(new Date());
+      
+      // Show status change notification
+      if (previousStatus && previousStatus !== data.status) {
         toast({
-          title: "Durum Değişikliği",
-          description: statusMessage,
-          variant: data.status === 'cancelled' || data.status === 'failed' ? "destructive" : "default",
+          title: "Sipariş Durumu Güncellendi",
+          description: `Sipariş durumu: ${getStatusText(data.status)}`,
         });
       }
       
-      setSearchedOrder(data);
-      setLastUpdated(new Date());
-      setIsSearching(false);
+      // Start auto-refresh for pending/processing orders
+      if (['pending', 'processing', 'in_progress'].includes(data.status)) {
+        setIsAutoRefreshing(true);
+      }
     },
-    onError: (error) => {
-      console.error("Order search error:", error);
-      setOrderNotFound(true);
-      setSearchedOrder(null);
-      setIsSearching(false);
+    onError: (error: any) => {
       toast({
-        title: "Sipariş bulunamadı",
-        description: "Girdiğiniz sipariş ID'si bulunamadı. Lütfen kontrol edip tekrar deneyin.",
+        title: "Sipariş Bulunamadı",
+        description: error.message || "Sipariş ID'si doğru değil veya sipariş mevcut değil.",
         variant: "destructive",
       });
-    }
+      setOrderDetails(null);
+      setIsAutoRefreshing(false);
+    },
   });
 
-  const onSearch = (data: SearchData) => {
+  const onSubmit = (data: SearchData) => {
+    setRefreshCount(0);
     searchOrderMutation.mutate(data);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <Badge className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-medium">
-            Tamamlandı
-          </Badge>
-        );
-      case 'failed':
-      case 'cancelled':
-        return (
-          <Badge className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 text-sm font-medium">
-            İptal
-          </Badge>
-        );
-      case 'processing':
-      case 'in_progress':
-        return (
-          <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 text-sm font-medium">
-            İşleniyor
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm font-medium">
-            Sipariş Alındı
-          </Badge>
-        );
-      case 'partial':
-        return (
-          <Badge className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 text-sm font-medium">
-            Kısmi
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 text-sm font-medium">
-            Bilinmiyor
-          </Badge>
-        );
+  const handleManualRefresh = () => {
+    if (orderDetails) {
+      searchOrderMutation.mutate({ orderId: orderDetails.orderId });
+      setRefreshCount(prev => prev + 1);
     }
   };
 
-  // Enhanced Progress Steps Component
-  const ProgressSteps = ({ order }: { order: OrderDetails }) => {
-    const steps = [
-      { key: 'pending', label: 'Sipariş Alındı', icon: CheckCircle2 },
-      { key: 'processing', label: 'İşleniyor', icon: Settings },
-      { key: 'in_progress', label: 'Devam Ediyor', icon: PlayCircle },
-      { key: 'completed', label: 'Tamamlandı', icon: CheckCircle }
-    ];
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-gradient-to-r from-emerald-500 to-green-500';
+      case 'processing':
+      case 'in_progress':
+        return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+      case 'pending':
+        return 'bg-gradient-to-r from-yellow-500 to-amber-500';
+      case 'partial':
+        return 'bg-gradient-to-r from-orange-500 to-yellow-500';
+      case 'failed':
+      case 'cancelled':
+        return 'bg-gradient-to-r from-red-500 to-pink-500';
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-slate-500';
+    }
+  };
 
-    const getStepStatus = (stepIndex: number, orderStatus: string) => {
-      switch (orderStatus) {
-        case 'pending':
-          return stepIndex === 0 ? 'active' : 'inactive';
-        case 'processing':
-          return stepIndex === 0 ? 'completed' : stepIndex === 1 ? 'active' : 'inactive';
-        case 'in_progress':
-          return stepIndex <= 1 ? 'completed' : stepIndex === 2 ? 'active' : 'inactive';
-        case 'completed':
-          return 'completed';
-        case 'failed':
-        case 'cancelled':
-          return stepIndex === 0 ? 'completed' : stepIndex === 1 ? 'failed' : 'inactive';
-        case 'partial':
-          return stepIndex <= 2 ? 'completed' : 'inactive';
-        default:
-          return 'inactive';
-      }
-    };
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Tamamlandı';
+      case 'processing':
+        return 'İşleniyor';
+      case 'in_progress':
+        return 'Devam Ediyor';
+      case 'pending':
+        return 'Sipariş Alındı';
+      case 'partial':
+        return 'Kısmi Tamamlandı';
+      case 'failed':
+        return 'Başarısız';
+      case 'cancelled':
+        return 'İptal Edildi';
+      default:
+        return status;
+    }
+  };
 
-    const getProgressPercentage = (orderStatus: string) => {
-      switch (orderStatus) {
-        case 'pending': return 25;
-        case 'processing': return 50;
-        case 'in_progress': return 75;
-        case 'completed': return 100;
-        case 'partial': return 75;
-        case 'failed':
-        case 'cancelled': return 50;
-        default: return 0;
-      }
-    };
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-5 h-5" />;
+      case 'processing':
+      case 'in_progress':
+        return <Settings className="w-5 h-5 animate-spin" />;
+      case 'pending':
+        return <Clock className="w-5 h-5" />;
+      case 'partial':
+        return <CheckCircle2 className="w-5 h-5" />;
+      case 'failed':
+      case 'cancelled':
+        return <XCircle className="w-5 h-5" />;
+      default:
+        return <Clock className="w-5 h-5" />;
+    }
+  };
 
-    return (
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="relative">
-          {/* Progress Line Background */}
-          <div className="absolute top-6 left-0 w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full"
-              initial={{ width: "0%" }}
-              animate={{ width: `${getProgressPercentage(order.status)}%` }}
-              transition={{ duration: 2, ease: "easeInOut" }}
-            />
-          </div>
+  const getProgressPercentage = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 25;
+      case 'processing':
+        return 50;
+      case 'in_progress':
+        return 75;
+      case 'completed':
+      case 'partial':
+        return 100;
+      case 'failed':
+      case 'cancelled':
+        return 0;
+      default:
+        return 0;
+    }
+  };
 
-          {/* Steps */}
-          <div className="relative flex justify-between">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const status = getStepStatus(index, order.status);
-              
-              return (
-                <motion.div 
-                  key={step.key} 
-                  className="flex flex-col items-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.15 }}
-                >
-                  {/* Step Circle */}
-                  <motion.div 
-                    className={`relative flex items-center justify-center w-12 h-12 rounded-full border-3 z-10 ${
-                      status === 'completed' 
-                        ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-200 dark:shadow-green-800' 
-                        : status === 'active'
-                          ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-800'
-                          : status === 'failed'
-                            ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-200 dark:shadow-red-800'
-                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
-                    }`}
-                    whileHover={{ scale: 1.1 }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }}
-                  >
-                    <motion.div
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: status === 'active' ? 360 : 0 }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: status === 'active' ? Infinity : 0, 
-                        ease: "linear" 
-                      }}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </motion.div>
-                    
-                    {/* Pulse effect for active step */}
-                    {status === 'active' && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full bg-blue-500 opacity-30"
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.5, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                    )}
-                  </motion.div>
+  const progressSteps = [
+    { key: 'pending', label: 'Sipariş Alındı', icon: Clock },
+    { key: 'processing', label: 'İşleniyor', icon: Settings },
+    { key: 'in_progress', label: 'Devam Ediyor', icon: PlayCircle },
+    { key: 'completed', label: 'Tamamlandı', icon: CheckCircle },
+  ];
 
-                  {/* Step Label */}
-                  <motion.div 
-                    className="mt-3 text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
-                  >
-                    <p className={`text-sm font-medium transition-colors duration-500 ${
-                      status === 'completed' 
-                        ? 'text-green-600 dark:text-green-400' 
-                        : status === 'active'
-                          ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                          : status === 'failed'
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {step.label}
-                    </p>
-                  </motion.div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Progress Percentage */}
-        <motion.div 
-          className="mt-6 text-center"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        >
-          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full">
-            <motion.div 
-              className="w-2 h-2 bg-blue-500 rounded-full"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              İlerleme: {getProgressPercentage(order.status)}%
-            </span>
-          </div>
-        </motion.div>
-      </div>
-    );
+  const getCurrentStepIndex = (status: string) => {
+    if (status === 'completed' || status === 'partial') return 3;
+    if (status === 'in_progress') return 2;
+    if (status === 'processing') return 1;
+    if (status === 'pending') return 0;
+    return -1;
   };
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-500">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <motion.div 
-            className="flex justify-between items-center mb-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Sipariş Sorgulama</h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 transition-colors duration-300">Sipariş durumunuzu takip edin</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-            </div>
-          </motion.div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <FloatingOrbs />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-cyan-500/5 pointer-events-none"></div>
+      
+      {/* Advanced Mouse tracking effect */}
+      <motion.div
+        className="fixed w-48 h-48 bg-gradient-to-br from-blue-400/30 via-purple-400/20 to-cyan-400/15 rounded-full blur-2xl pointer-events-none z-10"
+        style={{
+          x: mousePosition.x - 96,
+          y: mousePosition.y - 96,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      />
 
-          {/* Main Content */}
-          <motion.div 
-            className="space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            {/* Search Form */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+      {/* Enhanced Header */}
+      <motion.header 
+        className="bg-slate-950/70 backdrop-blur-xl border-b border-slate-800/50 relative z-20"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <motion.div 
+              className="flex items-center space-x-3"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <Card className="border-0 shadow-2xl bg-white dark:bg-gray-800 transition-all duration-500 hover:shadow-3xl">
-                <CardContent className="p-8">
-                  <motion.div 
-                    className="mb-6"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-300 flex items-center">
-                      <Sparkles className="w-6 h-6 mr-2 text-blue-500" />
-                      Sipariş ID
-                    </h2>
-                  </motion.div>
-                  
-                  <form onSubmit={searchForm.handleSubmit(onSearch)} className="space-y-4">
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.3 }}
-                    >
+              <motion.div 
+                className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.1, rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Search className="w-6 h-6 text-white" />
+              </motion.div>
+              <div>
+                <h1 className="text-3xl font-bold gradient-text">Sipariş Sorgula</h1>
+                <p className="text-slate-400">Siparişinizin durumunu kontrol edin</p>
+              </div>
+            </motion.div>
+            <motion.div 
+              className="flex items-center space-x-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.05, x: -5 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  onClick={() => (window.location.href = "/")}
+                  className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Ana Sayfa
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button 
+                  className="bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  onClick={() => window.open('https://www.itemsatis.com/p/KiwiPazari', '_blank')}
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Satın Al
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* Main Content */}
+      <motion.main 
+        className="container mx-auto px-4 py-8 relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.3 }}
+      >
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Search Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <Card className="neo-card bg-slate-800/70 border-slate-700/50 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="text-slate-50 flex items-center">
+                  <Search className="w-6 h-6 mr-2 text-blue-400" />
+                  Sipariş Arama
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
                       <Input
-                        placeholder="87963433"
-                        className="h-14 text-lg border-2 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-300 focus:scale-[1.02] focus:shadow-lg"
-                        {...searchForm.register("orderId")}
+                        {...form.register("orderId")}
+                        placeholder="Sipariş ID'sini giriniz..."
+                        className="bg-slate-700/50 border-slate-600 text-slate-50 placeholder-slate-400 focus:border-blue-500 transition-all duration-300"
                       />
-                      <AnimatePresence>
-                        {searchForm.formState.errors.orderId && (
-                          <motion.p 
-                            className="text-red-500 text-sm mt-2"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            {searchForm.formState.errors.orderId.message}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                    
+                      {form.formState.errors.orderId && (
+                        <p className="text-red-400 text-sm mt-1">
+                          {form.formState.errors.orderId.message}
+                        </p>
+                      )}
+                    </div>
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: 0.4 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       <Button 
                         type="submit" 
-                        disabled={isSearching}
-                        className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-500 dark:to-blue-600 dark:hover:from-blue-600 dark:hover:to-blue-700 text-white font-medium transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
+                        disabled={searchOrderMutation.isPending}
+                        className="cyber-button w-full sm:w-auto px-8"
                       >
-                        {isSearching ? (
-                          <motion.div 
-                            className="flex items-center"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Sorgulanıyor...
-                          </motion.div>
+                        {searchOrderMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         ) : (
-                          <motion.div 
-                            className="flex items-center"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <Search className="w-5 h-5 mr-2" />
-                            Sorgula
-                          </motion.div>
+                          <Search className="w-4 h-4 mr-2" />
                         )}
+                        Ara
                       </Button>
                     </motion.div>
-                  </form>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                  {/* Success Message */}
-                  <AnimatePresence>
-                    {searchedOrder && (
-                      <motion.div 
-                        className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-300"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
+          {/* Order Details */}
+          <AnimatePresence>
+            {orderDetails && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-6"
+              >
+                {/* Enhanced Progress Steps */}
+                <Card className="neo-card bg-slate-800/70 border-slate-700/50 backdrop-blur-xl">
+                  <CardContent className="p-8">
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-semibold text-slate-50">Sipariş Durumu</h3>
+                        {isAutoRefreshing && (
+                          <motion.div 
+                            className="flex items-center text-blue-400"
+                            animate={{ opacity: [1, 0.5, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          >
+                            <Activity className="w-4 h-4 mr-2" />
+                            <span className="text-sm">Canlı takip aktif</span>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Progress Steps */}
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-8">
+                          {progressSteps.map((step, index) => {
+                            const currentIndex = getCurrentStepIndex(orderDetails.status);
+                            const isActive = index <= currentIndex;
+                            const isCurrent = index === currentIndex;
+                            
+                            return (
+                              <motion.div
+                                key={step.key}
+                                className="flex flex-col items-center flex-1"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: index * 0.1 }}
+                              >
+                                <motion.div
+                                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 mb-3 transition-all duration-500 ${
+                                    isActive 
+                                      ? 'bg-blue-500 border-blue-500 text-white' 
+                                      : 'bg-slate-700 border-slate-600 text-slate-400'
+                                  }`}
+                                  animate={isCurrent ? { scale: [1, 1.1, 1] } : {}}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                  <step.icon className="w-5 h-5" />
+                                </motion.div>
+                                <span className={`text-sm font-medium ${isActive ? 'text-slate-50' : 'text-slate-400'}`}>
+                                  {step.label}
+                                </span>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="absolute top-6 left-6 right-6 h-0.5 bg-slate-700 -z-10">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                            initial={{ width: "0%" }}
+                            animate={{ width: `${(getCurrentStepIndex(orderDetails.status) / 3) * 100}%` }}
+                            transition={{ duration: 1, ease: "easeInOut" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="flex items-center justify-center">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                        >
+                          <Badge className={`${getStatusColor(orderDetails.status)} text-white px-6 py-2 text-base font-semibold`}>
+                            {getStatusIcon(orderDetails.status)}
+                            <span className="ml-2">{getStatusText(orderDetails.status)}</span>
+                          </Badge>
+                        </motion.div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Order Details Card */}
+                <Card className="neo-card bg-slate-800/70 border-slate-700/50 backdrop-blur-xl">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-slate-50 flex items-center">
+                        <Tag className="w-5 h-5 mr-2 text-purple-400" />
+                        Sipariş Detayları
+                      </CardTitle>
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        <div className="flex items-center text-green-800 dark:text-green-200">
-                          <CheckCircle className="w-5 h-5 mr-2" />
-                          <span className="font-medium">Sipariş bilgileri güncellendi</span>
+                        <Button
+                          onClick={handleManualRefresh}
+                          variant="outline"
+                          size="sm"
+                          disabled={searchOrderMutation.isPending}
+                          className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                        >
+                          <RefreshCw className={`w-4 h-4 mr-2 ${searchOrderMutation.isPending ? 'animate-spin' : ''}`} />
+                          Yenile
+                        </Button>
+                      </motion.div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <motion.div 
+                        className="space-y-4"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                      >
+                        <div>
+                          <label className="text-slate-400 text-sm">Sipariş ID</label>
+                          <p className="text-slate-50 font-mono text-lg">{orderDetails.orderId}</p>
+                        </div>
+                        <div>
+                          <label className="text-slate-400 text-sm">Servis</label>
+                          <p className="text-slate-50">{orderDetails.service.name}</p>
+                          <p className="text-slate-400 text-sm">{orderDetails.service.platform}</p>
+                        </div>
+                        <div>
+                          <label className="text-slate-400 text-sm">Miktar</label>
+                          <p className="text-slate-50">{orderDetails.quantity.toLocaleString()}</p>
+                        </div>
+                      </motion.div>
+
+                      <motion.div 
+                        className="space-y-4"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.5 }}
+                      >
+                        <div>
+                          <label className="text-slate-400 text-sm">Oluşturulma Tarihi</label>
+                          <p className="text-slate-50">{new Date(orderDetails.createdAt).toLocaleString('tr-TR')}</p>
+                        </div>
+                        {orderDetails.targetUrl && (
+                          <div>
+                            <label className="text-slate-400 text-sm">Hedef URL</label>
+                            <p className="text-slate-50 break-all">{orderDetails.targetUrl}</p>
+                          </div>
+                        )}
+                        <div>
+                          <label className="text-slate-400 text-sm">Anahtar</label>
+                          <p className="text-slate-50 font-mono">{orderDetails.key.value}</p>
+                        </div>
+                      </motion.div>
+                    </div>
+
+                    {/* Auto-refresh Info */}
+                    {lastUpdate && (
+                      <motion.div 
+                        className="pt-4 border-t border-slate-700/50"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                      >
+                        <div className="flex items-center justify-between text-sm text-slate-400">
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
+                          </div>
+                          {refreshCount > 0 && (
+                            <div className="flex items-center">
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              {refreshCount} kez yenilendi
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}
-                  </AnimatePresence>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Order Details */}
-            <AnimatePresence>
-              {searchedOrder && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -30, scale: 0.95 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                >
-                  <Card className="border-0 shadow-2xl bg-white dark:bg-gray-800 transition-all duration-500 hover:shadow-3xl overflow-hidden">
-                    <CardContent className="p-8">
-                      <div className="space-y-6">
-                        {/* Order Header */}
-                        <motion.div 
-                          className="flex justify-between items-start"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.5, delay: 0.2 }}
-                        >
-                          <div>
-                            <motion.h3 
-                              className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.4, delay: 0.3 }}
-                            >
-                              Sipariş ID:
-                            </motion.h3>
-                            <motion.p 
-                              className="text-2xl font-mono text-blue-600 dark:text-blue-400 mt-1 transition-colors duration-300"
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.5, delay: 0.4 }}
-                            >
-                              {searchedOrder.orderId}
-                            </motion.p>
-                          </div>
-                          <motion.div 
-                            className="text-right"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                          >
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 transition-colors duration-300">Durum:</p>
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.4, delay: 0.5 }}
-                              whileHover={{ scale: 1.05 }}
-                            >
-                              {getStatusBadge(searchedOrder.status)}
-                            </motion.div>
-                          </motion.div>
-                        </motion.div>
-
-                        {/* Enhanced Progress Steps */}
-                        <motion.div 
-                          className="my-8"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.4 }}
-                        >
-                          <ProgressSteps order={searchedOrder} />
-                        </motion.div>
-
-                        {/* Status Text */}
-                        <motion.div 
-                          className="text-center space-y-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.6 }}
-                        >
-                          <p className="text-lg text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                            Oluşturulma: <span className="font-semibold">
-                              {searchedOrder.createdAt 
-                                ? new Date(searchedOrder.createdAt).toLocaleString('tr-TR', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })
-                                : 'Bilinmiyor'
-                              }
-                            </span>
-                          </p>
-                          {lastUpdated && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                              Son güncelleme: {lastUpdated.toLocaleString('tr-TR', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit'
-                              })}
-                            </p>
-                          )}
-                          {isAutoRefreshing && (
-                            <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors duration-300">
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              <span className="text-sm">Otomatik yenileniyor...</span>
-                            </div>
-                          )}
-                        </motion.div>
-
-                        {/* Order Details Grid */}
-                        <motion.div 
-                          className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.7 }}
-                        >
-                          <div className="space-y-4">
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Tag className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Kategori:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.key.category}</p>
-                              </div>
-                            </motion.div>
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Miktar:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.quantity}</p>
-                              </div>
-                            </motion.div>
-                          </div>
-                          <div className="space-y-4">
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Link className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Hedef URL:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white text-sm break-all">{searchedOrder.targetUrl}</p>
-                              </div>
-                            </motion.div>
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <CheckCircle2 className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Anahtar:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white font-mono text-sm">{searchedOrder.key.value}</p>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </motion.div>
-
-                        {/* Manual Refresh Button */}
-                        <motion.div 
-                          className="text-center mt-6"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.8 }}
-                        >
-                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button 
-                              onClick={() => searchOrderMutation.mutate({ orderId: searchedOrder.orderId, forceRefresh: true })}
-                              disabled={searchOrderMutation.isPending}
-                              variant="outline"
-                              className="border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300"
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-2 ${searchOrderMutation.isPending ? 'animate-spin' : ''}`} />
-                              Manuel Yenile
-                            </Button>
-                          </motion.div>
-                        </motion.div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Order Not Found */}
-            <AnimatePresence>
-              {orderNotFound && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card className="border-0 shadow-2xl bg-white dark:bg-gray-800 transition-all duration-500">
-                    <CardContent className="p-8 text-center">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.2, type: "spring" }}
-                      >
-                        <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                      </motion.div>
-                      <motion.h3 
-                        className="text-xl font-semibold text-gray-900 dark:text-white mb-2 transition-colors duration-300"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                      >
-                        Sipariş Bulunamadı
-                      </motion.h3>
-                      <motion.p 
-                        className="text-gray-600 dark:text-gray-300 transition-colors duration-300"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: 0.4 }}
-                      >
-                        Girdiğiniz sipariş ID'si bulunamadı. Lütfen kontrol edip tekrar deneyin.
-                      </motion.p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
-    </ThemeProvider>
+      </motion.main>
+    </div>
   );
 }
