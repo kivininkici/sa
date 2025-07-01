@@ -295,9 +295,9 @@ export default function Auth() {
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
                             >
                               {showLoginPassword ? (
-                                <EyeOff className="w-4 h-4" />
-                              ) : (
                                 <Eye className="w-4 h-4" />
+                              ) : (
+                                <EyeOff className="w-4 h-4" />
                               )}
                             </button>
                           </div>
@@ -422,9 +422,9 @@ export default function Auth() {
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
                             >
                               {showRegisterPassword ? (
-                                <EyeOff className="w-4 h-4" />
-                              ) : (
                                 <Eye className="w-4 h-4" />
+                              ) : (
+                                <EyeOff className="w-4 h-4" />
                               )}
                             </button>
                           </div>
@@ -453,9 +453,9 @@ export default function Auth() {
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-blue-400 transition-colors"
                             >
                               {showConfirmPassword ? (
-                                <EyeOff className="w-4 h-4" />
-                              ) : (
                                 <Eye className="w-4 h-4" />
+                              ) : (
+                                <EyeOff className="w-4 h-4" />
                               )}
                             </button>
                           </div>

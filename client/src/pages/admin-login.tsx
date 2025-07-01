@@ -213,9 +213,9 @@ export default function AdminLogin() {
                           className="absolute right-3 top-3 text-slate-400 hover:text-blue-400 transition-colors"
                         >
                           {showUsername ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
                             <Eye className="w-5 h-5" />
+                          ) : (
+                            <EyeOff className="w-5 h-5" />
                           )}
                         </button>
                       </div>
@@ -248,9 +248,9 @@ export default function AdminLogin() {
                           className="absolute right-3 top-3 text-slate-400 hover:text-blue-400 transition-colors"
                         >
                           {showPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
                             <Eye className="w-5 h-5" />
+                          ) : (
+                            <EyeOff className="w-5 h-5" />
                           )}
                         </button>
                       </div>
