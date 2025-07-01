@@ -262,11 +262,12 @@ export default function Auth() {
           <motion.div
             whileHover={{ scale: 1.05, x: -5 }}
             whileTap={{ scale: 0.95 }}
+            className="cyber-button relative overflow-hidden rounded-lg"
           >
             <Button
               variant="ghost"
               onClick={() => (window.location.href = "/")}
-              className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3 transition-all duration-300 cyber-button relative overflow-hidden"
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 neo-card px-6 py-3 transition-all duration-300 relative z-10"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Ana Sayfaya Dön
