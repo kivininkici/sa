@@ -226,6 +226,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Auto-login endpoint for admin to login as any user
+  app.post('/api/auth/auto-login', requireAdminAuth, async (req, res) => {
+    try {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'Kullanıcı ID gerekli' });
+      }
+
+      // Try to find user in normal_users table first
+      const normalUser = await db
+        .select()
+        .from(normalUsers)
+        .where(eq(normalUsers.id, parseInt(userId)))
+        .limit(1);
+      
+      if (normalUser.length > 0) {
+        const user = normalUser[0];
+        
+        // Create session for the user
+        req.session.userId = user.id;
+        req.session.username = user.username;
+        req.session.isAdmin = false; // Will be checked dynamically
+        
+        return res.json({ 
+          message: 'Kullanıcı olarak giriş yapıldı',
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email
+          }
+        });
+      }
+      
+      // If not found in normal users, try Replit users
+      const replitUser = await storage.getUser(userId.toString());
+      if (replitUser) {
+        req.session.userId = replitUser.id;
+        req.session.username = replitUser.firstName || replitUser.email || 'User';
+        req.session.isAdmin = replitUser.role === 'admin';
+        
+        return res.json({
+          message: 'Kullanıcı olarak giriş yapıldı',
+          user: {
+            id: replitUser.id,
+            username: replitUser.firstName || replitUser.email,
+            email: replitUser.email
+          }
+        });
+      }
+      
+      res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+    } catch (error) {
+      console.error('Auto-login error:', error);
+      res.status(500).json({ message: 'Giriş yapılamadı' });
+    }
+  });
+
   app.get('/api/user', async (req, res) => {
     if (!req.session?.userId) {
       return res.status(401).json({ message: 'Giriş yapılmamış' });
@@ -248,7 +306,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // For custom auth users
+      // For custom auth users (normal users), check their current role in database
+      if (req.session.username) {
+        const normalUser = await storage.getNormalUserByUsername(req.session.username);
+        if (normalUser) {
+          // Check if this normal user has a role entry in users table
+          const userRole = await db
+            .select({ role: users.role })
+            .from(users)
+            .where(eq(users.id, normalUser.id.toString()))
+            .limit(1);
+          
+          const isAdmin = userRole.length > 0 ? userRole[0].role === 'admin' : false;
+          
+          return res.json({
+            id: req.session.userId,
+            username: req.session.username,
+            authenticated: true,
+            isAdmin: isAdmin
+          });
+        }
+      }
+      
+      // Fallback for session data
       res.json({
         id: req.session.userId,
         username: req.session.username,
@@ -1026,21 +1106,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(eq(users.id, user.id.toString()))
             .limit(1);
           
-          allUsers.push({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role: userRole.length > 0 ? userRole[0].role : 'user',
-            createdAt: user.createdAt,
-            type: 'normal',
-            isActive: user.isActive
-          });
+          const currentRole = userRole.length > 0 ? userRole[0].role : 'user';
+          
+          // Only add non-admin users to regular user list
+          if (currentRole !== 'admin') {
+            allUsers.push({
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              role: currentRole,
+              createdAt: user.createdAt,
+              type: 'normal',
+              isActive: user.isActive
+            });
+          }
         }
       }
       
-      // Add Replit users only if they don't already exist in normal users
+      // Add Replit users only if they don't already exist in normal users and are not admins
       for (const user of replitUsers) {
-        if (!seenIds.has(user.id)) {
+        if (!seenIds.has(user.id) && user.role !== 'admin') {
           seenIds.add(user.id);
           
           allUsers.push({

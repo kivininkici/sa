@@ -36,7 +36,8 @@ import {
   UserPlus,
   Ban,
   CheckCircle,
-  Crown
+  Crown,
+  LogIn
 } from "lucide-react";
 
 // Admin oluşturma formu için schema
@@ -402,6 +403,7 @@ export default function UsersPage() {
                       <TableHead>Rol</TableHead>
                       <TableHead>Kayıt Tarihi</TableHead>
                       <TableHead>İşlemler</TableHead>
+                      <TableHead>Giriş</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -436,6 +438,42 @@ export default function UsersPage() {
                               <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-20"
+                            onClick={async () => {
+                              try {
+                                // Direct login API call
+                                const response = await fetch('/api/auth/auto-login', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ userId: user.id })
+                                });
+                                
+                                if (response.ok) {
+                                  window.location.href = '/';
+                                } else {
+                                  toast({
+                                    title: "Hata",
+                                    description: "Giriş yapılamadı",
+                                    variant: "destructive"
+                                  });
+                                }
+                              } catch (error) {
+                                toast({
+                                  title: "Hata", 
+                                  description: "Giriş yapılamadı",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            <LogIn className="w-4 h-4 mr-1" />
+                            Giriş
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
