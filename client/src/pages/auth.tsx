@@ -289,20 +289,32 @@ export default function Auth() {
                   >
                     <AnimatePresence mode="wait">
                       {isLoginSuccess ? (
-                        <motion.div
-                          key="login-success"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="text-center py-8 space-y-4"
-                        >
-                          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                            <CheckCircle className="w-8 h-8 text-white" />
-                          </div>
-                          <h3 className="text-xl font-semibold text-green-400">
-                            Giriş Başarılı!
-                          </h3>
-                          <p className="text-slate-400">Yönlendiriliyor...</p>
-                        </motion.div>
+                        <>
+                          {/* Blue animated background overlay */}
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 20, opacity: [0, 0.3, 0] }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="fixed inset-0 bg-gradient-radial from-blue-500 via-blue-600 to-transparent pointer-events-none z-50"
+                            style={{
+                              background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.4) 0%, rgba(147, 197, 253, 0.2) 30%, transparent 70%)`
+                            }}
+                          />
+                          <motion.div
+                            key="login-success"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center py-8 space-y-4 relative z-10"
+                          >
+                            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
+                              <CheckCircle className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-blue-400">
+                              Giriş Başarılı!
+                            </h3>
+                            <p className="text-slate-400">Yönlendiriliyor...</p>
+                          </motion.div>
+                        </>
                       ) : (
                         <motion.form
                           key="login-form"
@@ -401,20 +413,32 @@ export default function Auth() {
                   >
                     <AnimatePresence mode="wait">
                       {isRegisterSuccess ? (
-                      <motion.div
-                        key="register-success"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-8 space-y-4"
-                      >
-                        <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-                          <CheckCircle className="w-8 h-8 text-white" />
-                        </div>
-                        <h3 className="text-xl font-semibold text-green-400">
-                          Kayıt Başarılı!
-                        </h3>
-                        <p className="text-slate-400">Giriş sekmesine yönlendiriliyorsunuz...</p>
-                      </motion.div>
+                        <>
+                          {/* Blue animated background overlay */}
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 20, opacity: [0, 0.3, 0] }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="fixed inset-0 bg-gradient-radial from-blue-500 via-blue-600 to-transparent pointer-events-none z-50"
+                            style={{
+                              background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.4) 0%, rgba(147, 197, 253, 0.2) 30%, transparent 70%)`
+                            }}
+                          />
+                          <motion.div
+                            key="register-success"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="text-center py-8 space-y-4 relative z-10"
+                          >
+                            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
+                              <CheckCircle className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-xl font-semibold text-blue-400">
+                              Kayıt Başarılı!
+                            </h3>
+                            <p className="text-slate-400">Giriş sekmesine yönlendiriliyorsunuz...</p>
+                          </motion.div>
+                        </>
                     ) : (
                       <motion.form
                         key="register-form"
