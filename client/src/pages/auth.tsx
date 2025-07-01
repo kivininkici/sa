@@ -206,30 +206,61 @@ export default function Auth() {
 
             <CardContent className="space-y-6">
               <Tabs defaultValue="login" className="w-full" onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 bg-slate-700 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-md transition-all duration-300 ease-in-out transform translate-x-0 w-1/2 tabs-indicator"></div>
+                <TabsList className="grid w-full grid-cols-2 bg-slate-700/50 relative overflow-hidden rounded-xl p-1 backdrop-blur-sm">
+                  <motion.div 
+                    className="absolute inset-y-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 rounded-lg shadow-lg tab-indicator-glow"
+                    initial={false}
+                    animate={{
+                      x: activeTab === "login" ? "0%" : "calc(100% - 2px)",
+                      width: "calc(50% - 2px)"
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 25,
+                      duration: 0.7,
+                      bounce: 0.2
+                    }}
+                  />
                   <TabsTrigger 
                     value="login" 
-                    data-value="login"
-                    className="relative z-10 transition-all duration-300 ease-in-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white"
+                    className="relative z-10 transition-all duration-500 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
                   >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Giriş Yap
+                    <motion.div
+                      className="flex items-center"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Giriş Yap
+                    </motion.div>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="register"
-                    className="relative z-10 transition-all duration-300 ease-in-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white"
+                    className="relative z-10 transition-all duration-500 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
                   >
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Kayıt Ol
+                    <motion.div
+                      className="flex items-center"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Kayıt Ol
+                    </motion.div>
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login" className="mt-0">
                   <motion.div
-                    initial={{ opacity: 0, x: activeTab === "login" ? -30 : 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    key="login-content"
+                    initial={{ opacity: 0, x: -20, y: 10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    exit={{ opacity: 0, x: -20, y: -10 }}
+                    transition={{ 
+                      duration: 0.5, 
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                      delay: 0.1
+                    }}
                   >
                     <AnimatePresence mode="wait">
                       {isLoginSuccess ? (
@@ -333,9 +364,15 @@ export default function Auth() {
 
                 <TabsContent value="register" className="mt-0">
                   <motion.div
-                    initial={{ opacity: 0, x: activeTab === "register" ? 30 : -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    key="register-content"
+                    initial={{ opacity: 0, x: 20, y: 10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    exit={{ opacity: 0, x: 20, y: -10 }}
+                    transition={{ 
+                      duration: 0.5, 
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                      delay: 0.1
+                    }}
                   >
                     <AnimatePresence mode="wait">
                       {isRegisterSuccess ? (

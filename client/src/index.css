@@ -50,6 +50,39 @@
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
 
+/* Smooth tab transitions */
+.tab-content-enter {
+  opacity: 0;
+  transform: translateX(20px) translateY(5px);
+}
+
+.tab-content-active {
+  opacity: 1;
+  transform: translateX(0) translateY(0);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.tab-content-exit {
+  opacity: 0;
+  transform: translateX(-20px) translateY(-5px);
+}
+
+/* Tab indicator glow effect */
+.tab-indicator-glow {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+/* Enhanced tab button hover states */
+.tab-button-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-button-hover:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
 /* Radial gradient utility for success animations */
 .bg-gradient-radial {
   background: radial-gradient(circle, var(--tw-gradient-stops));
