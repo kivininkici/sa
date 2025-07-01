@@ -34,7 +34,7 @@ import { Key as KeyType } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { isAuthenticated, isLoading, admin } = useAdminAuth();
   const [showKeyModal, setShowKeyModal] = useState(false);
 
   // Redirect to admin login if not authenticated
@@ -103,7 +103,9 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-4 md:p-6 border border-blue-500/20 gap-4">
               <div className="flex-1">
-                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-2xl md:text-[32px]">Hoş Geldiniz!</h2>
+                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-2xl md:text-[32px]">
+                  Hoş Geldiniz{admin?.username ? `, ${admin.username}!` : '!'}
+                </h2>
                 <p className="text-slate-400 mt-2 text-sm md:text-base">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
               </div>
               <Button 
