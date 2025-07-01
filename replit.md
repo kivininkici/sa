@@ -278,6 +278,11 @@ Changelog:
 - Giriş ve kayıt başarı durumlarında tam ekran dalga efekti
 - CheckCircle ikonu için ayrı scale animasyonu ve glow efekti
 - Text elementleri için staggered timing animasyonları
+- July 1, 2025: Admin ve normal kullanıcı girişine profesyonel tick animasyonu eklendi
+- SVG path ile çizilerek oluşan checkmark animasyonu (pathLength)
+- 0.8 saniye süren easeInOut geçişi, 0.6 saniye gecikme
+- CheckCircle ikonu yerine özel çizili tick animasyonu
+- Hem admin (yeşil) hem kullanıcı (mavi) girişlerinde tutarlı kalite
 
 ## User Preferences
 

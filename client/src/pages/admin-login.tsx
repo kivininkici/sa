@@ -159,13 +159,28 @@ export default function AdminLogin() {
                       transition={{ duration: 0.5, delay: 0.3 }}
                       className="relative z-10 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-500/50"
                     >
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ duration: 0.3, delay: 0.6 }}
+                      {/* Animated Checkmark */}
+                      <svg 
+                        width="32" 
+                        height="32" 
+                        viewBox="0 0 32 32" 
+                        className="text-white"
                       >
-                        <CheckCircle className="w-8 h-8 text-white" />
-                      </motion.div>
+                        <motion.path
+                          d="M8 16l6 6 12-12"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="none"
+                          initial={{ pathLength: 0, opacity: 0 }}
+                          animate={{ pathLength: 1, opacity: 1 }}
+                          transition={{ 
+                            pathLength: { duration: 0.8, delay: 0.6, ease: "easeInOut" },
+                            opacity: { duration: 0.2, delay: 0.6 }
+                          }}
+                        />
+                      </svg>
                     </motion.div>
                     <motion.h3
                       initial={{ opacity: 0, y: 10 }}
