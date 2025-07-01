@@ -25,7 +25,7 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden">
       {/* Mouse tracking effect */}
       <motion.div
-        className="fixed w-36 h-36 bg-blue-400/30 rounded-full blur-xl pointer-events-none z-10"
+        className="fixed w-36 h-36 bg-gradient-to-br from-blue-400/20 via-purple-400/15 to-slate-400/10 rounded-full blur-xl pointer-events-none z-10"
         style={{
           x: mousePosition.x - 72,
           y: mousePosition.y - 72,
