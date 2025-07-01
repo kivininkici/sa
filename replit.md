@@ -283,6 +283,10 @@ Changelog:
 - 0.8 saniye süren easeInOut geçişi, 0.6 saniye gecikme
 - CheckCircle ikonu yerine özel çizili tick animasyonu
 - Hem admin (yeşil) hem kullanıcı (mavi) girişlerinde tutarlı kalite
+- July 1, 2025: Admin login sayfasına mavi mouse tracking efekti eklendi
+- 3 katmanlı mouse tracking sistem - farklı boyut ve hızlarda takip
+- Mouse pozisyonunu gerçek zamanlı takip eden mavi gradient daireler
+- Normal kullanıcı auth sayfasındaki ile aynı kalitede interactive efekt
 
 ## User Preferences
 

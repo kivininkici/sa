@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,30 @@ export default function AdminLogin() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showUsername, setShowUsername] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Mouse tracking effect
+  useEffect(() => {
+    let rafId: number;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (rafId) cancelAnimationFrame(rafId);
+      
+      rafId = requestAnimationFrame(() => {
+        setMousePosition({
+          x: e.clientX,
+          y: e.clientY,
+        });
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   const {
     register,
@@ -63,12 +87,32 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-950">
+    <div ref={containerRef} className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-950">
       {/* Background Effects */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-green-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        
+        {/* Mouse Tracking Blue Effect */}
+        <div 
+          className="absolute w-96 h-96 bg-blue-400/8 rounded-full blur-3xl transition-transform duration-75 ease-out pointer-events-none"
+          style={{
+            transform: `translate(${mousePosition.x - 192}px, ${mousePosition.y - 192}px)`,
+          }}
+        />
+        <div 
+          className="absolute w-64 h-64 bg-cyan-400/12 rounded-full blur-2xl transition-transform duration-100 ease-out pointer-events-none"
+          style={{
+            transform: `translate(${mousePosition.x - 128}px, ${mousePosition.y - 128}px)`,
+          }}
+        />
+        <div 
+          className="absolute w-32 h-32 bg-blue-300/15 rounded-full blur-xl transition-transform duration-150 ease-out pointer-events-none"
+          style={{
+            transform: `translate(${mousePosition.x - 64}px, ${mousePosition.y - 64}px)`,
+          }}
+        />
       </div>
 
       {/* Grid Pattern */}
