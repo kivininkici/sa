@@ -205,8 +205,12 @@ Changelog:
 - June 30, 2025: Replit Agent'tan Replit ortamına migration başarıyla tamamlandı
 - PostgreSQL database kuruldu, tüm dependencies yüklendi
 - tsx paketi eklendi, server port 5000'de çalışıyor
-- KeyPanel sistemi Replit ortamında production seviyesinde aktif
-- Kullanıcı rol değiştirme sisteminde iyileştirme gerekiyor (yarın planlandı)
+- KeyPanel sistemi Replit ortamında production seviyesinde aktiv
+- June 30, 2025: Kullanıcı rol değiştirme sistemi tamamen düzeltildi
+- updateUserRole fonksiyonu normal ve Replit kullanıcıları için optimize edildi
+- Duplicate kullanıcı görünme sorunu çözüldü - unique ID kontrolü eklendi
+- API endpoint'e debug logları eklendi ve rol güncelleme çalışıyor
+- React key uyarıları giderildi, frontend stable
 
 ## User Preferences
 

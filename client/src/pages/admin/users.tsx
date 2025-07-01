@@ -406,9 +406,9 @@ export default function UsersPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user: any) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={`${user.type}-${user.id}`}>
                         <TableCell className="font-medium">{user.id}</TableCell>
-                        <TableCell>{user.firstName || user.name || "Belirtilmemiş"}</TableCell>
+                        <TableCell>{user.username || user.firstName || user.name || "Belirtilmemiş"}</TableCell>
                         <TableCell>{user.email || "Belirtilmemiş"}</TableCell>
                         <TableCell>
                           <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="flex items-center gap-1 w-fit">

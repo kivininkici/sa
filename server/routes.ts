@@ -1010,9 +1010,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get Replit users from users table  
       const replitUsers = await storage.getAllUsers();
       
+      // Track unique user IDs to avoid duplicates
+      const seenIds = new Set();
+      const allUsers = [];
+      
       // For normal users, check if they have a role entry in users table
-      const normalUsersWithRoles = await Promise.all(
-        normalUsersList.map(async (user: any) => {
+      for (const user of normalUsersList) {
+        if (!seenIds.has(user.id.toString())) {
+          seenIds.add(user.id.toString());
+          
           // Check if this normal user has an entry in users table (for role info)
           const userRole = await db
             .select({ role: users.role })
@@ -1020,7 +1026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(eq(users.id, user.id.toString()))
             .limit(1);
           
-          return {
+          allUsers.push({
             id: user.id,
             username: user.username,
             email: user.email,
@@ -1028,23 +1034,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             createdAt: user.createdAt,
             type: 'normal',
             isActive: user.isActive
-          };
-        })
-      );
+          });
+        }
+      }
       
-      // Combine and format all users
-      const allUsers = [
-        ...normalUsersWithRoles,
-        ...replitUsers.map((user: any) => ({
-          id: user.id,
-          username: user.firstName || user.email || 'Unknown',
-          email: user.email,
-          role: user.role || 'user',
-          createdAt: user.createdAt,
-          type: 'replit',
-          isActive: true
-        }))
-      ];
+      // Add Replit users only if they don't already exist in normal users
+      for (const user of replitUsers) {
+        if (!seenIds.has(user.id)) {
+          seenIds.add(user.id);
+          
+          allUsers.push({
+            id: user.id,
+            username: user.firstName || user.email || 'Unknown',
+            email: user.email,
+            role: user.role || 'user',
+            createdAt: user.createdAt,
+            type: 'replit',
+            isActive: true
+          });
+        }
+      }
       
       res.json(allUsers);
     } catch (error) {
