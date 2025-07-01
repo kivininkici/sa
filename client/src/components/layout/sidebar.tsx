@@ -16,7 +16,8 @@ import {
   Cog,
   Download,
   Search,
-  BarChart3
+  BarChart3,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ const navigation = [
   { name: "Key Yönetimi", href: "/admin/keys", icon: Key },
   { name: "Servisler", href: "/admin/services", icon: Settings },
   { name: "API Yönetimi", href: "/admin/api-management", icon: Download },
+  { name: "API Bakiyeleri", href: "/admin/api-balances", icon: DollarSign },
   { name: "Siparişler", href: "/admin/orders", icon: ShoppingCart },
   { name: "Kullanıcılar", href: "/admin/users", icon: Users },
   { name: "Loglar", href: "/admin/logs", icon: FileText },

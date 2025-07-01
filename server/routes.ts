@@ -1728,6 +1728,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API Bakiye Routes
+  app.get("/api/admin/api-balances", requireAdminAuth, async (req, res) => {
+    try {
+      const balances = await storage.getApiBalances();
+      res.json(balances);
+    } catch (error) {
+      console.error("Error fetching API balances:", error);
+      res.status(500).json({ message: "Failed to fetch API balances" });
+    }
+  });
+
+  app.post("/api/admin/api-balances/refresh", requireAdminAuth, async (req, res) => {
+    try {
+      const apiSettings = await storage.getActiveApiSettings();
+      const balanceUpdates = [];
+      
+      for (const api of apiSettings) {
+        try {
+          // Make balance request to API
+          const response = await fetch(api.apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              key: api.apiKey,
+              action: 'balance'
+            })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            // Extract balance from response (format may vary between APIs)
+            let balance = '0.00';
+            
+            if (result.balance !== undefined) {
+              balance = result.balance.toString();
+            } else if (result.currency !== undefined) {
+              balance = result.currency.toString();
+            } else if (typeof result === 'number') {
+              balance = result.toString();
+            }
+            
+            // Update balance in database
+            await storage.updateApiBalance(api.id, balance);
+            balanceUpdates.push({
+              id: api.id,
+              name: api.name,
+              balance,
+              status: 'success'
+            });
+          } else {
+            balanceUpdates.push({
+              id: api.id,
+              name: api.name,
+              balance: null,
+              status: 'error',
+              error: 'API yanıt vermedi'
+            });
+          }
+        } catch (error) {
+          balanceUpdates.push({
+            id: api.id,
+            name: api.name,
+            balance: null,
+            status: 'error',
+            error: 'Bağlantı hatası'
+          });
+        }
+      }
+      
+      res.json({
+        success: true,
+        updated: balanceUpdates.filter(u => u.status === 'success').length,
+        failed: balanceUpdates.filter(u => u.status === 'error').length,
+        results: balanceUpdates
+      });
+    } catch (error) {
+      console.error("Error refreshing API balances:", error);
+      res.status(500).json({ message: "Failed to refresh API balances" });
+    }
+  });
+
   // Maintenance mode endpoints
   app.get("/api/admin/maintenance-mode", requireAdminAuth, async (req, res) => {
     try {

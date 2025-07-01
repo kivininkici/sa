@@ -83,6 +83,8 @@ export interface IStorage {
   getApiSettingsById(id: number): Promise<ApiSettings | undefined>;
   updateApiSettings(id: number, updates: Partial<InsertApiSettings>): Promise<ApiSettings>;
   deleteApiSettings(id: number): Promise<void>;
+  updateApiBalance(id: number, balance: string): Promise<ApiSettings>;
+  getApiBalances(): Promise<{ id: number; name: string; balance: string; lastBalanceCheck: Date | null }[]>;
 
   // Normal User operations
   getNormalUserByUsername(username: string): Promise<NormalUser | undefined>;
@@ -526,6 +528,38 @@ export class DatabaseStorage implements IStorage {
 
   async deleteApiSettings(id: number): Promise<void> {
     await db.delete(apiSettings).where(eq(apiSettings.id, id));
+  }
+
+  async updateApiBalance(id: number, balance: string): Promise<ApiSettings> {
+    const [updated] = await db
+      .update(apiSettings)
+      .set({ 
+        balance,
+        lastBalanceCheck: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(apiSettings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getApiBalances(): Promise<{ id: number; name: string; balance: string; lastBalanceCheck: Date | null }[]> {
+    const results = await db
+      .select({
+        id: apiSettings.id,
+        name: apiSettings.name,
+        balance: apiSettings.balance,
+        lastBalanceCheck: apiSettings.lastBalanceCheck
+      })
+      .from(apiSettings)
+      .where(eq(apiSettings.isActive, true))
+      .orderBy(apiSettings.name);
+    
+    // Convert null balance to "0.00"
+    return results.map(result => ({
+      ...result,
+      balance: result.balance || "0.00"
+    }));
   }
 
   // Dashboard stats

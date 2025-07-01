@@ -9,6 +9,7 @@ import {
   boolean,
   integer,
   numeric,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -132,6 +133,8 @@ export const apiSettings = pgTable("api_settings", {
   apiUrl: varchar("api_url", { length: 500 }).notNull(),
   apiKey: varchar("api_key", { length: 500 }),
   isActive: boolean("is_active").notNull().default(true),
+  balance: numeric("balance", { precision: 10, scale: 2 }).default("0.00"), // API bakiyesi
+  lastBalanceCheck: timestamp("last_balance_check"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -174,6 +177,8 @@ export const insertLogSchema = createInsertSchema(logs).omit({
 
 export const insertApiSettingsSchema = createInsertSchema(apiSettings).omit({
   id: true,
+  balance: true,
+  lastBalanceCheck: true,
   createdAt: true,
   updatedAt: true,
 });
