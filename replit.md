@@ -272,6 +272,11 @@ Changelog:
 - Kırmızı tema ile tutarlı tasarım - hover efektleri ve gölge animasyonları
 - Alışveriş sepeti ikonu ile görsel ipucu eklendi
 - Yeni sekmede açılarak kullanıcı deneyimini kesintisiz tutuyor
+- July 1, 2025: Normal kullanıcı girişine mavi animasyon efekti eklendi
+- Giriş ve kayıt başarı durumlarında radial gradient ile yayılan mavi animasyon
+- Admin panelindeki yeşil efekte benzer, ancak mavi renk kullanıyor
+- Mouse pozisyonunu takip eden animasyon - instant cursor following
+- Framer Motion ile smooth animasyonlar ve backdrop effects
 
 ## User Preferences
 
