@@ -1746,22 +1746,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const api of apiSettings) {
         try {
-          // Make balance request to API
-          const response = await fetch(api.apiUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              key: api.apiKey,
-              action: 'balance'
-            })
-          });
+          console.log(`Refreshing balance for ${api.name}...`);
           
-          if (response.ok) {
-            const result = await response.json();
+          let response;
+          let result;
+          let requestSuccessful = false;
+          
+          // Method 1: Try form-data format (most common for SMM panels)
+          if (!requestSuccessful) {
+            try {
+              const formData = new URLSearchParams();
+              formData.append('key', api.apiKey || '');
+              formData.append('action', 'balance');
+              
+              response = await fetch(api.apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                body: formData.toString(),
+              });
+              
+              if (response.ok) {
+                const responseText = await response.text();
+                try {
+                  result = JSON.parse(responseText);
+                  requestSuccessful = true;
+                  console.log(`Form-data balance request successful for ${api.name}`);
+                } catch (parseError) {
+                  // If response is just a number (some APIs return plain text balance)
+                  const numericBalance = parseFloat(responseText.trim());
+                  if (!isNaN(numericBalance)) {
+                    result = { balance: numericBalance };
+                    requestSuccessful = true;
+                    console.log(`Plain text balance received for ${api.name}: ${numericBalance}`);
+                  }
+                }
+              }
+            } catch (error) {
+              console.log(`Form-data balance request failed for ${api.name}:`, error instanceof Error ? error.message : 'Unknown error');
+            }
+          }
+          
+          // Method 2: Try JSON format as fallback
+          if (!requestSuccessful) {
+            try {
+              response = await fetch(api.apiUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                body: JSON.stringify({
+                  key: api.apiKey || '',
+                  action: 'balance'
+                })
+              });
+              
+              if (response.ok) {
+                result = await response.json();
+                requestSuccessful = true;
+                console.log(`JSON balance request successful for ${api.name}`);
+              }
+            } catch (error) {
+              console.log(`JSON balance request failed for ${api.name}:`, error instanceof Error ? error.message : 'Unknown error');
+            }
+          }
+          
+          if (requestSuccessful && result) {
             // Extract balance from response (format may vary between APIs)
             let balance = '0.00';
+            
+            console.log(`Balance response for ${api.name}:`, result);
             
             // Check various possible balance field names and formats
             if (result.balance !== undefined) {
@@ -1776,11 +1833,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
               balance = parseFloat(result.credit).toFixed(2);
             } else if (result.amount !== undefined) {
               balance = parseFloat(result.amount).toFixed(2);
+            } else if (result.funds !== undefined) {
+              balance = parseFloat(result.funds).toFixed(2);
             } else if (typeof result === 'number') {
               balance = result.toFixed(2);
             } else if (typeof result === 'string' && !isNaN(parseFloat(result))) {
               balance = parseFloat(result).toFixed(2);
+            } else {
+              // Log the response structure for debugging
+              console.log(`Unknown balance format for ${api.name}:`, JSON.stringify(result, null, 2));
+              balance = '0.00';
             }
+            
+            console.log(`Final balance for ${api.name}: ${balance}`);
             
             // Update balance in database
             await storage.updateApiBalance(api.id, balance);
@@ -1800,6 +1865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         } catch (error) {
+          console.error(`Error refreshing balance for ${api.name}:`, error);
           balanceUpdates.push({
             id: api.id,
             name: api.name,
