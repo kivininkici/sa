@@ -1,6 +1,93 @@
+/* Import fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Advanced animations and effects */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatingGlow {
+  0%, 100% { 
+    transform: translateY(0px) scale(1);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.3), 0 0 60px rgba(59, 130, 246, 0.2);
+  }
+  50% { 
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5), 0 0 80px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@keyframes particleFloat {
+  0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+  25% { transform: translateY(-20px) translateX(10px) rotate(90deg); }
+  50% { transform: translateY(-10px) translateX(-10px) rotate(180deg); }
+  75% { transform: translateY(-30px) translateX(5px) rotate(270deg); }
+}
+
+@keyframes morphGradient {
+  0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) rotate(-5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100px) rotate(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(-90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
 
 /* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
@@ -188,14 +275,145 @@
 }
 
 @layer components {
+  /* Enhanced glass morphism cards */
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.1);
+  }
+  
+  .neo-card {
+    @apply relative overflow-hidden rounded-2xl;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 20px 40px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .neo-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 3s infinite;
+  }
+  
+  .cyber-button {
+    @apply relative px-8 py-4 font-semibold tracking-wide uppercase;
+    background: linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4);
+    background-size: 300% 300%;
+    animation: gradientShift 3s ease infinite;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .cyber-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+  }
+  
+  .cyber-button:hover::before {
+    left: 100%;
+  }
+  
+  .cyber-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+  }
+  
+  .floating-orb {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #8b5cf6, #3b82f6);
+    opacity: 0.1;
+    animation: floatingGlow 8s ease-in-out infinite;
+    filter: blur(40px);
+  }
+  
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: radial-gradient(circle, #8b5cf6, transparent);
+    border-radius: 50%;
+    animation: particleFloat 6s infinite;
+  }
+  
+  .morphing-bg {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4, #8b5cf6);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite, morphGradient 12s ease-in-out infinite;
+    opacity: 0.3;
+    filter: blur(60px);
+  }
+  
+  .slide-in-left {
+    animation: slideInFromLeft 0.8s ease-out forwards;
+  }
+  
+  .slide-in-right {
+    animation: slideInFromRight 0.8s ease-out forwards;
+  }
+  
+  .bounce-in {
+    animation: bounceIn 1s ease-out forwards;
+  }
+  
+  .gradient-text {
+    background: linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease infinite;
+  }
+  
+  .ripple-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ripple-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s ease-out;
+  }
+  
   .dashboard-card {
-    @apply bg-card border border-border rounded-xl backdrop-blur-sm;
+    @apply bg-card border border-border rounded-xl backdrop-blur-sm neo-card;
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%);
     box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.3);
   }
   
   .glass-card {
-    @apply bg-card border border-border rounded-xl backdrop-blur-xl;
+    @apply bg-card border border-border rounded-xl backdrop-blur-xl glass-morphism;
     background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card)) 100%);
     box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.2);
   }

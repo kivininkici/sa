@@ -7,6 +7,8 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import StatsCard from "@/components/admin/stats-card";
 import KeyCreationModal from "@/components/admin/key-creation-modal";
+import { motion, AnimatePresence } from "framer-motion";
+import { FloatingOrbs } from "@/components/ui/animated-background";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,71 +88,136 @@ export default function Dashboard() {
   const recentOrdersData = Array.isArray(recentOrders) ? recentOrders.slice(0, 5) : [];
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <FloatingOrbs />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-cyan-500/10 pointer-events-none"></div>
+      
       <Sidebar />
       <main className="flex-1 overflow-hidden relative md:ml-0 ml-0">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 pointer-events-none"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        
-        <Header 
-          title="Dashboard" 
-          description="Sistem genel bakış ve istatistikler" 
-        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10"
+        >
+          <Header 
+            title="Dashboard" 
+            description="Sistem genel bakış ve istatistikler" 
+          /></motion.div>
         
         <div className="content-area relative z-10">
           <div className="p-4 md:p-8 space-y-6 md:space-y-8">
-            {/* Welcome Section */}
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-4 md:p-6 border border-blue-500/20 gap-4">
-              <div className="flex-1">
-                <h2 className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent font-extrabold text-2xl md:text-[32px]">
-                  Hoş Geldiniz!{admin?.username ? ` ${admin.username}` : ''}
-                </h2>
-                <p className="text-slate-400 mt-2 text-sm md:text-base">Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz</p>
+            {/* Enhanced Welcome Section */}
+            <motion.div 
+              className="neo-card bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl p-4 md:p-6 border border-blue-500/20 gap-4 relative overflow-hidden"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between relative z-10">
+                <div className="flex-1">
+                  <motion.h2 
+                    className="gradient-text font-extrabold text-2xl md:text-[32px] mb-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                  >
+                    Hoş Geldiniz!{admin?.username ? ` ${admin.username}` : ''}
+                  </motion.h2>
+                  <motion.p 
+                    className="text-slate-400 text-sm md:text-base"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    Sistemin genel durumunu buradan takip edebilir ve yeni key'ler oluşturabilirsiniz
+                  </motion.p>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button 
+                    className="cyber-button text-white shadow-lg hover:shadow-blue-500/40 w-full md:w-auto"
+                    onClick={() => setShowKeyModal(true)}
+                  >
+                    <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                    Hızlı Key Oluştur
+                  </Button>
+                </motion.div>
               </div>
-              <Button 
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 w-full md:w-auto"
-                onClick={() => setShowKeyModal(true)}
-              >
-                <Plus className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                Hızlı Key Oluştur
-              </Button>
-            </div>
+            </motion.div>
 
-            {/* Statistics Cards */}
+            {/* Enhanced Statistics Cards */}
             <div className="stats-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <StatsCard
-                title="Toplam Key"
-                value={dashboardStats?.totalKeys || 0}
-                icon={Key}
-                iconColor="bg-blue-600"
-                change="+12% bu ay"
-                changeType="positive"
-              />
-              <StatsCard
-                title="Kullanılmış Key"
-                value={dashboardStats?.usedKeys || 0}
-                icon={Users}
-                iconColor="bg-green-600"
-                change="+8% bu hafta"
-                changeType="positive"
-              />
-              <StatsCard
-                title="Aktif Servis"
-                value={dashboardStats?.activeServices || 0}
-                icon={ShoppingCart}
-                iconColor="bg-cyan-600"
-                change="5 servis aktif"
-                changeType="neutral"
-              />
-              <StatsCard
-                title="Günlük İşlem"
-                value={dashboardStats?.dailyTransactions || 0}
-                icon={Activity}
-                iconColor="bg-emerald-600"
-                change="+25% dün"
-                changeType="positive"
-              />
+              {[
+                {
+                  title: "Toplam Key",
+                  value: dashboardStats?.totalKeys || 0,
+                  icon: Key,
+                  iconColor: "bg-gradient-to-br from-blue-500 to-cyan-500",
+                  change: "+12% bu ay",
+                  changeType: "positive" as const,
+                  delay: 0.1
+                },
+                {
+                  title: "Kullanılmış Key",
+                  value: dashboardStats?.usedKeys || 0,
+                  icon: Users,
+                  iconColor: "bg-gradient-to-br from-emerald-500 to-green-500",
+                  change: "+8% bu hafta",
+                  changeType: "positive" as const,
+                  delay: 0.2
+                },
+                {
+                  title: "Aktif Servis",
+                  value: dashboardStats?.activeServices || 0,
+                  icon: ShoppingCart,
+                  iconColor: "bg-gradient-to-br from-cyan-500 to-blue-500",
+                  change: "5 servis aktif",
+                  changeType: "neutral" as const,
+                  delay: 0.3
+                },
+                {
+                  title: "Günlük İşlem",
+                  value: dashboardStats?.dailyTransactions || 0,
+                  icon: Activity,
+                  iconColor: "bg-gradient-to-br from-purple-500 to-pink-500",
+                  change: "+25% dün",
+                  changeType: "positive" as const,
+                  delay: 0.4
+                }
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    delay: stat.delay,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    y: -5,
+                    transition: { duration: 0.2 }
+                  }}
+                >
+                  <StatsCard
+                    title={stat.title}
+                    value={stat.value}
+                    icon={stat.icon}
+                    iconColor={stat.iconColor}
+                    change={stat.change}
+                    changeType={stat.changeType}
+                  />
+                </motion.div>
+              ))}
             </div>
 
             {/* Recent Activity */}
