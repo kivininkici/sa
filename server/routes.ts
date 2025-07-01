@@ -263,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If not found in normal users, try Replit users
       const replitUser = await storage.getUser(userId.toString());
       if (replitUser) {
-        req.session.userId = replitUser.id;
+        (req.session as any).userId = replitUser.id;
         req.session.username = replitUser.firstName || replitUser.email || 'User';
         req.session.isAdmin = replitUser.role === 'admin';
         

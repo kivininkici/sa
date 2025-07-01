@@ -133,7 +133,9 @@ export default function UsersPage() {
         title: "Başarılı!",
         description: "Kullanıcı rolü güncellendi.",
       });
+      // Hem normal kullanıcılar hem de admin listesini güncelle
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/list"] });
     },
     onError: (error: Error) => {
       toast({

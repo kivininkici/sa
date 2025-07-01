@@ -129,13 +129,10 @@ export default function Auth() {
       setIsRegisterSuccess(true);
       toast({
         title: "Kayıt Başarılı",
-        description: "Hesabınız oluşturuldu! Giriş yapabilirsiniz.",
+        description: "Hesabınız oluşturuldu! Yönlendiriliyorsunuz...",
       });
       setTimeout(() => {
-        setIsRegisterSuccess(false);
-        // Switch to login tab
-        const loginTab = document.querySelector('[data-value="login"]') as HTMLElement;
-        if (loginTab) loginTab.click();
+        window.location.href = "/";
       }, 2000);
     },
     onError: (error: Error) => {

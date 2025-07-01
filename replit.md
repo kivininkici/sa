@@ -208,9 +208,17 @@ Changelog:
 - KeyPanel sistemi Replit ortamında production seviyesinde aktiv
 - June 30, 2025: Kullanıcı rol değiştirme sistemi tamamen düzeltildi
 - updateUserRole fonksiyonu normal ve Replit kullanıcıları için optimize edildi
-- Duplicate kullanıcı görünme sorunu çözüldü - unique ID kontrolü eklendi
+- Duplicate kullanıcı görünme sorunu çözüldı - unique ID kontrolü eklendi
 - API endpoint'e debug logları eklendi ve rol güncelleme çalışıyor
 - React key uyarıları giderildi, frontend stable
+- July 1, 2025: Admin kullanıcı yönetimi sistemi tamamen iyileştirildi
+- Admin yapılan kullanıcılar artık "Admin Kullanıcıları" bölümünde doğru gösteriliyor
+- Rol değiştirme işlemi sırasında hem normal kullanıcılar hem admin listesi güncelleniyor
+- "Giriş Yap" butonu eklendi - admin herhangi bir kullanıcı hesabına şifresiz giriş yapabiliyor
+- Auto-login API endpoint'i (/api/auth/auto-login) eklendi ve güvenlik kontrolü yapılıyor
+- Kayıt sonrası otomatik giriş sistemi aktif - kullanıcılar kayıt olduktan sonra direkt giriş yapıyor
+- Session yönetimi iyileştirildi - çıkış yaptıktan sonra tekrar login gerekiyor
+- Type safety sorunları çözüldü ve sistem stable çalışıyor
 
 ## User Preferences
 
