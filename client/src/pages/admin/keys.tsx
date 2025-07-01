@@ -354,14 +354,22 @@ export default function Keys() {
             <Card className="dashboard-card">
               <CardHeader className="border-b border-slate-700">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center space-x-3 flex-1">
                     <CardTitle className="text-lg font-semibold text-slate-50">
                       Key Listesi
                     </CardTitle>
-                    <Button 
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 hover:bg-red-700 px-3 py-1 bg-[#5f8af2] font-bold text-[#ffffff] text-[18px]"
-                      onClick={() => setShowExportModal(true)}
-                    >Keyleri İndir</Button>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Button 
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 h-10 hover:bg-red-700 px-3 py-1 bg-[#5f8af2] font-bold text-[#ffffff] text-[18px]"
+                        onClick={() => setShowExportModal(true)}
+                      >
+                        Keyleri İndir
+                      </Button>
+                    </motion.div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Input

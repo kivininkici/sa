@@ -292,6 +292,10 @@ Changelog:
 - Interactive kartlar - hover efektleri ve yeşil seçim durumu
 - Download ikonu ile yeşil gradient header tasarımı
 - Her kategoride key sayısı ve smooth geçiş animasyonları
+- July 1, 2025: "Keyleri İndir" butonuna hover animasyonu ve ortalama eklendi
+- Motion wrapper ile hover'da %5 büyüme, tıklamada %5 küçülme animasyonu
+- Buton ve başlık satırda ortalandı (justify-center + flex-1)
+- Mavi renk teması ile güncellenmiş buton stili
 
 ## User Preferences
 
