@@ -61,8 +61,8 @@ export default function Auth() {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         setMousePosition({
-          x: ((e.clientX - rect.left) / rect.width) * 100,
-          y: ((e.clientY - rect.top) / rect.height) * 100,
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
         });
       }
     };
@@ -183,17 +183,14 @@ export default function Auth() {
         <motion.div
           className="absolute w-36 h-36 bg-blue-400/25 rounded-full blur-xl pointer-events-none"
           animate={{
-            x: mousePosition.x + '%',
-            y: mousePosition.y + '%',
+            x: mousePosition.x - 72,
+            y: mousePosition.y - 72,
           }}
           transition={{
             type: "spring",
-            stiffness: 400,
-            damping: 15,
-            mass: 0.2
-          }}
-          style={{
-            transform: 'translate(-50%, -50%)',
+            stiffness: 300,
+            damping: 25,
+            mass: 0.3
           }}
         />
       </div>
