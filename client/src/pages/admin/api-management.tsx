@@ -86,7 +86,12 @@ export default function ApiManagement() {
   const deleteApiMutation = useMutation({
     mutationFn: async (apiId: number) => {
       const response = await apiRequest("DELETE", `/api/admin/api-settings/${apiId}`);
-      return response.json();
+      const responseText = await response.text();
+      try {
+        return JSON.parse(responseText);
+      } catch (error) {
+        return { success: true, message: "API başarıyla silindi" };
+      }
     },
     onSuccess: (data) => {
       toast({
