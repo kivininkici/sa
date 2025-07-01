@@ -21,8 +21,7 @@ import {
   Calendar,
   Link,
   Loader2,
-  Sparkles,
-  PlayCircle
+  Sparkles
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -86,13 +85,13 @@ export default function OrderSearchPage() {
     }
   }, []);
 
-  // Auto-refresh for pending/processing orders
+  // Auto-refresh order status every 10 seconds if order is found and not completed
   useEffect(() => {
-    if (searchedOrder && (searchedOrder.status === 'pending' || searchedOrder.status === 'processing' || searchedOrder.status === 'in_progress')) {
+    if (searchedOrder && !['completed', 'failed', 'cancelled'].includes(searchedOrder.status)) {
       setIsAutoRefreshing(true);
       const interval = setInterval(() => {
         searchOrderMutation.mutate({ orderId: searchedOrder.orderId });
-      }, 10000); // Every 10 seconds
+      }, 10000);
 
       return () => {
         clearInterval(interval);
@@ -131,6 +130,27 @@ export default function OrderSearchPage() {
 
   const onSearch = (data: SearchData) => {
     searchOrderMutation.mutate(data);
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Tamamlandı';
+      case 'failed':
+        return 'Başarısız';
+      case 'cancelled':
+        return 'İptal Edildi';
+      case 'processing':
+        return 'İşleniyor';
+      case 'pending':
+        return 'Beklemede';
+      case 'partial':
+        return 'Kısmi Tamamlandı';
+      case 'in_progress':
+        return 'Devam Ediyor';
+      default:
+        return 'Bilinmiyor';
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -176,58 +196,59 @@ export default function OrderSearchPage() {
     }
   };
 
-  // Enhanced Progress Steps Component
-  const ProgressSteps = ({ order }: { order: OrderDetails }) => {
+  const getProgressSteps = (status: string) => {
     const steps = [
       { key: 'pending', label: 'Sipariş Alındı', icon: CheckCircle2 },
       { key: 'processing', label: 'İşleniyor', icon: Settings },
-      { key: 'in_progress', label: 'Devam Ediyor', icon: PlayCircle },
+      { key: 'in_progress', label: 'Devam Ediyor', icon: RotateCcw },
       { key: 'completed', label: 'Tamamlandı', icon: CheckCircle }
     ];
 
-    const getStepStatus = (stepIndex: number, orderStatus: string) => {
-      switch (orderStatus) {
-        case 'pending':
-          return stepIndex === 0 ? 'active' : 'inactive';
-        case 'processing':
-          return stepIndex === 0 ? 'completed' : stepIndex === 1 ? 'active' : 'inactive';
-        case 'in_progress':
-          return stepIndex <= 1 ? 'completed' : stepIndex === 2 ? 'active' : 'inactive';
-        case 'completed':
-          return 'completed';
-        case 'failed':
-        case 'cancelled':
-          return stepIndex === 0 ? 'completed' : stepIndex === 1 ? 'failed' : 'inactive';
-        case 'partial':
-          return stepIndex <= 2 ? 'completed' : 'inactive';
-        default:
-          return 'inactive';
-      }
-    };
+    return steps.map((step, index) => {
+      const isActive = 
+        (status === 'pending' && index === 0) ||
+        (status === 'processing' && index === 1) ||
+        (status === 'in_progress' && index === 2) ||
+        (status === 'completed' && index === 3) ||
+        (status === 'partial' && index === 2) ||
+        (status === 'failed' && index === 1) ||
+        (status === 'cancelled' && index === 1);
 
-    const getProgressPercentage = (orderStatus: string) => {
-      switch (orderStatus) {
-        case 'pending': return 25;
-        case 'processing': return 50;
-        case 'in_progress': return 75;
-        case 'completed': return 100;
-        case 'partial': return 75;
-        case 'failed':
-        case 'cancelled': return 50;
-        default: return 0;
-      }
-    };
+      const isCompleted = 
+        (status === 'processing' && index === 0) ||
+        (status === 'in_progress' && index <= 1) ||
+        (status === 'completed' && index <= 2) ||
+        (status === 'partial' && index <= 1);
 
+      const isFailed = (status === 'failed' || status === 'cancelled') && index > 1;
+
+      return {
+        ...step,
+        isActive,
+        isCompleted,
+        isFailed
+      };
+    });
+  };
+
+  // Progress Component with Animations
+  const ProgressSteps = ({ order }: { order: OrderDetails }) => {
+    const steps = getProgressSteps(order.status);
+    
     return (
       <div className="w-full max-w-4xl mx-auto">
         <div className="relative">
-          {/* Progress Line Background */}
-          <div className="absolute top-6 left-0 w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+          {/* Progress Line */}
+          <div className="absolute top-5 left-0 w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full">
             <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full"
+              className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full"
               initial={{ width: "0%" }}
-              animate={{ width: `${getProgressPercentage(order.status)}%` }}
-              transition={{ duration: 2, ease: "easeInOut" }}
+              animate={{ 
+                width: steps.filter(s => s.isCompleted).length > 0 
+                  ? `${(steps.filter(s => s.isCompleted).length / (steps.length - 1)) * 100}%`
+                  : "0%"
+              }}
+              transition={{ duration: 1, ease: "easeInOut" }}
             />
           </div>
 
@@ -235,46 +256,41 @@ export default function OrderSearchPage() {
           <div className="relative flex justify-between">
             {steps.map((step, index) => {
               const Icon = step.icon;
-              const status = getStepStatus(index, order.status);
-              
               return (
                 <motion.div 
                   key={step.key} 
                   className="flex flex-col items-center"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  transition={{ duration: 0.6, delay: index * 0.2 }}
                 >
                   {/* Step Circle */}
                   <motion.div 
-                    className={`relative flex items-center justify-center w-12 h-12 rounded-full border-3 z-10 ${
-                      status === 'completed' 
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-full border-3 transition-all duration-700 z-10 ${
+                      step.isCompleted 
                         ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-200 dark:shadow-green-800' 
-                        : status === 'active'
-                          ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-800'
-                          : status === 'failed'
+                        : step.isActive
+                          ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-200 dark:shadow-blue-800 animate-pulse'
+                          : step.isFailed
                             ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-200 dark:shadow-red-800'
                             : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400'
                     }`}
                     whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ duration: 0.5, delay: index * 0.1, type: "spring" }}
                   >
                     <motion.div
                       initial={{ rotate: 0 }}
-                      animate={{ rotate: status === 'active' ? 360 : 0 }}
-                      transition={{ 
-                        duration: 2, 
-                        repeat: status === 'active' ? Infinity : 0, 
-                        ease: "linear" 
-                      }}
+                      animate={{ rotate: step.isActive ? 360 : 0 }}
+                      transition={{ duration: 2, repeat: step.isActive ? Infinity : 0, ease: "linear" }}
                     >
                       <Icon className="w-5 h-5" />
                     </motion.div>
                     
                     {/* Pulse effect for active step */}
-                    {status === 'active' && (
+                    {step.isActive && (
                       <motion.div
                         className="absolute inset-0 rounded-full bg-blue-500 opacity-30"
                         initial={{ scale: 1 }}
@@ -292,11 +308,11 @@ export default function OrderSearchPage() {
                     transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
                   >
                     <p className={`text-sm font-medium transition-colors duration-500 ${
-                      status === 'completed' 
+                      step.isCompleted 
                         ? 'text-green-600 dark:text-green-400' 
-                        : status === 'active'
+                        : step.isActive
                           ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                          : status === 'failed'
+                          : step.isFailed
                             ? 'text-red-600 dark:text-red-400'
                             : 'text-gray-500 dark:text-gray-400'
                     }`}>
@@ -317,39 +333,61 @@ export default function OrderSearchPage() {
           transition={{ duration: 0.6, delay: 0.8 }}
         >
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full">
-            <motion.div 
-              className="w-2 h-2 bg-blue-500 rounded-full"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              İlerleme: {getProgressPercentage(order.status)}%
+              İlerleme: {Math.round((steps.filter(s => s.isCompleted).length / steps.length) * 100)}%
             </span>
           </div>
         </motion.div>
       </div>
     );
   };
+                    <Icon className={`w-5 h-5 ${step.isActive ? 'animate-spin' : ''}`} />
+                    {step.isActive && (
+                      <div className="absolute inset-0 rounded-full bg-blue-500 animate-ping opacity-75"></div>
+                    )}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div 
+                      className={`flex-1 h-1 mx-2 transition-all duration-700 ease-in-out ${
+                        step.isCompleted ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                      }`}
+                    />
+                  )}
+                </div>
+                <span className={`mt-2 text-xs font-medium transition-colors duration-300 ${
+                  step.isCompleted ? 'text-green-600 dark:text-green-400' : 
+                  step.isActive ? 'text-blue-600 dark:text-blue-400' : 
+                  step.isFailed ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+                }`}>
+                  {step.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-all duration-500">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <motion.div 
-            className="flex justify-between items-center mb-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Sipariş Sorgulama</h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 transition-colors duration-300">Sipariş durumunuzu takip edin</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 transition-colors duration-300">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Header with Theme Toggle */}
+          <div className="flex justify-between items-center mb-8">
+            <div className="text-center flex-1">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4 transition-colors duration-300">
+                Sipariş Sorgulama
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 transition-colors duration-300">
+                Sipariş durumunuzu takip edin
+              </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="ml-4">
               <ThemeToggle />
             </div>
-          </motion.div>
+          </div>
 
           {/* Main Content */}
           <motion.div 
@@ -441,25 +479,17 @@ export default function OrderSearchPage() {
                     </motion.div>
                   </form>
 
-                  {/* Success Message */}
-                  <AnimatePresence>
-                    {searchedOrder && (
-                      <motion.div 
-                        className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-300"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="flex items-center text-green-800 dark:text-green-200">
-                          <CheckCircle className="w-5 h-5 mr-2" />
-                          <span className="font-medium">Sipariş bilgileri güncellendi</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </CardContent>
-              </Card>
+                {/* Success Message */}
+                {searchedOrder && (
+                  <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-300">
+                    <div className="flex items-center text-green-800 dark:text-green-200">
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      <span className="font-medium">Sipariş bilgileri güncellendi</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
             </motion.div>
 
             {/* Order Details */}
@@ -517,128 +547,94 @@ export default function OrderSearchPage() {
                           </motion.div>
                         </motion.div>
 
-                        {/* Enhanced Progress Steps */}
-                        <motion.div 
-                          className="my-8"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.6, delay: 0.4 }}
-                        >
-                          <ProgressSteps order={searchedOrder} />
-                        </motion.div>
+                    {/* Progress Steps */}
+                    <div className="my-8">
+                      <ProgressSteps order={searchedOrder} />
+                    </div>
 
-                        {/* Status Text */}
-                        <motion.div 
-                          className="text-center space-y-2"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.6 }}
-                        >
-                          <p className="text-lg text-gray-700 dark:text-gray-300 transition-colors duration-300">
-                            Oluşturulma: <span className="font-semibold">
-                              {searchedOrder.createdAt 
-                                ? new Date(searchedOrder.createdAt).toLocaleString('tr-TR', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })
-                                : 'Bilinmiyor'
-                              }
-                            </span>
-                          </p>
-                          {lastUpdated && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
-                              Son güncelleme: {lastUpdated.toLocaleString('tr-TR', {
+                    {/* Status Text */}
+                    <div className="text-center space-y-2">
+                      <p className="text-lg text-gray-700 dark:text-gray-300 transition-colors duration-300">
+                        Oluşturulma: <span className="font-semibold">
+                          {searchedOrder.createdAt 
+                            ? new Date(searchedOrder.createdAt).toLocaleString('tr-TR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
                                 hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit'
-                              })}
-                            </p>
-                          )}
-                          {isAutoRefreshing && (
-                            <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors duration-300">
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              <span className="text-sm">Otomatik yenileniyor...</span>
-                            </div>
-                          )}
-                        </motion.div>
+                                minute: '2-digit'
+                              })
+                            : 'Bilinmiyor'
+                          }
+                        </span>
+                      </p>
+                      {lastUpdated && (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">
+                          Son güncelleme: {lastUpdated.toLocaleString('tr-TR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                          })}
+                        </p>
+                      )}
+                      {isAutoRefreshing && (
+                        <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 transition-colors duration-300">
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          <span className="text-sm">Canlı takip aktif</span>
+                        </div>
+                      )}
+                    </div>
 
-                        {/* Order Details Grid */}
-                        <motion.div 
-                          className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5, delay: 0.7 }}
-                        >
-                          <div className="space-y-4">
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Tag className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Kategori:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.key.category}</p>
-                              </div>
-                            </motion.div>
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Miktar:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.quantity}</p>
-                              </div>
-                            </motion.div>
+                    {/* Order Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                      <div className="space-y-4">
+                        <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                          <Tag className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Kategori:</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.key.category}</p>
                           </div>
-                          <div className="space-y-4">
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <Link className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Hedef URL:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white text-sm break-all">{searchedOrder.targetUrl}</p>
-                              </div>
-                            </motion.div>
-                            <motion.div 
-                              className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300"
-                              whileHover={{ scale: 1.02 }}
-                            >
-                              <CheckCircle2 className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
-                              <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-300">Anahtar:</p>
-                                <p className="font-semibold text-gray-900 dark:text-white font-mono text-sm">{searchedOrder.key.value}</p>
-                              </div>
-                            </motion.div>
+                        </div>
+                        <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                          <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Miktar:</p>
+                            <p className="font-semibold text-gray-900 dark:text-white">{searchedOrder.quantity}</p>
                           </div>
-                        </motion.div>
-
-                        {/* Manual Refresh Button */}
-                        <motion.div 
-                          className="text-center mt-6"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.5, delay: 0.8 }}
-                        >
-                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                            <Button 
-                              onClick={() => searchOrderMutation.mutate({ orderId: searchedOrder.orderId })}
-                              disabled={searchOrderMutation.isPending}
-                              variant="outline"
-                              className="border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300"
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-2 ${searchOrderMutation.isPending ? 'animate-spin' : ''}`} />
-                              Manuel Yenile
-                            </Button>
-                          </motion.div>
-                        </motion.div>
+                        </div>
                       </div>
-                    </CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                          <Link className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Hedef URL:</p>
+                            <p className="font-semibold text-gray-900 dark:text-white text-sm break-all">{searchedOrder.targetUrl}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors duration-300">
+                          <CheckCircle2 className="w-5 h-5 text-gray-600 dark:text-gray-300 mr-3" />
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Anahtar:</p>
+                            <p className="font-semibold text-gray-900 dark:text-white font-mono text-sm">{searchedOrder.key.value}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Manual Refresh Button */}
+                    <div className="text-center mt-6">
+                      <Button 
+                        onClick={() => searchOrderMutation.mutate({ orderId: searchedOrder.orderId })}
+                        disabled={searchOrderMutation.isPending}
+                        variant="outline"
+                        className="border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-300"
+                      >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${searchOrderMutation.isPending ? 'animate-spin' : ''}`} />
+                        Manuel Yenile
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
                   </Card>
                 </motion.div>
               )}
