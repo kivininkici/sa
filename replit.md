@@ -287,6 +287,11 @@ Changelog:
 - 3 katmanlı mouse tracking sistem - farklı boyut ve hızlarda takip
 - Mouse pozisyonunu gerçek zamanlı takip eden mavi gradient daireler
 - Normal kullanıcı auth sayfasındaki ile aynı kalitede interactive efekt
+- July 1, 2025: Key kategorisi seçme modal'ına profesyonel tasarım eklendi
+- Staggered animasyonlar ile kategoriler sırayla görünüyor
+- Interactive kartlar - hover efektleri ve yeşil seçim durumu
+- Download ikonu ile yeşil gradient header tasarımı
+- Her kategoride key sayısı ve smooth geçiş animasyonları
 
 ## User Preferences
 

@@ -7,6 +7,7 @@ import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import StatsCard from "@/components/admin/stats-card";
 import KeyCreationModal from "@/components/admin/key-creation-modal";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Copy,
-  Download
+  Download,
+  Check
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Key as KeyType } from "@shared/schema";
@@ -588,46 +590,109 @@ export default function Keys() {
 
       {/* Export Modal */}
       <Dialog open={showExportModal} onOpenChange={setShowExportModal}>
-        <DialogContent className="sm:max-w-md bg-slate-900 border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-slate-50">Key Kategorisi Seç</DialogTitle>
-            <DialogDescription className="text-slate-400">
+        <DialogContent className="sm:max-w-lg bg-slate-900/95 border-slate-700/50 backdrop-blur-xl">
+          <DialogHeader className="text-center pb-6">
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/25"
+            >
+              <Download className="w-8 h-8 text-white" />
+            </motion.div>
+            <DialogTitle className="text-2xl font-bold text-slate-50">Key Kategorisi Seç</DialogTitle>
+            <DialogDescription className="text-slate-400 text-lg">
               İndirmek istediğiniz key kategorisini seçiniz.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <Select value={selectedExportCategory} onValueChange={setSelectedExportCategory}>
-              <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-50">
-                <SelectValue placeholder="Kategori seçin" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600">
-                {getUniqueCategories().map((category: string) => (
-                  <SelectItem key={category} value={category} className="text-slate-50">
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="space-y-4"
+          >
+            <div className="space-y-3">
+              {getUniqueCategories().map((category: string, index: number) => (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 + index * 0.05, duration: 0.3 }}
+                  className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 ${
+                    selectedExportCategory === category
+                      ? 'border-green-500 bg-green-500/10 shadow-lg shadow-green-500/25'
+                      : 'border-slate-600/50 bg-slate-800/50 hover:border-slate-500 hover:bg-slate-700/50'
+                  }`}
+                  onClick={() => setSelectedExportCategory(category)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <motion.div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                          selectedExportCategory === category
+                            ? 'border-green-500 bg-green-500'
+                            : 'border-slate-500'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {selectedExportCategory === category && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Check className="w-3 h-3 text-white" />
+                          </motion.div>
+                        )}
+                      </motion.div>
+                      <div>
+                        <h3 className="text-slate-50 font-medium">{category}</h3>
+                        <p className="text-slate-400 text-sm">
+                          {Array.isArray(keys) ? keys.filter((key: any) => key.category === category).length : 0} key
+                        </p>
+                      </div>
+                    </div>
+                    {selectedExportCategory === category && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-green-500"
+                      >
+                        <Download className="w-5 h-5" />
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowExportModal(false)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              İptal
-            </Button>
-            <Button
-              onClick={exportKeysByCategory}
-              disabled={!selectedExportCategory}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              İndir
-            </Button>
-          </DialogFooter>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+          >
+            <DialogFooter className="pt-6 gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowExportModal(false)}
+                className="border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all duration-300"
+              >
+                İptal
+              </Button>
+              <Button
+                onClick={exportKeysByCategory}
+                disabled={!selectedExportCategory}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                İndir
+              </Button>
+            </DialogFooter>
+          </motion.div>
         </DialogContent>
       </Dialog>
     </div>
