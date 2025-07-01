@@ -298,6 +298,17 @@ Changelog:
 - Kırmızı tema ile tutarlı tasarım - hover efektleri ve gölge animasyonları
 - Alışveriş sepeti ikonu ile görsel ipucu eklendi
 - Yeni sekmede açılarak kullanıcı deneyimini kesintisiz tutuyor
+- July 1, 2025: Site tamamen yeniden tasarlandı - inanılmaz görsel dönüşüm tamamlandı
+- Gelişmiş CSS animasyon sistemi: 15+ keyframe animasyonu, gradient shifts, floating glow
+- AnimatedBackground ve FloatingOrbs bileşenleri: particle system ve dinamik canvas
+- Tüm sayfalar modernize edildi: Auth, Home, Order-Search, Admin paneli, User Interface
+- Mouse tracking sistemi optimize edildi: 3 katmanlı smooth cursor following
+- Floating particles sistemi: bağımsız hareket eden 15 adet renkli particle
+- Neo-morphism ve glassmorphism tasarım dili: backdrop blur, gradient borders
+- CyberButton bileşeni: gradient shift ve hover glow animasyonları
+- Professional UX: staggered animations, scale effects, rotation transitions
+- Enhanced background effects: morphing gradients, floating orbs, particle connections
+- Cross-browser optimized: modern CSS özellikleri ve performans iyileştirmeleri
 - July 1, 2025: Normal kullanıcı girişine admin seviyesinde mavi dalga efekti eklendi
 - Çoklu katmanlı dalga animasyonu - admin panelindeki yeşil efektin aynısının mavi versiyonu
 - 4 farklı gradient katmanı farklı hızlarda yayılıyor (2.5s, 2s, 1.5s, 1.2s)
