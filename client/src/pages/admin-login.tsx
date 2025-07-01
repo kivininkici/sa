@@ -121,33 +121,33 @@ export default function AdminLogin() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-8 space-y-4 relative"
                   >
-                    {/* Full-Screen Success Wave Effect - Starting from Card */}
+                    {/* Success Wave Effect - Around Card, Behind It */}
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: [0, 8, 12], opacity: [0, 0.3, 0] }}
+                      animate={{ scale: [0, 8, 12], opacity: [0, 0.08, 0] }}
                       transition={{ duration: 2.5, ease: "easeOut" }}
-                      className="fixed inset-0 z-0 bg-gradient-radial from-green-400/40 via-green-500/20 to-transparent pointer-events-none"
+                      className="fixed inset-0 -z-10 bg-gradient-radial from-green-400/15 via-green-500/8 to-transparent pointer-events-none"
                       style={{ transformOrigin: 'center center' }}
                     />
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: [0, 6, 10], opacity: [0, 0.4, 0] }}
+                      animate={{ scale: [0, 6, 10], opacity: [0, 0.12, 0] }}
                       transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
-                      className="fixed inset-0 z-0 bg-gradient-radial from-emerald-400/50 via-green-400/30 to-transparent pointer-events-none"
+                      className="fixed inset-0 -z-10 bg-gradient-radial from-emerald-400/20 via-green-400/10 to-transparent pointer-events-none"
                       style={{ transformOrigin: 'center center' }}
                     />
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: [0, 4, 8], opacity: [0, 0.5, 0] }}
+                      animate={{ scale: [0, 4, 8], opacity: [0, 0.15, 0] }}
                       transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
-                      className="fixed inset-0 z-0 bg-gradient-radial from-green-300/60 via-emerald-400/40 to-transparent pointer-events-none"
+                      className="fixed inset-0 -z-10 bg-gradient-radial from-green-300/25 via-emerald-400/12 to-transparent pointer-events-none"
                       style={{ transformOrigin: 'center center' }}
                     />
                     <motion.div
                       initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: [0, 2, 5], opacity: [0, 0.6, 0] }}
+                      animate={{ scale: [0, 2, 5], opacity: [0, 0.18, 0] }}
                       transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
-                      className="fixed inset-0 z-0 bg-gradient-radial from-green-200/70 via-green-300/50 to-transparent pointer-events-none"
+                      className="fixed inset-0 -z-10 bg-gradient-radial from-green-200/30 via-green-300/15 to-transparent pointer-events-none"
                       style={{ transformOrigin: 'center center' }}
                     />
                     
