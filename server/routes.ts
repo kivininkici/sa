@@ -1763,12 +1763,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Extract balance from response (format may vary between APIs)
             let balance = '0.00';
             
+            // Check various possible balance field names and formats
             if (result.balance !== undefined) {
-              balance = result.balance.toString();
+              balance = parseFloat(result.balance).toFixed(2);
             } else if (result.currency !== undefined) {
-              balance = result.currency.toString();
+              balance = parseFloat(result.currency).toFixed(2);
+            } else if (result.fund !== undefined) {
+              balance = parseFloat(result.fund).toFixed(2);
+            } else if (result.money !== undefined) {
+              balance = parseFloat(result.money).toFixed(2);
+            } else if (result.credit !== undefined) {
+              balance = parseFloat(result.credit).toFixed(2);
+            } else if (result.amount !== undefined) {
+              balance = parseFloat(result.amount).toFixed(2);
             } else if (typeof result === 'number') {
-              balance = result.toString();
+              balance = result.toFixed(2);
+            } else if (typeof result === 'string' && !isNaN(parseFloat(result))) {
+              balance = parseFloat(result).toFixed(2);
             }
             
             // Update balance in database

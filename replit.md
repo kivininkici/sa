@@ -219,6 +219,15 @@ Changelog:
 - Kayıt sonrası otomatik giriş sistemi aktif - kullanıcılar kayıt olduktan sonra direkt giriş yapıyor
 - Session yönetimi iyileştirildi - çıkış yaptıktan sonra tekrar login gerekiyor
 - Type safety sorunları çözüldü ve sistem stable çalışıyor
+- July 1, 2025: API Bakiye Görüntüleme Sistemi eklendi
+- Database schema'ya balance ve lastBalanceCheck alanları eklendi
+- API Bakiyeleri sayfası (/admin/api-balances) oluşturuldu
+- Bakiye yenileme sistemi - tüm API'ler tek seferde güncellenebiliyor
+- Türk Lirası (₺) para birimi kullanılıyor, küsuratı ile birlikte gösteriliyor
+- Çoklu API format desteği - balance, currency, fund, money, credit, amount alanlarını destekliyor
+- Renkli bakiye durumu göstergesi - kırmızı (₺0), turuncu (<₺10), yeşil (normal)
+- Toplam bakiye, aktif API sayısı ve düşük bakiye uyarı sistemi
+- Sistem production seviyesinde güvenilir çalışıyor
 
 ## User Preferences
 

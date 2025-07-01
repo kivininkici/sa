@@ -100,7 +100,10 @@ export default function ApiBalances() {
 
   const formatBalance = (balance: string) => {
     const num = parseFloat(balance);
-    return isNaN(num) ? "0.00" : num.toFixed(2);
+    return isNaN(num) ? "0,00" : num.toLocaleString('tr-TR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
   };
 
   const formatDate = (dateString: string | null) => {
@@ -178,7 +181,7 @@ export default function ApiBalances() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  ${formatBalance(getTotalBalance().toString())}
+                  ₺{formatBalance(getTotalBalance().toString())}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Tüm API'lerin toplam bakiyesi
@@ -215,7 +218,7 @@ export default function ApiBalances() {
                   {(balances as ApiBalance[]).filter(b => parseFloat(b.balance || "0") < 10).length}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  $10'dan az bakiyesi olan API'ler
+                  ₺10'dan az bakiyesi olan API'ler
                 </p>
               </CardContent>
             </Card>
@@ -270,7 +273,7 @@ export default function ApiBalances() {
                                     ? 'text-orange-600' 
                                     : 'text-green-600'
                               }`}>
-                                ${formatBalance(balance.balance)}
+                                ₺{formatBalance(balance.balance)}
                               </span>
                             </TableCell>
                             <TableCell className="flex items-center gap-2">
