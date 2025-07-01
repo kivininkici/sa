@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ApiManagement() {
   const { toast } = useToast();
@@ -53,6 +54,8 @@ export default function ApiManagement() {
   const [servicesCurrentPage, setServicesCurrentPage] = useState(1);
   const [servicesItemsPerPage] = useState(50); // 50 services per page
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [selectedApis, setSelectedApis] = useState<number[]>([]);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
 
   // API creation mutation with auto-import
   const createApiMutation = useMutation({
@@ -141,6 +144,59 @@ export default function ApiManagement() {
       });
     },
   });
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      let totalDeletedServices = 0;
+      for (const id of ids) {
+        const response = await fetch(`/api/admin/api-settings/${id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          totalDeletedServices += data.deletedServices || 0;
+        }
+      }
+      return { deletedApis: ids.length, totalDeletedServices };
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Başarılı", 
+        description: `${data.deletedApis} API ve ${data.totalDeletedServices} servis silindi`,
+      });
+      setSelectedApis([]);
+      setShowBulkDelete(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/api-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/services/all"] });
+    },
+    onError: () => {
+      toast({
+        title: "Hata",
+        description: "Toplu silme işlemi başarısız",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Helper functions for bulk selection
+  const toggleApiSelection = (apiId: number) => {
+    setSelectedApis(prev => 
+      prev.includes(apiId) 
+        ? prev.filter(id => id !== apiId)
+        : [...prev, apiId]
+    );
+  };
+
+  const selectAllApis = () => {
+    if (selectedApis.length === apiSettingsList?.length) {
+      setSelectedApis([]);
+    } else {
+      setSelectedApis(apiSettingsList?.map((api: any) => api.id) || []);
+    }
+  };
 
   // Maintenance mode toggle mutation
   const toggleMaintenanceMutation = useMutation({
@@ -696,9 +752,39 @@ export default function ApiManagement() {
             {/* Active APIs */}
             <Card className="dashboard-card">
               <CardHeader className="border-b border-slate-700">
-                <CardTitle className="text-lg font-semibold text-slate-50">
-                  Aktif API'ler
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-semibold text-slate-50">
+                    Aktif API'ler
+                  </CardTitle>
+                  
+                  {/* Bulk Actions */}
+                  {apiSettingsList && apiSettingsList.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="select-all"
+                          checked={selectedApis.length === apiSettingsList.length}
+                          onCheckedChange={selectAllApis}
+                        />
+                        <label htmlFor="select-all" className="text-sm text-slate-300">
+                          Tümünü Seç ({selectedApis.length}/{apiSettingsList.length})
+                        </label>
+                      </div>
+                      
+                      {selectedApis.length > 0 && (
+                        <Button
+                          onClick={() => setShowBulkDelete(true)}
+                          variant="destructive"
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Hızlı Sil ({selectedApis.length})
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="p-6">
                 {apiSettingsLoading ? (
@@ -712,6 +798,11 @@ export default function ApiManagement() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={selectedApis.includes(api.id)}
+                                onCheckedChange={() => toggleApiSelection(api.id)}
+                                className="border-slate-600"
+                              />
                               <Settings className="w-4 h-4 text-blue-400" />
                               <h4 className="font-semibold text-slate-50">{api.name}</h4>
                             </div>
@@ -883,6 +974,39 @@ export default function ApiManagement() {
               className="bg-red-600 hover:bg-red-700"
             >
               Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDelete} onOpenChange={setShowBulkDelete}>
+        <AlertDialogContent className="bg-slate-900 border-slate-700">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-slate-50">
+              Toplu API Silme
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              {selectedApis.length} API'yi silmek istediğinizden emin misiniz? 
+              Bu işlem geri alınamaz ve bu API'lere bağlı TÜM servisler de silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => setShowBulkDelete(false)}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            >
+              İptal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                bulkDeleteMutation.mutate(selectedApis);
+                setShowBulkDelete(false);
+              }}
+              disabled={bulkDeleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {bulkDeleteMutation.isPending ? "Siliniyor..." : `${selectedApis.length} API'yi Sil`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
