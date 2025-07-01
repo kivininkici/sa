@@ -80,7 +80,7 @@ interface OrderHistory {
   };
 }
 
-function UserInterface() {
+export default function UserInterface() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
   const [currentStep, setCurrentStep] = useState<'key-entry' | 'order-form' | 'order-tracking'>('key-entry');

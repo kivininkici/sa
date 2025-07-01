@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, ExternalLink, Search } from "lucide-react";
+import { KeyRound, Shield, Zap, Users, Star, TrendingUp, Activity, LogOut, User, ExternalLink, Search, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { motion } from "framer-motion";
@@ -82,6 +82,14 @@ export default function Home() {
 
             {/* User Info & Actions */}
             <div className="flex items-center space-x-4">
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                onClick={() => window.open('https://www.itemsatis.com/p/KiwiPazari', '_blank')}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Satın Al
+              </Button>
+              
               <div className="flex items-center space-x-3 px-4 py-2 bg-white/10 rounded-full backdrop-blur-sm">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />

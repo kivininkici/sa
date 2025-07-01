@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { KeyRound, Shield, Zap, Users, Star, CheckCircle, TrendingUp, Activity, LogIn, UserPlus, Crown, Sparkles } from "lucide-react";
+import { KeyRound, Shield, Zap, Users, Star, CheckCircle, TrendingUp, Activity, LogIn, UserPlus, Crown, Sparkles, ShoppingCart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
@@ -71,6 +71,13 @@ export default function Landing() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
+                <Button 
+                  className="bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  onClick={() => window.open('https://www.itemsatis.com/p/KiwiPazari', '_blank')}
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Satın Al
+                </Button>
                 <Button 
                   variant="outline" 
                   className="border-white/20 bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm"
