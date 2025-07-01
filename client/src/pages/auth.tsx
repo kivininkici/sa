@@ -57,6 +57,7 @@ export default function Auth() {
   useEffect(() => {
     const indicator = document.querySelector('.tabs-indicator') as HTMLElement;
     if (indicator) {
+      indicator.style.transition = "transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)";
       if (activeTab === "register") {
         indicator.style.transform = "translateX(100%)";
       } else {
@@ -224,12 +225,13 @@ export default function Auth() {
                   />
                   <TabsTrigger 
                     value="login" 
-                    className="relative z-10 transition-all duration-500 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
+                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
                   >
                     <motion.div
                       className="flex items-center"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                     >
                       <LogIn className="w-4 h-4 mr-2" />
                       Giriş Yap
@@ -237,12 +239,13 @@ export default function Auth() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="register"
-                    className="relative z-10 transition-all duration-500 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
+                    className="relative z-10 transition-all duration-300 ease-out data-[state=active]:text-white data-[state=active]:bg-transparent hover:text-white text-slate-300 rounded-lg py-3 font-medium"
                   >
                     <motion.div
                       className="flex items-center"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
                     >
                       <UserPlus className="w-4 h-4 mr-2" />
                       Kayıt Ol
@@ -253,13 +256,13 @@ export default function Auth() {
                 <TabsContent value="login" className="mt-0">
                   <motion.div
                     key="login-content"
-                    initial={{ opacity: 0, x: -20, y: 10 }}
-                    animate={{ opacity: 1, x: 0, y: 0 }}
-                    exit={{ opacity: 0, x: -20, y: -10 }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
                     transition={{ 
-                      duration: 0.5, 
-                      ease: [0.25, 0.46, 0.45, 0.94],
-                      delay: 0.1
+                      duration: 0.3, 
+                      ease: [0.4, 0.0, 0.2, 1],
+                      delay: 0.05
                     }}
                   >
                     <AnimatePresence mode="wait">
@@ -281,10 +284,10 @@ export default function Auth() {
                       ) : (
                         <motion.form
                           key="login-form"
-                          initial={{ opacity: 0, y: 20 }}
+                          initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.4, ease: "easeOut" }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.25, ease: [0.4, 0.0, 0.2, 1] }}
                           onSubmit={loginForm.handleSubmit(onLoginSubmit)}
                           className="space-y-4 mt-6"
                         >
@@ -365,13 +368,13 @@ export default function Auth() {
                 <TabsContent value="register" className="mt-0">
                   <motion.div
                     key="register-content"
-                    initial={{ opacity: 0, x: 20, y: 10 }}
-                    animate={{ opacity: 1, x: 0, y: 0 }}
-                    exit={{ opacity: 0, x: 20, y: -10 }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
                     transition={{ 
-                      duration: 0.5, 
-                      ease: [0.25, 0.46, 0.45, 0.94],
-                      delay: 0.1
+                      duration: 0.3, 
+                      ease: [0.4, 0.0, 0.2, 1],
+                      delay: 0.05
                     }}
                   >
                     <AnimatePresence mode="wait">
@@ -393,10 +396,10 @@ export default function Auth() {
                     ) : (
                       <motion.form
                         key="register-form"
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.25, ease: [0.4, 0.0, 0.2, 1] }}
                         onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
                         className="space-y-4 mt-6"
                       >
