@@ -272,11 +272,12 @@ Changelog:
 - Kırmızı tema ile tutarlı tasarım - hover efektleri ve gölge animasyonları
 - Alışveriş sepeti ikonu ile görsel ipucu eklendi
 - Yeni sekmede açılarak kullanıcı deneyimini kesintisiz tutuyor
-- July 1, 2025: Normal kullanıcı girişine mavi animasyon efekti eklendi
-- Giriş ve kayıt başarı durumlarında radial gradient ile yayılan mavi animasyon
-- Admin panelindeki yeşil efekte benzer, ancak mavi renk kullanıyor
-- Mouse pozisyonunu takip eden animasyon - instant cursor following
-- Framer Motion ile smooth animasyonlar ve backdrop effects
+- July 1, 2025: Normal kullanıcı girişine admin seviyesinde mavi dalga efekti eklendi
+- Çoklu katmanlı dalga animasyonu - admin panelindeki yeşil efektin aynısının mavi versiyonu
+- 4 farklı gradient katmanı farklı hızlarda yayılıyor (2.5s, 2s, 1.5s, 1.2s)
+- Giriş ve kayıt başarı durumlarında tam ekran dalga efekti
+- CheckCircle ikonu için ayrı scale animasyonu ve glow efekti
+- Text elementleri için staggered timing animasyonları
 
 ## User Preferences
 

@@ -290,29 +290,72 @@ export default function Auth() {
                     <AnimatePresence mode="wait">
                       {isLoginSuccess ? (
                         <>
-                          {/* Blue animated background overlay */}
+                          {/* Success Wave Effect - Multiple layers like admin */}
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 20, opacity: [0, 0.3, 0] }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            className="fixed inset-0 bg-gradient-radial from-blue-500 via-blue-600 to-transparent pointer-events-none z-50"
-                            style={{
-                              background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.4) 0%, rgba(147, 197, 253, 0.2) 30%, transparent 70%)`
-                            }}
+                            animate={{ scale: [0, 8, 12], opacity: [0, 0.08, 0] }}
+                            transition={{ duration: 2.5, ease: "easeOut" }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-400/15 via-blue-500/8 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
                           />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 6, 10], opacity: [0, 0.12, 0] }}
+                            transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-cyan-400/20 via-blue-400/10 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 4, 8], opacity: [0, 0.15, 0] }}
+                            transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-300/25 via-cyan-400/12 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 2, 5], opacity: [0, 0.18, 0] }}
+                            transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-200/30 via-blue-300/15 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          
                           <motion.div
                             key="login-success"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center py-8 space-y-4 relative z-10"
                           >
-                            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
-                              <CheckCircle className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-blue-400">
+                            <motion.div
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.5, delay: 0.3 }}
+                              className="relative z-10 w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-500/50"
+                            >
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.3, delay: 0.6 }}
+                              >
+                                <CheckCircle className="w-8 h-8 text-white" />
+                              </motion.div>
+                            </motion.div>
+                            <motion.h3
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: 0.8 }}
+                              className="text-xl font-semibold text-blue-400 relative z-10"
+                            >
                               Giriş Başarılı!
-                            </h3>
-                            <p className="text-slate-400">Yönlendiriliyor...</p>
+                            </motion.h3>
+                            <motion.p
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: 1 }}
+                              className="text-slate-400 relative z-10"
+                            >
+                              Yönlendiriliyor...
+                            </motion.p>
                           </motion.div>
                         </>
                       ) : (
@@ -414,29 +457,72 @@ export default function Auth() {
                     <AnimatePresence mode="wait">
                       {isRegisterSuccess ? (
                         <>
-                          {/* Blue animated background overlay */}
+                          {/* Success Wave Effect - Multiple layers like admin */}
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 20, opacity: [0, 0.3, 0] }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            className="fixed inset-0 bg-gradient-radial from-blue-500 via-blue-600 to-transparent pointer-events-none z-50"
-                            style={{
-                              background: `radial-gradient(circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(59, 130, 246, 0.4) 0%, rgba(147, 197, 253, 0.2) 30%, transparent 70%)`
-                            }}
+                            animate={{ scale: [0, 8, 12], opacity: [0, 0.08, 0] }}
+                            transition={{ duration: 2.5, ease: "easeOut" }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-400/15 via-blue-500/8 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
                           />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 6, 10], opacity: [0, 0.12, 0] }}
+                            transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-cyan-400/20 via-blue-400/10 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 4, 8], opacity: [0, 0.15, 0] }}
+                            transition={{ duration: 1.5, ease: "easeOut", delay: 0.4 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-300/25 via-cyan-400/12 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: [0, 2, 5], opacity: [0, 0.18, 0] }}
+                            transition={{ duration: 1.2, ease: "easeOut", delay: 0.6 }}
+                            className="fixed inset-0 -z-10 bg-gradient-radial from-blue-200/30 via-blue-300/15 to-transparent pointer-events-none"
+                            style={{ transformOrigin: 'center center' }}
+                          />
+                          
                           <motion.div
                             key="register-success"
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center py-8 space-y-4 relative z-10"
                           >
-                            <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto">
-                              <CheckCircle className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-xl font-semibold text-blue-400">
+                            <motion.div
+                              initial={{ scale: 0.5, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ duration: 0.5, delay: 0.3 }}
+                              className="relative z-10 w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-blue-500/50"
+                            >
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.3, delay: 0.6 }}
+                              >
+                                <CheckCircle className="w-8 h-8 text-white" />
+                              </motion.div>
+                            </motion.div>
+                            <motion.h3
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: 0.8 }}
+                              className="text-xl font-semibold text-blue-400 relative z-10"
+                            >
                               Kayıt Başarılı!
-                            </h3>
-                            <p className="text-slate-400">Giriş sekmesine yönlendiriliyorsunuz...</p>
+                            </motion.h3>
+                            <motion.p
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.5, delay: 1 }}
+                              className="text-slate-400 relative z-10"
+                            >
+                              Giriş sekmesine yönlendiriliyorsunuz...
+                            </motion.p>
                           </motion.div>
                         </>
                     ) : (
