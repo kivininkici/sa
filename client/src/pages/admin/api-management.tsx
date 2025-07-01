@@ -53,7 +53,7 @@ export default function ApiManagement() {
   const [itemsPerPage] = useState(50); // 50 servis per page for better performance
   const [servicesCurrentPage, setServicesCurrentPage] = useState(1);
   const [servicesItemsPerPage] = useState(50); // 50 services per page
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
   const [selectedApis, setSelectedApis] = useState<number[]>([]);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
 
@@ -817,14 +817,14 @@ export default function ApiManagement() {
                                 {api.isActive ? "Aktif" : "Pasif"}
                               </Badge>
                               <Button
-                                onClick={() => setDeleteConfirmId(api.id)}
+                                onClick={() => deleteApiMutation.mutate(api.id)}
                                 disabled={deleteApiMutation.isPending}
                                 variant="destructive"
                                 size="sm"
-                                className="w-8 h-8 p-0"
-                                title="API'yi sil"
+                                className="bg-red-600 hover:bg-red-700 text-xs px-2 py-1 h-6"
+                                title="Hızlı sil"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                {deleteApiMutation.isPending ? "..." : "Hızlı Sil"}
                               </Button>
                             </div>
                           </div>
@@ -947,37 +947,7 @@ export default function ApiManagement() {
         </div>
       </main>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteConfirmId !== null} onOpenChange={() => setDeleteConfirmId(null)}>
-        <AlertDialogContent className="bg-slate-900 border-slate-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-slate-50">API'yi Sil</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
-              Bu API'yi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve 
-              bu API'ye bağlı tüm servisler de silinecektir.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={() => setDeleteConfirmId(null)}
-              className="border-slate-600 text-slate-300 hover:bg-slate-700"
-            >
-              İptal
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteConfirmId) {
-                  deleteApiMutation.mutate(deleteConfirmId);
-                  setDeleteConfirmId(null);
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Sil
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
 
       {/* Bulk Delete Confirmation Dialog */}
       <AlertDialog open={showBulkDelete} onOpenChange={setShowBulkDelete}>
