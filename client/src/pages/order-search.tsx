@@ -117,10 +117,8 @@ export default function OrderSearchEnhanced() {
 
   const searchOrderMutation = useMutation({
     mutationFn: async (data: SearchData) => {
-      const response = await apiRequest(`/api/orders/search/${data.orderId}`, {
-        method: 'GET',
-      });
-      return response;
+      const response = await apiRequest('GET', `/api/orders/search/${data.orderId}`);
+      return response.json();
     },
     onSuccess: (data) => {
       const previousStatus = orderDetails?.status;
