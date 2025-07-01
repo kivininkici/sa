@@ -235,6 +235,11 @@ Changelog:
 - API bakiye yenileme sistemi iyileştirildi - form-data ve JSON formatları destekleniyor
 - ResellerProvider API uyumluluğu artırıldı - balance parsing optimize edildi
 - TypeScript hataları giderildi, sistem stable çalışıyor
+- July 1, 2025: Admin giriş sayfası animasyonları eklendi
+- Framer Motion entegrasyonu tamamlandı - normal kullanıcı girişi gibi smooth animasyonlar
+- AnimatePresence ile form ve başarı animasyonları optimize edildi
+- Giriş sırasında loading ve başarı durumları için visual feedback eklendi
+- Input hover efektleri ve error message animasyonları iyileştirildi
 
 ## User Preferences
 

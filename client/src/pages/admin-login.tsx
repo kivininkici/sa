@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, User, Shield, ArrowLeft, Sparkles, CheckCircle, Loader2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminLogin() {
   const { toast } = useToast();
@@ -74,17 +75,27 @@ export default function AdminLogin() {
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           {/* Back Button */}
-          <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-8"
+          >
             <Link href="/">
-              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/50 backdrop-blur-sm">
+              <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/50 backdrop-blur-sm transition-all duration-300">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Ana Sayfaya Dön
               </Button>
             </Link>
-          </div>
+          </motion.div>
 
           {/* Login Card */}
-          <Card className="backdrop-blur-xl bg-slate-900/70 border-slate-700/50 shadow-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.6 }}
+          >
+            <Card className="backdrop-blur-xl bg-slate-900/70 border-slate-700/50 shadow-2xl">
             <CardHeader className="text-center pb-8">
               {/* Logo */}
               <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/25 relative group">
@@ -102,84 +113,118 @@ export default function AdminLogin() {
             </CardHeader>
 
             <CardContent className="space-y-6">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-slate-300 text-sm font-medium">
-                    Kullanıcı Adı
-                  </Label>
-                  <div className="relative group">
-                    <User className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="admin"
-                      className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
-                      {...register("username")}
-                    />
-                  </div>
-                  {errors.username && (
-                    <p className="text-red-400 text-sm">{errors.username.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
-                    Şifre
-                  </Label>
-                  <div className="relative group">
-                    <Lock className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all"
-                      {...register("password")}
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="text-red-400 text-sm">{errors.password.message}</p>
-                  )}
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className={`w-full h-12 text-white font-medium shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
-                    isSuccess 
-                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 hover:shadow-green-500/25' 
-                      : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-blue-500/25'
-                  }`} 
-                  disabled={isLoading || loginMutation.isPending || isSuccess}
-                >
-                  {isSuccess ? (
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Yetkili Girişi Başarılı
+              <AnimatePresence mode="wait">
+                {isSuccess ? (
+                  <motion.div
+                    key="admin-success"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-8 space-y-4"
+                  >
+                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle className="w-8 h-8 text-white" />
                     </div>
-                  ) : isLoading || loginMutation.isPending ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Giriş yapılıyor...
+                    <h3 className="text-xl font-semibold text-green-400">
+                      Yetkili Girişi Başarılı!
+                    </h3>
+                    <p className="text-slate-400">Admin paneline yönlendiriliyor...</p>
+                  </motion.div>
+                ) : (
+                  <motion.form
+                    key="admin-form"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-6"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-slate-300 text-sm font-medium">
+                        Kullanıcı Adı
+                      </Label>
+                      <div className="relative group">
+                        <User className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
+                        <Input
+                          id="username"
+                          type="text"
+                          placeholder="admin"
+                          className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+                          {...register("username")}
+                        />
+                      </div>
+                      {errors.username && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-400 text-sm"
+                        >
+                          {errors.username.message}
+                        </motion.p>
+                      )}
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Giriş Yap
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+                        Şifre
+                      </Label>
+                      <div className="relative group">
+                        <Lock className="w-5 h-5 absolute left-3 top-3 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="••••••••"
+                          className="pl-11 h-12 bg-slate-800/50 border-slate-600/50 text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-300"
+                          {...register("password")}
+                        />
+                      </div>
+                      {errors.password && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-400 text-sm"
+                        >
+                          {errors.password.message}
+                        </motion.p>
+                      )}
                     </div>
-                  )}
-                </Button>
-              </form>
 
-
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 text-white font-medium shadow-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-blue-500/25 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                      disabled={isLoading || loginMutation.isPending}
+                    >
+                      {isLoading || loginMutation.isPending ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Giriş yapılıyor...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4" />
+                          Giriş Yap
+                        </div>
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
+          </motion.div>
 
           {/* Security Badge */}
-          <div className="mt-6 text-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-6 text-center"
+          >
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/30 rounded-full border border-slate-700/30 backdrop-blur-sm">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-xs text-slate-300">Güvenli Bağlantı</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
