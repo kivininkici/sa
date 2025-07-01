@@ -254,6 +254,9 @@ Changelog:
 - Authentication sistemi optimize edildi - giriş/kayıt tab geçişleri yumuşatıldı
 - Tab buton animasyonları iyileştirildi - sallama etkisi kaldırıldı ve smooth transitions eklendi
 - Tab button styling optimize edildi - merkezi hizalama ve kenarlık boşlukları düzeltildi
+- Mouse tracking background efekti eklendi - instant cursor following sistemi
+- Perfect mouse following: hiç gecikme olmadan anlık takip, yumuşak blur efekt
+- Authentication sayfası UX/UI optimizasyonu tamamlandı - production ready
 - Sistem production seviyesinde Replit ortamında güvenilir şekilde çalışıyor
 - July 1, 2025: Toplu key export sistemi eklendi
 - Key Listesi başlığının yanına kırmızı "Toplu Key.txt" butonu eklendi
